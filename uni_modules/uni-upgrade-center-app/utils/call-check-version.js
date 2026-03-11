@@ -2,12 +2,13 @@ export default function() {
 	// #ifdef APP-PLUS
 	return new Promise((resolve, reject) => {
 		plus.runtime.getProperty(plus.runtime.appid, function(widgetInfo) {
-			let data = {
+			const data = {
 				action: 'checkVersion',
 				appid: plus.runtime.appid,
 				appVersion: plus.runtime.version,
 				wgtVersion: widgetInfo.version
 			}
+			console.log("data: ",data);
 			uniCloud.callFunction({
 				name: 'uni-upgrade-center',
 				data,

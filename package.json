@@ -1,19 +1,15 @@
 {
-  "id": "uni-starter",
-  "displayName": "uni-starter",
-  "version": "2.2.15",
-  "description": "云端一体应用快速开发基本项目模版",
+  "id": "uni-cloud",
+  "displayName": "hello uniCloud",
+  "version": "1.4.3",
+  "description": "为开发者提供的基于 serverless 模式和 js 编程的云开发平台。示例代码",
   "keywords": [
-    "login",
-    "登录",
-    "搜索",
-    "uni-id实例",
-    "留言板"
+    "uniCloud示例"
 ],
-  "repository": "https://gitcode.net/dcloud/uni-starter",
+  "repository": "https://gitcode.net/dcloud/hellounicloud",
   "engines": {
-    "HBuilderX": "^3.2.6",
-    "uni-app": "^4.07",
+    "HBuilderX": "^3.7.0",
+    "uni-app": "^4.03",
     "uni-app-x": ""
   },
   "dcloudext": {
@@ -36,12 +32,10 @@
     "npmurl": "",
     "type": "unicloud-template-project",
     "darkmode": "x",
-    "i18n": "√",
+    "i18n": "x",
     "widescreen": "x"
   },
   "uni_modules": {
-    "dependencies": ["uni-id-pages"],
-    "encrypt": [],
     "platforms": {
       "cloud": {
         "tcb": "√",
@@ -63,10 +57,7 @@
             "nvue": "√",
             "android": "√",
             "ios": "√",
-            "harmony": {
-                "extVersion": "2.2.1",
-                "minVersion": ""
-            }
+            "harmony": "√"
           },
           "mp": {
             "weixin": "√",
@@ -77,8 +68,7 @@
             "jd": "-",
             "harmony": "-",
             "qq": "-",
-            "lark": "-",
-            "xhs": "-"
+            "lark": "-"
           },
           "quickapp": {
             "huawei": "-",
@@ -101,8 +91,5 @@
         }
       }
     }
-  },
-  "dependencies": {
-    "qrcodejs2": "^0.0.2"
   }
 }

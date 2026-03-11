@@ -1,12 +1,6 @@
 {
 	"bsonType": "object",
 	"required": ["name", "menu_id"],
-	"permission": {
-		"read": true,
-		"create": "'CREATE_OPENDB_ADMIN_MENUS' in auth.permission",
-		"update": "'UPDATE_OPENDB_ADMIN_MENUS' in auth.permission",
-		"delete": "'DELETE_OPENDB_ADMIN_MENUS' in auth.permission"
-	},
 	"properties": {
 		"_id": {
 			"description": "存储文档 ID，系统自动生成"

@@ -21,7 +21,7 @@ mpMixins = {
 	},
 	created() {
 		this.swipeaction = this.getSwipeAction()
-		if (this.swipeaction && Array.isArray(this.swipeaction.children)) {
+		if (this.swipeaction.children !== undefined) {
 			this.swipeaction.children.push(this)
 		}
 	},
@@ -31,9 +31,8 @@ mpMixins = {
 	methods: {
 		// wxs 中调用
 		closeSwipe(e) {
-			if (this.autoClose && this.swipeaction) {
-				this.swipeaction.closeOther(this)
-			}
+			if (!this.autoClose) return
+			this.swipeaction.closeOther(this)
 		},
 
 		change(e) {

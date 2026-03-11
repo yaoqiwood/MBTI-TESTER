@@ -10,6 +10,6 @@
     },
     "origin-plugin-dev-name": "uni-cloud-s2s",
     "origin-plugin-version": "1.0.1",
-    "plugin-dev-name": "uni-starter",
-    "plugin-version": "2.2.15"
+    "plugin-dev-name": "uni-cloud",
+    "plugin-version": "1.4.3"
 }

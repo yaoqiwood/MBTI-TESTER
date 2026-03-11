@@ -21,7 +21,7 @@ export default {
 	},
 	created() {
 		this.swipeaction = this.getSwipeAction()
-		if (this.swipeaction && Array.isArray(this.swipeaction.children)) {
+		if (this.swipeaction.children !== undefined) {
 			this.swipeaction.children.push(this)
 		}
 	},
@@ -65,9 +65,7 @@ export default {
 		touchstart(e) {
 			this.transition = false
 			this.isclose = true
-			if (this.autoClose && this.swipeaction) {
-				this.swipeaction.closeOther(this)
-			}
+			this.autoClose && this.swipeaction.closeOther(this)
 		},
 		touchmove(e) {},
 		touchend(e) {

@@ -1,9 +1,16 @@
 [
   {
-    "role_id": "admin",
-    "role_name": "超级管理员",
-    "permission": [],
-    "comment": "超级管理员拥有所有权限",
-    "create_date": 0
+    "role_id": "USER",
+    "role_name": "用户",
+    "permission": [
+      "P_TEST_ADD"
+    ]
+  },
+  {
+    "role_id": "AUDITOR",
+    "role_name": "审核员",
+    "permission": [
+      "P_TEST_UPDATE"
+    ]
   }
 ]

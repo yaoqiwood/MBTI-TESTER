@@ -28,20 +28,22 @@
 					<template v-else>
 						<template v-if="!downloadSuccess">
 							<view class="progress-box flex-column" v-if="downloading">
-								<progress class="progress" border-radius="35" :percent="downLoadPercent" activeColor="#3DA7FF" show-info
-									stroke-width="10" />
+								<progress class="progress" border-radius="35" :percent="downLoadPercent"
+									activeColor="#3DA7FF" show-info stroke-width="10" />
 								<view style="width:100%;font-size: 28rpx;display: flex;justify-content: space-around;">
 									<text>{{downLoadingText}}</text>
 									<text>({{downloadedSize}}/{{packageFileSize}}M)</text>
 								</view>
 							</view>
 
-							<button v-else class="content-button" style="border: none;color: #fff;" plain @click="updateApp">
+							<button v-else class="content-button" style="border: none;color: #fff;" plain
+								@click="updateApp">
 								{{downLoadBtnText}}
 							</button>
 						</template>
-						<button v-else-if="downloadSuccess && !installed" class="content-button" style="border: none;color: #fff;"
-							plain :loading="installing" :disabled="installing" @click="installPackage">
+						<button v-else-if="downloadSuccess && !installed" class="content-button"
+							style="border: none;color: #fff;" plain :loading="installing" :disabled="installing"
+							@click="installPackage">
 							{{installing ? '正在安装……' : '下载完成，立即安装'}}
 						</button>
 
@@ -53,8 +55,8 @@
 				</view>
 			</view>
 
-			<image v-if="!is_mandatory" class="close-img" src="../images/app_update_close.png" @click.stop="closeUpdate">
-			</image>
+			<image v-if="!is_mandatory" class="close-img" src="../images/app_update_close.png"
+				@click.stop="closeUpdate"></image>
 		</view>
 	</view>
 </template>
@@ -280,25 +282,22 @@
 					success: res => {
 						if (res.statusCode == 200) {
 							this.downloadSuccess = true;
-							// fix: wgt 文件下载完成后后缀不是 wgt
-							if (this.isWGT && res.tempFilePath.split('.').slice(-1) !== 'wgt') {
-								const failCallback = (e) => {
-									console.log('[FILE RENAME FAIL]：', JSON.stringify(e));
-								}
-								plus.io.resolveLocalFileSystemURL(res.tempFilePath, function(entry) {
-									entry.getParent((parent) => {
-										const newName = `new_wgt_${Date.now()}.wgt`
-										entry.copyTo(parent, newName, (res) => {
-											this.tempFilePath = res.fullPath
-											this.downLoadComplete()
-										}, failCallback)
-									}, failCallback)
-								}, failCallback);
-							} else {
-								this.tempFilePath = res.tempFilePath
-								this.downLoadComplete()
+							this.tempFilePath = res.tempFilePath
+
+							// 强制更新，直接安装
+							if (this.is_mandatory) {
+								this.installPackage();
 							}
 						}
+					},
+					complete: () => {
+						this.downloading = false;
+
+						this.downLoadPercent = 0
+						this.downloadedSize = 0
+						this.packageFileSize = 0
+
+						downloadTask = null;
 					}
 				});
 
@@ -307,20 +306,6 @@
 					this.downloadedSize = (res.totalBytesWritten / Math.pow(1024, 2)).toFixed(2);
 					this.packageFileSize = (res.totalBytesExpectedToWrite / Math.pow(1024, 2)).toFixed(2);
 				});
-			},
-			downLoadComplete() {
-				this.downloading = false;
-			
-				this.downLoadPercent = 0
-				this.downloadedSize = 0
-				this.packageFileSize = 0
-			
-				downloadTask = null;
-
-				// 强制更新，直接安装
-				if (this.is_mandatory) {
-					this.installPackage();
-				}
 			},
 			installPackage() {
 				// #ifdef APP-PLUS

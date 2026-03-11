@@ -1,12 +1,10 @@
 import {
 	validator,
 	enumConverter
-} from '@/js_sdk/validator/opendb-app-versions.js';
+} from '@/uni_modules/uni-upgrade-center/js_sdk/validator/opendb-app-versions.js';
 
 const platform_iOS = 'iOS';
 const platform_Android = 'Android';
-const platform_HarmonyOS = 'HarmonyOS';
-const db = uniCloud.database();
 
 function getValidator(fields) {
 	let reuslt = {}
@@ -19,7 +17,7 @@ function getValidator(fields) {
 }
 
 export const fields =
-	'appid,name,title,contents,platform,type,version,min_uni_version,url,stable_publish,is_silently,is_mandatory,create_date,store_list'
+	'appid,name,title,contents,platform,type,version,min_uni_version,url,stable_publish,is_silently,is_mandatory,create_date'
 
 export default {
 	data() {
@@ -43,7 +41,6 @@ export default {
 				"title": "",
 				"contents": "",
 				"platform": [],
-				"store_list": [],
 				"type": "",
 				"version": "",
 				"min_uni_version": "",
@@ -59,10 +56,6 @@ export default {
 					{
 						"value": "iOS",
 						"text": "苹果"
-					},
-					{
-						"value": "HarmonyOS",
-						"text": "鸿蒙"
 					}
 				],
 				"type_localdata": [{
@@ -76,10 +69,9 @@ export default {
 				]
 			},
 			rules: {
-				...getValidator([
-					"appid", "contents", "platform", "type",
-					"version", "min_uni_version", "url", "stable_publish",
-					"title", "name", "is_silently", "is_mandatory", "store_list"
+				...getValidator(["appid", "contents", "platform", "type", "version", "min_uni_version", "url",
+					"stable_publish",
+					"title", "name", "is_silently", "is_mandatory"
 				])
 			}
 		}
@@ -105,23 +97,10 @@ export default {
 				.platform_localdata : [this.formOptions.platform_localdata[0]]
 		},
 		uni_platform() {
-			if (this.isiOS) return platform_iOS.toLocaleLowerCase();
-			if (this.formData.platform && this.formData.platform.includes(platform_HarmonyOS)) return platform_HarmonyOS.toLocaleLowerCase();
-			return platform_Android.toLocaleLowerCase();
+			return (this.isiOS ? platform_iOS : platform_Android).toLocaleLowerCase()
 		}
 	},
 	methods: {
-		getStoreList(appid) {
-			return db.collection('opendb-app-list')
-				.where({
-					appid
-				})
-				.get()
-				.then(res => {
-					const data = res.result.data[0]
-					return data.store_list || []
-				})
-		},
 		packageUploadSuccess(res) {
 			uni.showToast({
 				icon: 'success',
@@ -131,16 +110,13 @@ export default {
 			this.preUrl = this.formData.url
 			this.formData.url = res.tempFilePaths[0]
 		},
-		deleteFile(fileList) {
-			return this.$request('deleteFile', {
-				fileList
-			}, {
-				functionName: 'uni-upgrade-center'
-			})
-		},
 		async packageDelete(res) {
 			if (!this.hasPackage) return;
-			let [deleteRes] = await this.deleteFile([res.tempFilePath])
+			let [deleteRes] = await this.$request('deleteFile', {
+				fileList: [res.tempFilePath]
+			}, {
+				functionName: 'upgrade-center'
+			})
 			if (deleteRes.success) {
 				uni.showToast({
 					icon: 'success',

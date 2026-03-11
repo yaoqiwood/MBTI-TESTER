@@ -7,32 +7,10 @@ function chooseImage(opts) {
 	const {
 		count,
 		sizeType = ['original', 'compressed'],
-		sourceType,
+		sourceType = ['album', 'camera'],
 		extension
 	} = opts
 	return new Promise((resolve, reject) => {
-		// 微信由于旧接口不再维护，针对微信小程序平台改用chooseMedia接口
-		// #ifdef MP-WEIXIN
-		uni.chooseMedia({
-			count,
-			sizeType,
-			sourceType,
-			mediaType: ['image'],
-			extension,
-			success(res) {
-				res.tempFiles.forEach(item => {
-					item.path = item.tempFilePath;
-				})
-				resolve(normalizeChooseAndUploadFileRes(res, 'image'));
-			},
-			fail(res) {
-				reject({
-					errMsg: res.errMsg.replace('chooseImage:fail', ERR_MSG_FAIL),
-				});
-			},
-		})
-		// #endif
-		// #ifndef MP-WEIXIN
 		uni.chooseImage({
 			count,
 			sizeType,
@@ -47,60 +25,18 @@ function chooseImage(opts) {
 				});
 			},
 		});
-		// #endif
-
 	});
 }
 
 function chooseVideo(opts) {
 	const {
-		count,
 		camera,
 		compressed,
 		maxDuration,
-		sourceType,
+		sourceType = ['album', 'camera'],
 		extension
 	} = opts;
 	return new Promise((resolve, reject) => {
-		// 微信由于旧接口不再维护，针对微信小程序平台改用chooseMedia接口
-		// #ifdef MP-WEIXIN
-		uni.chooseMedia({
-			count,
-			compressed,
-			maxDuration,
-			sourceType,
-			extension,
-			mediaType: ['video'],
-			success(res) {
-				const {
-					tempFiles,
-				} = res;
-				resolve(normalizeChooseAndUploadFileRes({
-					errMsg: 'chooseVideo:ok',
-					tempFiles: tempFiles.map(item => {
-						return {
-							name: item.name || '',
-							path: item.tempFilePath,
-							thumbTempFilePath: item.thumbTempFilePath,
-							size:item.size,
-							type: (res.tempFile && res.tempFile.type) || '',
-							width:item.width,
-							height:item.height,
-							duration:item.duration,
-							fileType: 'video',
-							cloudPath: '',
-						}
-					}),
-				}, 'video'));
-			},
-			fail(res) {
-				reject({
-					errMsg: res.errMsg.replace('chooseVideo:fail', ERR_MSG_FAIL),
-				});
-			},
-		})
-		// #endif
-		// #ifndef MP-WEIXIN
 		uni.chooseVideo({
 			camera,
 			compressed,
@@ -118,7 +54,8 @@ function chooseVideo(opts) {
 				resolve(normalizeChooseAndUploadFileRes({
 					errMsg: 'chooseVideo:ok',
 					tempFilePaths: [tempFilePath],
-					tempFiles: [{
+					tempFiles: [
+					{
 						name: (res.tempFile && res.tempFile.name) || '',
 						path: tempFilePath,
 						size,
@@ -137,7 +74,6 @@ function chooseVideo(opts) {
 				});
 			},
 		});
-		// #endif
 	});
 }
 
@@ -275,7 +211,8 @@ function chooseAndUploadFile(opts = {
 }) {
 	if (opts.type === 'image') {
 		return uploadFiles(chooseImage(opts), opts);
-	} else if (opts.type === 'video') {
+	}
+	else if (opts.type === 'video') {
 		return uploadFiles(chooseVideo(opts), opts);
 	}
 	return uploadFiles(chooseAll(opts), opts);
