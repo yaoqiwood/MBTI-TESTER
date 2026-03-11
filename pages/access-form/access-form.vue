@@ -295,7 +295,7 @@ export default {
 
 .action-btn {
 	flex: 1;
-	min-height: 120rpx;
+	min-height: 80rpx;
 	padding: 0 24rpx;
 	border-radius: 999rpx;
 	display: flex;
