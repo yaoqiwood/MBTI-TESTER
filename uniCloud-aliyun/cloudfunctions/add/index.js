@@ -6,3 +6,4 @@ exports.main = async (event, context) => {
 	const res = await collection.add({ product })
 	return res
 };
+ 
