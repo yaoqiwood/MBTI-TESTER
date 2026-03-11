@@ -39,8 +39,9 @@
     {
       "path": "pages/test/test",
       "style": {
-        "navigationBarTitleText": "测试页",
-        "enablePullDownRefresh": false
+        "navigationBarTitleText": "MBTI测试",
+        "enablePullDownRefresh": false,
+        "navigationStyle": "custom"
       }
     },
     {

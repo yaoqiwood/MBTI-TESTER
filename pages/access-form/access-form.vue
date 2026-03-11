@@ -136,6 +136,11 @@ export default {
 				title: '提交成功',
 				icon: 'success'
 			})
+			setTimeout(() => {
+				uni.navigateTo({
+					url: `/pages/test/test?name=${encodeURIComponent(name)}`
+				})
+			}, 450)
 		},
 		goHome() {
 			uni.navigateTo({

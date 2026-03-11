@@ -1,113 +1,867 @@
 <template>
-	<view class="test-page">
-		<view class="switch-bar">
-			<view class="switch-copy">
-				<text class="switch-title">原测试页已保留</text>
-				<text class="switch-desc">现在默认首页已经切到 MBTI 展示页，这里先放一个切换按钮方便来回跳转。</text>
+	<view class="page">
+		<view class="hero">
+			<view class="hero-backdrop hero-backdrop-left"></view>
+			<view class="hero-backdrop hero-backdrop-right"></view>
+
+			<view class="hero-copy">
+				<text class="eyebrow">LOVE MBTI LAB</text>
+				<text class="headline">{{ pageTitle }}</text>
+				<text class="subhead">{{ pageSubtitle }}</text>
 			</view>
-			<view class="switch-actions">
-				<button class="home-btn" @click="goHome">返回首页</button>
-				<button class="cloud-btn" @click="goCloudObject">云对象页</button>
+
+			<view class="progress-card">
+				<view class="progress-meta">
+					<text class="progress-title">答题进度</text>
+					<text class="progress-count">{{ answeredCount }}/{{ totalQuestions }}</text>
+				</view>
+				<view class="progress-track">
+					<view class="progress-fill" :style="{ width: `${progressPercent}%` }"></view>
+				</view>
+				<view class="stage-row">
+					<view
+						v-for="(stage, index) in stageList"
+						:key="stage.label"
+						class="stage-pill"
+						:class="getStageClass(index)"
+					>
+						<text class="stage-index">{{ formatStageIndex(index + 1) }}</text>
+						<text class="stage-label">{{ stage.label }}</text>
+					</view>
+				</view>
+			</view>
+
+			<view v-if="showStageSummary" class="summary-card">
+				<text class="card-eyebrow">STAGE CHECKPOINT</text>
+				<text class="summary-title">{{ stageSummary.title }}</text>
+				<text class="summary-copy">{{ stageSummary.description }}</text>
+
+				<view class="summary-preview">
+					<text class="summary-preview-label">当前轮廓</text>
+					<text class="summary-preview-value">{{ stageSummary.previewType }}</text>
+				</view>
+
+				<view class="summary-chip-row">
+					<view v-for="item in stageSummary.badges" :key="item" class="summary-chip">
+						<text>{{ item }}</text>
+					</view>
+				</view>
+
+				<text class="summary-encourage">{{ stageSummary.encouragement }}</text>
+
+				<view class="action-btn primary-btn" @click="continueToNextStage">
+					<text>{{ pendingStageNumber === stageList.length ? '查看最终结果' : '继续答题' }}</text>
+				</view>
+			</view>
+
+			<view v-else-if="showResult" class="result-card">
+				<text class="card-eyebrow">FINAL RESULT</text>
+				<text class="result-type">{{ resultType }}</text>
+				<text class="result-copy">{{ resultSummary }}</text>
+
+				<view class="result-chip-row">
+					<view v-for="item in resultKeywords" :key="item" class="summary-chip accent-chip">
+						<text>{{ item }}</text>
+					</view>
+				</view>
+
+				<view class="trait-list">
+					<view v-for="trait in resultTraits" :key="trait.axis" class="trait-item">
+						<view class="trait-meta">
+							<text class="trait-axis">{{ trait.axis }}</text>
+							<text class="trait-score">{{ trait.leftCount }} : {{ trait.rightCount }}</text>
+						</view>
+						<view class="trait-track">
+							<view class="trait-half trait-left"></view>
+							<view class="trait-half trait-right"></view>
+							<view
+								class="trait-fill"
+								:class="trait.dominant === trait.right ? 'fill-right' : 'fill-left'"
+								:style="{ width: `${trait.fillWidth}%` }"
+							></view>
+						</view>
+						<text class="trait-note">更偏向 {{ trait.dominant }} · {{ trait.dominantPercent }}%</text>
+					</view>
+				</view>
+
+				<view class="result-actions">
+					<view class="action-btn primary-btn" @click="restartTest">
+						<text>重新测试</text>
+					</view>
+					<view class="action-btn ghost-btn" @click="goHome">
+						<text>返回首页</text>
+					</view>
+				</view>
+			</view>
+
+			<view v-else class="question-card" :class="{ locked: isTransitioning }">
+				<view class="question-meta">
+					<text class="question-index">Q{{ currentQuestion.id }}</text>
+					<text class="question-type">{{ currentQuestion.type }} 维度</text>
+				</view>
+
+				<text class="question-title">{{ currentQuestion.title }}</text>
+				<text class="question-caption">选择更接近你真实状态的一项</text>
+
+				<view class="option-list">
+					<view
+						v-for="option in currentQuestion.selections"
+						:key="`${currentQuestion.id}-${option.dimension}`"
+						class="option-card"
+						:class="{ selected: selectedDimension === option.dimension }"
+						@click="selectOption(option)"
+					>
+						<view class="option-head">
+							<text class="option-dimension">{{ option.dimension }}</text>
+							<text class="option-tip">点击选择</text>
+						</view>
+						<text class="option-text">{{ option.text }}</text>
+					</view>
+				</view>
+
+				<view class="feedback-panel">
+					<text class="feedback-title">{{ liveHintTitle }}</text>
+					<text class="feedback-copy">{{ liveHintCopy }}</text>
+				</view>
 			</view>
 		</view>
-		<show-code :codes="schemaCode"></show-code>
-		<!-- <alertCode ref="alertCode"></alertCode> -->
-		<!-- <button @click="openFn()" type="default">alertCode</button> -->
-		<!-- <view v-for="(value,key) in schemaCode">
-			<text class="key">{{key}}:</text>
-			<text class="value">{{value}}</text>
-		</view> -->
 	</view>
 </template>
 
-<script>
-import schemaCode from './schemaCode.json';
-	export default {
-		data() {
-			return {
-				schemaCode:schemaCode
-			}
-		},
-		methods: {
-			goHome() {
-				uni.navigateTo({
-					url: '/pages/mbti-home/home'
-				})
-			},
-			goCloudObject() {
-				uni.switchTab({
-					url: '/pages/cloudObject/cloudObject'
-				})
-			},
-			openFn(){
-				console.log(this.$refs.alertCode.open(this.schemaCode));
-				//
-			}
-		}
+<script setup>
+import { computed, reactive, ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import questionsSource from '../../static/json/mbti-88-questions.json'
+
+const questions = questionsSource.questions || []
+const totalQuestions = questions.length
+const stageSize = totalQuestions / 4
+
+const stageList = [
+	{
+		label: '初始感知',
+		start: 0,
+		end: stageSize,
+		prompt: '先按第一直觉作答，别花太久犹豫。',
+		encouragement: '你已经完成热身阶段，继续答题，轮廓会更清晰。'
+	},
+	{
+		label: '关系线索',
+		start: stageSize,
+		end: stageSize * 2,
+		prompt: '这一段会更明显地拉开你的关系偏好。',
+		encouragement: '你的偏好已经开始稳定，继续把细节补完整。'
+	},
+	{
+		label: '决策倾向',
+		start: stageSize * 2,
+		end: stageSize * 3,
+		prompt: '继续保持真实选择，别按理想中的自己去答。',
+		encouragement: '还差最后一个阶段，你的结果已经很接近成型。'
+	},
+	{
+		label: '节奏定型',
+		start: stageSize * 3,
+		end: totalQuestions,
+		prompt: '最后一段会决定你在关系节奏中的整体走向。',
+		encouragement: '四个阶段都已完成，下一步就能看到完整测试结果。'
 	}
+]
+
+const axisPairs = [
+	{ left: 'E', right: 'I' },
+	{ left: 'S', right: 'N' },
+	{ left: 'T', right: 'F' },
+	{ left: 'J', right: 'P' }
+]
+
+const dimensionKeywords = {
+	E: '外向表达',
+	I: '内向沉淀',
+	S: '现实感知',
+	N: '未来想象',
+	T: '理性判断',
+	F: '情感判断',
+	J: '规划节奏',
+	P: '开放节奏'
+}
+
+const typeHeadlines = {
+	INTJ: '你会先看整体方向，再决定关系要不要继续投入。',
+	INTP: '你在关系里很重视精神交流和自由空间。',
+	ENTJ: '你倾向主动推动关系向更明确的方向发展。',
+	ENTP: '你容易被新鲜感、思想碰撞和可能性吸引。',
+	INFJ: '你会认真感受连接深度，也在意关系的长期意义。',
+	INFP: '你需要真诚、共鸣和不被打扰的情感空间。',
+	ENFJ: '你擅长经营氛围，也愿意主动照顾关系温度。',
+	ENFP: '你会为心动和可能性投入很多热情。',
+	ISTJ: '你更重视可靠、稳定和可以落地的陪伴。',
+	ISFJ: '你倾向用体贴和持续投入来维系关系。',
+	ESTJ: '你习惯把关系推进得更有秩序和确定感。',
+	ESFJ: '你会主动营造安心、温暖、可回应的关系体验。',
+	ISTP: '你更偏好轻松、真实、不过度束缚的互动方式。',
+	ISFP: '你在关系里很重视感受是否自然舒服。',
+	ESTP: '你会被即时互动、行动力和真实体验吸引。',
+	ESFP: '你擅长制造轻松快乐的氛围，也重视当下感受。'
+}
+
+const letterCopy = {
+	E: '你通常通过互动确认关系温度，交流本身会给你反馈。',
+	I: '你更需要稳定、舒服、低压力的相处节奏，深入比热闹更重要。',
+	S: '你会优先看见现实里的可靠、细节和可持续性。',
+	N: '你更容易被想法、愿景、潜力和未来感打动。',
+	T: '你处理关系问题时会先理清逻辑、边界和解决路径。',
+	F: '你会优先判断彼此的感受是否被看见、被接住。',
+	J: '你喜欢关系朝更明确、更稳定、更有规划的方向推进。',
+	P: '你更希望关系保留弹性，让互动自然生长。'
+}
+
+const feedbackMap = {
+	E: '记录了更主动外放的一面，继续保持直觉作答。',
+	I: '记录了更内敛沉静的一面，稳定偏好正在累积。',
+	S: '记录了更现实落地的偏好，这会让结果更扎实。',
+	N: '记录了更偏未来感和想象力的一面，轮廓更鲜明了。',
+	T: '记录了更理性的判断方式，结果正在收束。',
+	F: '记录了更感受导向的一面，关系温度线索更清楚了。',
+	J: '记录了更偏规划和确定感的倾向，节奏感更稳定了。',
+	P: '记录了更偏开放和灵活的倾向，风格开始显现。'
+}
+
+const userName = ref('')
+const currentIndex = ref(0)
+const answers = ref([])
+const showStageSummary = ref(false)
+const showResult = ref(false)
+const pendingStageNumber = ref(0)
+const selectedDimension = ref('')
+const latestFeedback = ref('')
+const isTransitioning = ref(false)
+
+const dimensionScores = reactive({
+	E: 0,
+	I: 0,
+	S: 0,
+	N: 0,
+	T: 0,
+	F: 0,
+	J: 0,
+	P: 0
+})
+
+onLoad((options) => {
+	if (options && options.name) {
+		userName.value = decodeURIComponent(options.name)
+	}
+})
+
+const answeredCount = computed(() => answers.value.length)
+const progressPercent = computed(() => Math.round((answeredCount.value / totalQuestions) * 100))
+const currentQuestion = computed(() => questions[currentIndex.value] || questions[questions.length - 1])
+const currentStageIndex = computed(() => {
+	if (answeredCount.value >= totalQuestions) {
+		return stageList.length - 1
+	}
+	return Math.min(stageList.length - 1, Math.floor(currentIndex.value / stageSize))
+})
+
+const pageTitle = computed(() => {
+	if (showResult.value) {
+		return '你的恋爱 MBTI'
+	}
+	if (showStageSummary.value) {
+		return '阶段小结'
+	}
+	return userName.value ? `${userName.value} 的测试中` : '恋爱 MBTI 测试'
+})
+
+const pageSubtitle = computed(() => {
+	if (showResult.value) {
+		return '四个阶段已经全部完成，现在看看你的关系偏好轮廓。'
+	}
+	if (showStageSummary.value) {
+		return '每完成四分之一题量都会生成一次阶段反馈，方便你感受自己的偏好走向。'
+	}
+	const currentStage = stageList[currentStageIndex.value]
+	return `${currentStage.label} · 第 ${(currentIndex.value % stageSize) + 1} / ${stageSize} 题，${currentStage.prompt}`
+})
+
+const liveHintTitle = computed(() => {
+	if (selectedDimension.value) {
+		return `已记录：${selectedDimension.value}`
+	}
+	return `${stageList[currentStageIndex.value].label} · 已完成 ${answeredCount.value} / ${totalQuestions}`
+})
+
+const liveHintCopy = computed(() => {
+	if (selectedDimension.value) {
+		return latestFeedback.value
+	}
+	return stageList[currentStageIndex.value].prompt
+})
+
+const resultType = computed(() => buildTypeFromCounts(dimensionScores))
+const resultKeywords = computed(() => resultType.value.split('').map((letter) => dimensionKeywords[letter]))
+const resultSummary = computed(() => {
+	const letters = resultType.value.split('')
+	const intro = userName.value ? `${userName.value}，` : ''
+	return `${intro}${typeHeadlines[resultType.value]} ${letters.map((letter) => letterCopy[letter]).join(' ')}`
+})
+
+const resultTraits = computed(() =>
+	axisPairs.map((pair) => {
+		const leftCount = dimensionScores[pair.left]
+		const rightCount = dimensionScores[pair.right]
+		const total = leftCount + rightCount || 1
+		const dominant = leftCount >= rightCount ? pair.left : pair.right
+		const dominantCount = Math.max(leftCount, rightCount)
+		return {
+			axis: `${pair.left} / ${pair.right}`,
+			left: pair.left,
+			right: pair.right,
+			leftCount,
+			rightCount,
+			dominant,
+			dominantPercent: Math.round((dominantCount / total) * 100),
+			fillWidth: Math.max(16, Math.round((dominantCount / total) * 100))
+		}
+	})
+)
+
+const stageSummary = computed(() => {
+	const stage = stageList[pendingStageNumber.value - 1] || stageList[0]
+	const stageAnswers = answers.value.slice(stage.start, stage.end)
+	const cumulativeAnswers = answers.value.slice(0, stage.end)
+	const stageCounts = countDimensions(stageAnswers)
+	const previewType = buildTypeFromCounts(countDimensions(cumulativeAnswers))
+	return {
+		title: `${stage.label}完成`,
+		description: `${userName.value ? `${userName.value}，` : ''}你已经完成 ${stage.end} / ${totalQuestions} 题，目前整体轮廓更接近 ${previewType}。`,
+		previewType,
+		badges: axisPairs.map((pair) => `${pair.left}/${pair.right} ${stageCounts[pair.left]}:${stageCounts[pair.right]}`),
+		encouragement: stage.encouragement
+	}
+})
+
+function formatStageIndex(index) {
+	return String(index).padStart(2, '0')
+}
+
+function getStageClass(index) {
+	return {
+		done: answeredCount.value >= stageList[index].end,
+		active:
+			index === currentStageIndex.value &&
+			!showStageSummary.value &&
+			!showResult.value &&
+			answeredCount.value < totalQuestions,
+		upcoming: answeredCount.value < stageList[index].start
+	}
+}
+
+function countDimensions(list) {
+	return list.reduce(
+		(acc, item) => {
+			acc[item.dimension] += 1
+			return acc
+		},
+		{
+			E: 0,
+			I: 0,
+			S: 0,
+			N: 0,
+			T: 0,
+			F: 0,
+			J: 0,
+			P: 0
+		}
+	)
+}
+
+function buildTypeFromCounts(counts) {
+	return axisPairs
+		.map((pair) => (counts[pair.left] >= counts[pair.right] ? pair.left : pair.right))
+		.join('')
+}
+
+function selectOption(option) {
+	if (isTransitioning.value || showStageSummary.value || showResult.value) {
+		return
+	}
+
+	const question = currentQuestion.value
+	answers.value.push({
+		questionId: question.id,
+		type: question.type,
+		dimension: option.dimension,
+		text: option.text
+	})
+	dimensionScores[option.dimension] += 1
+	selectedDimension.value = option.dimension
+	latestFeedback.value = feedbackMap[option.dimension]
+	isTransitioning.value = true
+
+	setTimeout(() => {
+		const nextAnsweredCount = answers.value.length
+		const nextIndex = currentIndex.value + 1
+
+		if (nextAnsweredCount % stageSize === 0) {
+			if (nextAnsweredCount < totalQuestions) {
+				currentIndex.value = nextIndex
+			}
+			pendingStageNumber.value = nextAnsweredCount / stageSize
+			showStageSummary.value = true
+		} else if (nextAnsweredCount < totalQuestions) {
+			currentIndex.value = nextIndex
+		}
+
+		selectedDimension.value = ''
+		isTransitioning.value = false
+	}, 220)
+}
+
+function continueToNextStage() {
+	showStageSummary.value = false
+	if (pendingStageNumber.value === stageList.length && answeredCount.value === totalQuestions) {
+		showResult.value = true
+		return
+	}
+	latestFeedback.value = ''
+}
+
+function restartTest() {
+	answers.value = []
+	currentIndex.value = 0
+	showStageSummary.value = false
+	showResult.value = false
+	pendingStageNumber.value = 0
+	selectedDimension.value = ''
+	latestFeedback.value = ''
+	isTransitioning.value = false
+	Object.keys(dimensionScores).forEach((key) => {
+		dimensionScores[key] = 0
+	})
+}
+
+function goHome() {
+	uni.navigateTo({
+		url: '/pages/mbti-home/home'
+	})
+}
 </script>
 
 <style>
-.test-page {
+.page {
 	min-height: 100vh;
-	background: linear-gradient(180deg, #fff8f2 0%, #fffdf9 100%);
+	background:
+		radial-gradient(circle at top left, rgba(255, 194, 159, 0.42), transparent 30%),
+		radial-gradient(circle at top right, rgba(135, 202, 255, 0.4), transparent 24%),
+		linear-gradient(180deg, #fffdf8 0%, #fff4ec 46%, #fffaf4 100%);
 }
 
-.switch-bar {
-	margin: 24rpx;
-	padding: 28rpx;
-	border-radius: 28rpx;
-	background: linear-gradient(135deg, #2f2a47 0%, #5b4b85 100%);
-	box-shadow: 0 18rpx 36rpx rgba(67, 53, 98, 0.18);
+.hero {
+	position: relative;
+	min-height: 100vh;
+	padding: 56rpx 30rpx 48rpx;
+	overflow: hidden;
 }
 
-.switch-copy {
-	margin-bottom: 20rpx;
+.hero-backdrop {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(10rpx);
+	opacity: 0.55;
 }
 
-.switch-actions {
+.hero-backdrop-left {
+	width: 320rpx;
+	height: 320rpx;
+	left: -120rpx;
+	top: -30rpx;
+	background: linear-gradient(180deg, #ffd5bc 0%, #ffb58b 100%);
+}
+
+.hero-backdrop-right {
+	width: 280rpx;
+	height: 280rpx;
+	right: -90rpx;
+	top: 220rpx;
+	background: linear-gradient(180deg, #cbe8ff 0%, #8ec8ff 100%);
+}
+
+.hero-copy,
+.progress-card,
+.question-card,
+.summary-card,
+.result-card {
+	position: relative;
+	z-index: 2;
+}
+
+.eyebrow,
+.card-eyebrow {
+	display: block;
+	font-size: 24rpx;
+	letter-spacing: 6rpx;
+	color: #8d5d41;
+}
+
+.headline {
+	display: block;
+	margin-top: 14rpx;
+	font-size: 60rpx;
+	line-height: 1.18;
+	font-weight: 700;
+	color: #2f211d;
+}
+
+.subhead {
+	display: block;
+	margin-top: 20rpx;
+	font-size: 28rpx;
+	line-height: 1.7;
+	color: #6d5b56;
+}
+
+.progress-card,
+.question-card,
+.summary-card,
+.result-card {
+	margin-top: 30rpx;
+	padding: 32rpx 28rpx;
+	border-radius: 36rpx;
+	background: rgba(255, 255, 255, 0.78);
+	box-shadow: 0 20rpx 44rpx rgba(117, 88, 63, 0.1);
+	backdrop-filter: blur(10rpx);
+}
+
+.progress-meta,
+.question-meta,
+.trait-meta {
 	display: flex;
+	align-items: center;
 	justify-content: space-between;
 }
 
-.switch-title {
-	display: block;
-	font-size: 34rpx;
-	font-weight: 700;
-	color: #fff8f0;
+.progress-title,
+.summary-preview-label,
+.question-index,
+.trait-axis {
+	font-size: 26rpx;
+	font-weight: 600;
+	color: #49362f;
 }
 
-.switch-desc {
+.progress-count,
+.question-type,
+.trait-score {
+	font-size: 24rpx;
+	color: #8a6a5a;
+}
+
+.progress-track {
+	margin-top: 20rpx;
+	height: 18rpx;
+	border-radius: 999rpx;
+	background: rgba(89, 74, 131, 0.12);
+	overflow: hidden;
+}
+
+.progress-fill {
+	height: 100%;
+	border-radius: 999rpx;
+	background: linear-gradient(90deg, #ffad88 0%, #5c4b85 100%);
+	box-shadow: 0 12rpx 22rpx rgba(92, 75, 133, 0.2);
+	transition: width 0.28s ease;
+}
+
+.stage-row {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 14rpx;
+	margin-top: 24rpx;
+}
+
+.stage-pill {
+	padding: 18rpx 14rpx;
+	border-radius: 24rpx;
+	background: rgba(255, 255, 255, 0.72);
+	border: 2rpx solid rgba(94, 68, 54, 0.08);
+}
+
+.stage-pill.done {
+	background: rgba(91, 75, 133, 0.12);
+	border-color: rgba(91, 75, 133, 0.18);
+}
+
+.stage-pill.active {
+	background: linear-gradient(135deg, rgba(255, 222, 203, 0.92) 0%, rgba(234, 228, 255, 0.92) 100%);
+	border-color: rgba(91, 75, 133, 0.22);
+	box-shadow: 0 14rpx 26rpx rgba(91, 75, 133, 0.1);
+}
+
+.stage-pill.upcoming {
+	opacity: 0.76;
+}
+
+.stage-index {
+	display: block;
+	font-size: 22rpx;
+	letter-spacing: 2rpx;
+	color: #8d5d41;
+}
+
+.stage-label {
 	display: block;
 	margin-top: 10rpx;
-	font-size: 25rpx;
-	line-height: 1.7;
-	color: rgba(255, 248, 240, 0.8);
-}
-
-.home-btn,
-.cloud-btn {
-	width: 320rpx;
-	height: 84rpx;
-	line-height: 84rpx;
-	border-radius: 999rpx;
-	font-size: 28rpx;
+	font-size: 24rpx;
 	font-weight: 600;
+	color: #3a2a25;
 }
 
-.home-btn {
-	background: #fff7ef;
-	color: #3e315d;
+.summary-title,
+.result-type,
+.question-title {
+	display: block;
+	margin-top: 16rpx;
+	font-size: 40rpx;
+	line-height: 1.35;
+	font-weight: 700;
+	color: #2f211d;
 }
 
-.cloud-btn {
-	background: rgba(255, 255, 255, 0.14);
-	color: #fff8f0;
-	border: 2rpx solid rgba(255, 248, 240, 0.28);
+.summary-copy,
+.result-copy,
+.question-caption,
+.summary-encourage,
+.feedback-copy {
+	display: block;
+	margin-top: 14rpx;
+	font-size: 27rpx;
+	line-height: 1.7;
+	color: #6d5b56;
 }
 
-.home-btn::after,
-.cloud-btn::after {
-	border: none;
+.summary-preview {
+	margin-top: 22rpx;
+	padding: 24rpx 22rpx;
+	border-radius: 26rpx;
+	background: linear-gradient(135deg, rgba(255, 247, 239, 0.98) 0%, rgba(242, 239, 255, 0.98) 100%);
+}
+
+.summary-preview-value {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 46rpx;
+	font-weight: 700;
+	color: #45345b;
+	letter-spacing: 4rpx;
+}
+
+.summary-chip-row,
+.result-chip-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14rpx;
+	margin-top: 22rpx;
+}
+
+.summary-chip {
+	padding: 14rpx 18rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 255, 255, 0.92);
+	border: 2rpx solid rgba(94, 68, 54, 0.08);
+}
+
+.summary-chip text {
+	font-size: 23rpx;
+	color: #594841;
+}
+
+.accent-chip {
+	background: rgba(91, 75, 133, 0.08);
+	border-color: rgba(91, 75, 133, 0.12);
+}
+
+.action-btn {
+	min-height: 112rpx;
+	padding: 0 24rpx;
+	border-radius: 999rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+}
+
+.action-btn text {
+	font-size: 32rpx;
+	font-weight: 600;
+	line-height: 1;
+}
+
+.primary-btn {
+	margin-top: 28rpx;
+	background: linear-gradient(90deg, #2f2a47 0%, #594a83 100%);
+	color: #fff9f0;
+	box-shadow: 0 18rpx 32rpx rgba(77, 62, 109, 0.22);
+}
+
+.ghost-btn {
+	background: rgba(255, 255, 255, 0.68);
+	color: #4e3d37;
+	border: 2rpx solid rgba(94, 68, 54, 0.12);
+}
+
+.option-list {
+	margin-top: 26rpx;
+}
+
+.option-card {
+	padding: 28rpx 24rpx;
+	border-radius: 28rpx;
+	background: rgba(255, 255, 255, 0.94);
+	border: 2rpx solid rgba(94, 68, 54, 0.08);
+	box-shadow: 0 16rpx 28rpx rgba(117, 88, 63, 0.08);
+	transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.option-card + .option-card {
+	margin-top: 18rpx;
+}
+
+.option-card.selected {
+	transform: translateY(-4rpx);
+	border-color: rgba(91, 75, 133, 0.28);
+	box-shadow: 0 20rpx 34rpx rgba(91, 75, 133, 0.14);
+	background: linear-gradient(135deg, rgba(255, 245, 237, 0.98) 0%, rgba(243, 239, 255, 0.98) 100%);
+}
+
+.option-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.option-dimension {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 56rpx;
+	height: 56rpx;
+	padding: 0 16rpx;
+	border-radius: 999rpx;
+	background: rgba(91, 75, 133, 0.12);
+	font-size: 28rpx;
+	font-weight: 700;
+	color: #46385a;
+}
+
+.option-tip {
+	font-size: 22rpx;
+	color: #9b7f71;
+}
+
+.option-text {
+	display: block;
+	margin-top: 18rpx;
+	font-size: 31rpx;
+	line-height: 1.55;
+	color: #342925;
+}
+
+.feedback-panel {
+	margin-top: 24rpx;
+	padding: 24rpx 22rpx;
+	border-radius: 28rpx;
+	background: rgba(255, 248, 241, 0.92);
+	border: 2rpx solid rgba(255, 192, 152, 0.2);
+}
+
+.feedback-title {
+	display: block;
+	font-size: 26rpx;
+	font-weight: 600;
+	color: #4a382f;
+}
+
+.question-card.locked {
+	pointer-events: none;
+}
+
+.trait-list {
+	margin-top: 26rpx;
+}
+
+.trait-item + .trait-item {
+	margin-top: 22rpx;
+}
+
+.trait-track {
+	position: relative;
+	display: flex;
+	margin-top: 12rpx;
+	height: 20rpx;
+	border-radius: 999rpx;
+	overflow: hidden;
+	background: rgba(89, 74, 131, 0.08);
+}
+
+.trait-half {
+	flex: 1;
+}
+
+.trait-left {
+	background: rgba(255, 178, 143, 0.34);
+}
+
+.trait-right {
+	background: rgba(139, 200, 255, 0.28);
+}
+
+.trait-fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	border-radius: 999rpx;
+	background: linear-gradient(90deg, #ffb28f 0%, #5b4b85 100%);
+}
+
+.fill-left {
+	left: 0;
+}
+
+.fill-right {
+	right: 0;
+}
+
+.trait-note {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 24rpx;
+	color: #7f665b;
+}
+
+.result-actions {
+	display: flex;
+	gap: 16rpx;
+	margin-top: 28rpx;
+}
+
+.result-actions .action-btn {
+	flex: 1;
+	margin-top: 0;
+}
+
+@media screen and (max-width: 420px) {
+	.headline {
+		font-size: 54rpx;
+	}
+
+	.stage-row {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.result-actions {
+		flex-direction: column;
+	}
 }
 </style>
