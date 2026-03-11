@@ -1,7 +1,7 @@
 {
   "pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
     {
-      "path": "pages/mbti-home/index",
+      "path": "pages/mbti-home/home",
       "style": {
         "navigationBarTitleText": "MBTI首页",
         "enablePullDownRefresh": false,
@@ -40,6 +40,13 @@
       "path": "pages/test/test",
       "style": {
         "navigationBarTitleText": "测试页",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/access-form/access-form",
+      "style": {
+        "navigationBarTitleText": "信息确认",
         "enablePullDownRefresh": false
       }
     },

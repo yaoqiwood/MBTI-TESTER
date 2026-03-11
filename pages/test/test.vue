@@ -31,11 +31,11 @@ import schemaCode from './schemaCode.json';
 		methods: {
 			goHome() {
 				uni.navigateTo({
-					url: '/pages/mbti-home/index'
+					url: '/pages/mbti-home/home'
 				})
 			},
 			goCloudObject() {
-				uni.navigateTo({
+				uni.switchTab({
 					url: '/pages/cloudObject/cloudObject'
 				})
 			},

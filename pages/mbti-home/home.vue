@@ -24,8 +24,12 @@
 			</view>
 
 			<view class="hero-actions">
-				<button class="primary-btn" @click="goTest">进入测试</button>
-				<button class="ghost-btn" @click="showGalleryTip">先看人格形象</button>
+				<view class="hero-action-btn primary-btn" @click="goTest">
+					<text>进入测试</text>
+				</view>
+				<view class="hero-action-btn ghost-btn" @click="showGalleryTip">
+					<text>先看人格形象</text>
+				</view>
 			</view>
 		</view>
 
@@ -217,7 +221,7 @@ export default {
 	methods: {
 		goTest() {
 			uni.navigateTo({
-				url: '/pages/test/test'
+				url: '/pages/access-form/access-form'
 			})
 		},
 		showGalleryTip() {
@@ -370,20 +374,39 @@ export default {
 
 .hero-actions {
 	display: flex;
-	justify-content: space-between;
+	align-items: center;
+	gap: 16rpx;
+}
+
+.hero-action-btn {
+	flex: 1;
+	height: 92rpx;
+	border-radius: 999rpx;
+	font-size: 30rpx;
+	font-weight: 600;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
 }
 
 .primary-btn,
 .ghost-btn {
-	width: 332rpx;
-	height: 92rpx;
-	line-height: 92rpx;
-	border-radius: 999rpx;
+	box-sizing: border-box;
+}
+
+.hero-action-btn text {
 	font-size: 30rpx;
 	font-weight: 600;
+	line-height: 1;
 }
 
 .primary-btn {
+	position: relative;
+	top: 5rpx;
 	background: linear-gradient(90deg, #2f2a47 0%, #594a83 100%);
 	color: #fff9f0;
 	box-shadow: 0 18rpx 32rpx rgba(77, 62, 109, 0.22);
