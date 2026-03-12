@@ -1,0 +1,19 @@
+[
+	{
+		"MgoKeySchema": {
+			"personnel_record_id": 1,
+			"attachment_type": 1
+		},
+		"MgoName": "personnel_attachment_unique_lookup",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"person_id": 1,
+			"attachment_type": 1,
+			"status": 1
+		},
+		"MgoName": "person_id_attachment_status",
+		"MgoUnique": false
+	}
+]

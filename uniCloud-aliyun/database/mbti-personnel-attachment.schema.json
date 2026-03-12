@@ -1,0 +1,87 @@
+{
+	"bsonType": "object",
+	"required": ["personnel_record_id", "person_id", "attachment_type", "file_id", "status", "created_at", "updated_at"],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "附件记录ID，系统自动生成"
+		},
+		"personnel_record_id": {
+			"bsonType": "string",
+			"title": "人员记录ID",
+			"description": "关联 mbti-personnel._id",
+			"trim": "both"
+		},
+		"person_id": {
+			"bsonType": "int",
+			"title": "人员编号",
+			"description": "关联 mbti-personnel.person_id"
+		},
+		"attachment_type": {
+			"bsonType": "string",
+			"title": "附件类型",
+			"defaultValue": "personal_photo",
+			"enum": [
+				{
+					"text": "个人照片",
+					"value": "personal_photo"
+				}
+			]
+		},
+		"file_id": {
+			"bsonType": "string",
+			"title": "云存储文件ID",
+			"trim": "both"
+		},
+		"file_url": {
+			"bsonType": "string",
+			"title": "临时访问地址",
+			"trim": "both"
+		},
+		"storage_provider": {
+			"bsonType": "string",
+			"title": "存储提供方",
+			"defaultValue": "uniCloud",
+			"trim": "both"
+		},
+		"status": {
+			"bsonType": "string",
+			"title": "状态",
+			"defaultValue": "active",
+			"enum": [
+				{
+					"text": "启用",
+					"value": "active"
+				},
+				{
+					"text": "删除",
+					"value": "deleted"
+				}
+			]
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "备注",
+			"trim": "both"
+		},
+		"created_at": {
+			"bsonType": "timestamp",
+			"title": "创建时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "更新时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

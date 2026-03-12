@@ -1,9 +1,13 @@
 const XLSX = require('xlsx')
 const db = uniCloud.database()
 const personnelCollection = db.collection('mbti-personnel')
+const attachmentCollection = db.collection('mbti-personnel-attachment')
 const COUNTER_COLLECTION = 'mbti-personnel-counter'
 const COUNTER_DOC_ID = 'mbti-personnel'
 const REVIEW_STATUS = ['pending', 'approved', 'rejected']
+const DEFAULT_PAGE_SIZE = 5
+const MAX_PAGE_SIZE = 50
+const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
 const HEADER_FIELD_MAP = {
 	'唯一编号': 'person_id',
 	'编号': 'person_id',
@@ -183,9 +187,96 @@ function isEmptyPayload(payload) {
 	return !Object.keys(payload).some((key) => trimString(String(payload[key] || '')))
 }
 
+function normalizePositiveInt(value, fallback) {
+	const parsed = parseInt(value, 10)
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+async function getFileTempUrl(fileID) {
+	if (!trimString(fileID)) {
+		return ''
+	}
+	try {
+		const tempRes = await uniCloud.getTempFileURL({
+			fileList: [fileID]
+		})
+		const fileInfo = tempRes.fileList && tempRes.fileList[0]
+		return (fileInfo && fileInfo.tempFileURL) || ''
+	} catch (error) {
+		return ''
+	}
+}
+
+async function syncPersonalPhotoAttachment({ personnelRecordId, personId, fileID }) {
+	const normalizedPersonnelRecordId = trimString(personnelRecordId)
+	if (!normalizedPersonnelRecordId) {
+		return
+	}
+
+	const where = {
+		personnel_record_id: normalizedPersonnelRecordId,
+		attachment_type: PERSONAL_PHOTO_ATTACHMENT_TYPE
+	}
+	const { data: currentList = [] } = await attachmentCollection.where(where).limit(1).get()
+	const current = currentList[0]
+
+	if (!trimString(fileID)) {
+		if (current && current._id) {
+			await attachmentCollection.doc(current._id).update({
+				status: 'deleted',
+				file_id: '',
+				file_url: '',
+				updated_at: new Date()
+			})
+		}
+		return
+	}
+
+	const tempFileUrl = await getFileTempUrl(fileID)
+	const payload = {
+		personnel_record_id: normalizedPersonnelRecordId,
+		person_id: normalizePositiveInt(personId, 0),
+		attachment_type: PERSONAL_PHOTO_ATTACHMENT_TYPE,
+		file_id: trimString(fileID),
+		file_url: tempFileUrl,
+		storage_provider: 'uniCloud',
+		status: 'active',
+		updated_at: new Date()
+	}
+
+	if (current && current._id) {
+		await attachmentCollection.doc(current._id).update(payload)
+		return
+	}
+
+	await attachmentCollection.add({
+		...payload,
+		created_at: new Date()
+	})
+}
+
+async function fetchAllPersonnelRecords() {
+	const batchSize = 500
+	let skip = 0
+	let list = []
+
+	while (true) {
+		const { data = [] } = await personnelCollection.orderBy('person_id', 'asc').skip(skip).limit(batchSize).get()
+		list = list.concat(data)
+		if (data.length < batchSize) {
+			break
+		}
+		skip += data.length
+	}
+
+	return list
+}
+
 module.exports = {
-	async list({ keyword = '', reviewStatus = 'all' } = {}) {
-		const { data = [] } = await personnelCollection.orderBy('updated_at', 'desc').limit(200).get()
+	async list({ keyword = '', reviewStatus = 'all', page = 1, pageSize = DEFAULT_PAGE_SIZE } = {}) {
+		const currentPage = normalizePositiveInt(page, 1)
+		const currentPageSize = Math.min(normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE)
+		const data = await fetchAllPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		let list = data.map(withFormattedDates)
 
@@ -208,8 +299,15 @@ module.exports = {
 			list = list.filter((item) => item.review_status === reviewStatus)
 		}
 
+		const total = list.length
+		const start = (currentPage - 1) * currentPageSize
+		const pageList = list.slice(start, start + currentPageSize)
+
 		return {
-			list,
+			list: pageList,
+			total,
+			page: currentPage,
+			pageSize: currentPageSize,
 			stats: buildStats(list)
 		}
 	},
@@ -244,6 +342,11 @@ module.exports = {
 			})
 
 			await transaction.commit()
+			await syncPersonalPhotoAttachment({
+				personnelRecordId: createRes.id,
+				personId: nextId,
+				fileID: record.personal_photo
+			})
 
 			return {
 				id: createRes.id,
@@ -274,6 +377,11 @@ module.exports = {
 		await personnelCollection.doc(id).update({
 			...payload,
 			person_id: current.person_id
+		})
+		await syncPersonalPhotoAttachment({
+			personnelRecordId: id,
+			personId: current.person_id,
+			fileID: payload.personal_photo
 		})
 
 		return {

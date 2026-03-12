@@ -1,6 +1,6 @@
 <template>
 	<view class="page">
-		<view class="hero-card">
+		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
 				<text class="hero-kicker">MBTI PERSONNEL ADMIN</text>
 				<text class="hero-title">后台人员信息录入</text>
@@ -34,13 +34,7 @@
 		</view>
 
 		<view class="filter-card">
-			<input
-				v-model="keyword"
-				class="search-input"
-				placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
-				confirm-type="search"
-				@confirm="loadList"
-			/>
+			<view v-if="!showFormOnly">
 			<scroll-view class="status-scroll" scroll-x>
 				<view class="status-row">
 					<view
@@ -54,13 +48,26 @@
 					</view>
 				</view>
 			</scroll-view>
-			<view class="filter-actions">
-				<button class="light-btn" @click="resetFilters">重置</button>
-				<button class="solid-btn" @click="loadList">查询</button>
+			<input
+				v-model="keyword"
+				class="search-input"
+				placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
+				confirm-type="search"
+				@confirm="searchList"
+			/>
+
+			</view>
+			<view class="filter-toolbar">
+				<button v-if="!showFormOnly" class="solid-btn" @click="openCreate">新增人员</button>
+				<button v-else class="ghost-btn" @click="exitFormMode">返回列表</button>
+				<view v-if="!showFormOnly" class="filter-actions">
+					<button class="light-btn" @click="resetFilters">重置</button>
+					<button class="solid-btn" @click="searchList">查询</button>
+				</view>
 			</view>
 		</view>
 
-		<view class="table-card">
+		<view v-if="!showFormOnly" class="table-card">
 			<view class="card-head">
 				<text class="card-title">人员信息表</text>
 				<text class="card-tip">小程序端使用横向滚动表格，避免字段过多时布局挤压。</text>
@@ -105,9 +112,18 @@
 					</view>
 				</view>
 			</scroll-view>
+			<view v-if="pagination.total" class="pagination-wrap">
+				<uni-pagination
+					show-icon
+					:current="pagination.page"
+					:page-size="pagination.pageSize"
+					:total="pagination.total"
+					@change="onPageChange"
+				/>
+			</view>
 		</view>
 
-		<view class="form-card">
+		<view v-if="showFormOnly" class="form-card">
 			<view class="card-head">
 				<text class="card-title">{{ isEditMode ? '编辑人员' : '新增人员' }}</text>
 				<text class="card-tip">提交时间和修改时间由云端自动维护，自增编号由云对象分配。</text>
@@ -306,14 +322,20 @@
 
 	export default {
 		data: function () {
-		return {
-			loading: false,
-			saving: false,
-			importing: false,
-			records: [],
+			return {
+				loading: false,
+				saving: false,
+				importing: false,
+				records: [],
 				stats: createDefaultStats(),
-				keyword: '',
-				reviewStatusFilter: 'all',
+			keyword: '',
+			reviewStatusFilter: 'all',
+			showFormOnly: false,
+			pagination: {
+					page: 1,
+					pageSize: 5,
+					total: 0
+				},
 				currentId: '',
 				form: createForm(),
 				genderOptions: ['男', '女', '未知'],
@@ -442,17 +464,14 @@
 					var uploadRes = await uniCloud.uploadFile({
 						filePath: filePath,
 						cloudPath:
-							'mbti-import/' +
-							Date.now() +
-							'-' +
-							Math.random().toString(36).slice(2) +
-							'.' +
-							ext
+							'mbti-import/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext
 					})
 					var res = await personnelAdmin.importExcel({
 						fileID: uploadRes.fileID
 					})
-					this.loadList()
+					this.loadList({
+						page: 1
+					})
 					uni.showModal({
 						title: '导入完成',
 						content:
@@ -463,7 +482,7 @@
 							' 条' +
 							(res.errors && res.errors.length
 								? '\n\n前几条跳过原因：\n' +
-								  res.errors
+									res.errors
 										.map(function (item) {
 											return '第' + item.row + '行：' + item.message
 										})
@@ -484,19 +503,41 @@
 					uni.hideLoading()
 				}
 			},
-			loadList: async function () {
+			searchList: function () {
+				this.loadList({
+					page: 1
+				})
+			},
+			onPageChange: function (event) {
+				if (!event || !event.current || event.current === this.pagination.page) {
+					return
+				}
+				this.loadList({
+					page: event.current
+				})
+			},
+			loadList: async function (options) {
 				if (!personnelAdmin) {
 					this.showUnavailable()
 					return
 				}
+				var nextPage =
+					options && options.page ? Number(options.page) : Number(this.pagination.page || 1)
 				this.loading = true
 				try {
 					var res = await personnelAdmin.list({
 						keyword: this.keyword,
-						reviewStatus: this.reviewStatusFilter
+						reviewStatus: this.reviewStatusFilter,
+						page: nextPage,
+						pageSize: this.pagination.pageSize
 					})
 					this.records = res.list || []
 					this.stats = res.stats || createDefaultStats()
+					this.pagination = {
+						page: res.page || nextPage,
+						pageSize: res.pageSize || this.pagination.pageSize,
+						total: res.total || 0
+					}
 				} catch (error) {
 					uni.showModal({
 						content: error.message || '列表加载失败',
@@ -507,10 +548,17 @@
 				}
 			},
 			openCreate: function () {
+				this.showFormOnly = true
+				this.currentId = ''
+				this.form = createForm()
+			},
+			exitFormMode: function () {
+				this.showFormOnly = false
 				this.currentId = ''
 				this.form = createForm()
 			},
 			openEdit: function (item) {
+				this.showFormOnly = true
 				this.currentId = item._id
 				this.form = {
 					nickname: item.nickname || '',
@@ -535,7 +583,7 @@
 					remark: item.remark || ''
 				}
 				uni.pageScrollTo({
-					scrollTop: 9999,
+					scrollTop: 0,
 					duration: 200
 				})
 			},
@@ -545,12 +593,12 @@
 			},
 			changeStatusFilter: function (value) {
 				this.reviewStatusFilter = value
-				this.loadList()
+				this.searchList()
 			},
 			resetFilters: function () {
 				this.keyword = ''
 				this.reviewStatusFilter = 'all'
-				this.loadList()
+				this.searchList()
 			},
 			onGenderChange: function (event) {
 				this.form.gender = this.genderOptions[event.detail.value]
@@ -656,6 +704,7 @@
 					this.showUnavailable()
 					return
 				}
+				var isEditMode = this.isEditMode
 				var errorMessage = this.validateForm()
 				if (errorMessage) {
 					uni.showToast({
@@ -706,11 +755,13 @@
 						})
 					}
 					uni.showToast({
-						title: this.isEditMode ? '修改成功' : '提交成功',
+						title: isEditMode ? '修改成功' : '提交成功',
 						icon: 'success'
 					})
-					this.resetForm()
-					this.loadList()
+					this.exitFormMode()
+					this.loadList({
+						page: isEditMode ? this.pagination.page : 1
+					})
 				} catch (error) {
 					uni.showModal({
 						content: error.message || '保存失败',
@@ -793,11 +844,17 @@
 
 	.hero-actions,
 	.filter-actions,
+	.filter-toolbar,
 	.photo-actions,
 	.form-actions {
 		display: flex;
 		flex-wrap: wrap;
 		margin-top: 24rpx;
+	}
+
+	.filter-toolbar {
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.solid-btn,
@@ -894,6 +951,8 @@
 
 	.status-scroll {
 		margin-top: 20rpx;
+		position: relative;
+		bottom: 20rpx;
 		white-space: nowrap;
 	}
 
@@ -918,6 +977,7 @@
 
 	.filter-actions {
 		justify-content: flex-end;
+		margin-top: 0;
 	}
 
 	.card-title,
@@ -1031,6 +1091,14 @@
 		font-size: 26rpx;
 		color: #857362;
 		text-align: center;
+	}
+
+	.pagination-wrap {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 24rpx;
+		padding-top: 24rpx;
+		border-top: 1rpx solid #eadfce;
 	}
 
 	.section-block {
