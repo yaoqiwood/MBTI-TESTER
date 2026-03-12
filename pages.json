@@ -9,6 +9,13 @@
 			}
 		},
 		{
+			"path": "pages/adminHome/adminHomeIndex",
+			"style": {
+				"navigationBarTitleText": "人员管理",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/adminHome/personnelManagement",
 			"style": {
 				"navigationBarTitleText": "人员管理",
@@ -19,6 +26,13 @@
 			"path": "pages/adminHome/gameQueryManagement",
 			"style": {
 				"navigationBarTitleText": "游戏查询管理",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
+			"path": "pages/adminHome/mbti-pair-query",
+			"style": {
+				"navigationBarTitleText": "MBTI组合配对查询",
 				"enablePullDownRefresh": false
 			}
 		},

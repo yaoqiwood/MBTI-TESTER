@@ -35,27 +35,26 @@
 
 		<view class="filter-card">
 			<view v-if="!showFormOnly">
-			<scroll-view class="status-scroll" scroll-x>
-				<view class="status-row">
-					<view
-						v-for="item in reviewStatusFilters"
-						:key="item.value"
-						class="status-chip"
-						:class="reviewStatusFilter === item.value ? 'status-chip active' : 'status-chip'"
-						@click="changeStatusFilter(item.value)"
-					>
-						{{ item.label }}
+				<scroll-view class="status-scroll" scroll-x>
+					<view class="status-row">
+						<view
+							v-for="item in reviewStatusFilters"
+							:key="item.value"
+							class="status-chip"
+							:class="reviewStatusFilter === item.value ? 'status-chip active' : 'status-chip'"
+							@click="changeStatusFilter(item.value)"
+						>
+							{{ item.label }}
+						</view>
 					</view>
-				</view>
-			</scroll-view>
-			<input
-				v-model="keyword"
-				class="search-input"
-				placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
-				confirm-type="search"
-				@confirm="searchList"
-			/>
-
+				</scroll-view>
+				<input
+					v-model="keyword"
+					class="search-input"
+					placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
+					confirm-type="search"
+					@confirm="searchList"
+				/>
 			</view>
 			<view class="filter-toolbar">
 				<button v-if="!showFormOnly" class="solid-btn" @click="openCreate">新增人员</button>
@@ -328,10 +327,10 @@
 				importing: false,
 				records: [],
 				stats: createDefaultStats(),
-			keyword: '',
-			reviewStatusFilter: 'all',
-			showFormOnly: false,
-			pagination: {
+				keyword: '',
+				reviewStatusFilter: 'all',
+				showFormOnly: false,
+				pagination: {
 					page: 1,
 					pageSize: 5,
 					total: 0
