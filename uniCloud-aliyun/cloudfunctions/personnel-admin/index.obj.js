@@ -85,6 +85,11 @@ function normalizeTimestamp(value, fallback) {
 	return date
 }
 
+function isDeletedRecord(value) {
+	const normalized = String(value).trim().toLowerCase()
+	return value === true || value === 1 || normalized === '1' || normalized === 'true'
+}
+
 function normalizePayload(payload = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
@@ -278,7 +283,7 @@ module.exports = {
 		const currentPageSize = Math.min(normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE)
 		const data = await fetchAllPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
-		let list = data.map(withFormattedDates)
+		let list = data.filter((item) => !isDeletedRecord(item && item.is_deleted)).map(withFormattedDates)
 
 		if (normalizedKeyword) {
 			list = list.filter((item) => {
@@ -338,7 +343,8 @@ module.exports = {
 
 			const createRes = await transactionPersonnel.add({
 				...record,
-				person_id: nextId
+				person_id: nextId,
+				is_deleted: false
 			})
 
 			await transaction.commit()
@@ -364,7 +370,7 @@ module.exports = {
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
-		if (!current) {
+		if (!current || isDeletedRecord(current.is_deleted)) {
 			throw new Error('记录不存在或已被删除')
 		}
 
@@ -382,6 +388,27 @@ module.exports = {
 			personnelRecordId: id,
 			personId: current.person_id,
 			fileID: payload.personal_photo
+		})
+
+		return {
+			id,
+			person_id: current.person_id
+		}
+	},
+
+	async softDelete({ id } = {}) {
+		if (!trimString(id)) {
+			throw new Error('缺少记录ID')
+		}
+		const { data: currentList = [] } = await personnelCollection.doc(id).get()
+		const current = currentList[0]
+		if (!current || isDeletedRecord(current.is_deleted)) {
+			throw new Error('记录不存在或已被删除')
+		}
+
+		await personnelCollection.doc(id).update({
+			is_deleted: true,
+			updated_at: new Date()
 		})
 
 		return {
@@ -438,7 +465,8 @@ module.exports = {
 					nextId += 1
 					docsToAdd.push({
 						...record,
-						person_id: nextId
+						person_id: nextId,
+						is_deleted: false
 					})
 				} catch (error) {
 					errors.push({

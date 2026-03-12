@@ -107,6 +107,7 @@
 						<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
 						<view class="col col-action action-cell">
 							<button class="mini-btn" @click="openEdit(item)">编辑</button>
+							<button class="mini-btn danger-btn" :disabled="deletingId === item._id" @click="removeRecord(item)">删除</button>
 						</view>
 					</view>
 				</view>
@@ -325,6 +326,7 @@
 				loading: false,
 				saving: false,
 				importing: false,
+				deletingId: '',
 				records: [],
 				stats: createDefaultStats(),
 				keyword: '',
@@ -585,6 +587,60 @@
 					scrollTop: 0,
 					duration: 200
 				})
+			},
+			removeRecord: async function (item) {
+				if (!personnelAdmin) {
+					this.showUnavailable()
+					return
+				}
+				if (!item || !item._id || this.deletingId) {
+					return
+				}
+				var modalRes = await new Promise(function (resolve) {
+					uni.showModal({
+						title: '提示',
+						content: '确认删除该人员吗？删除后将以逻辑删除方式隐藏。',
+						success: function (res) {
+							resolve(res)
+						},
+						fail: function () {
+							resolve({ confirm: false })
+						}
+					})
+				})
+				if (!modalRes.confirm) {
+					return
+				}
+
+				this.deletingId = item._id
+				uni.showLoading({
+					title: '删除中',
+					mask: true
+				})
+				try {
+					await personnelAdmin.softDelete({
+						id: item._id
+					})
+					uni.showToast({
+						title: '删除成功',
+						icon: 'success'
+					})
+					var nextPage = this.pagination.page
+					if (this.records.length === 1 && nextPage > 1) {
+						nextPage -= 1
+					}
+					await this.loadList({
+						page: nextPage
+					})
+				} catch (error) {
+					uni.showModal({
+						content: error.message || '删除失败',
+						showCancel: false
+					})
+				} finally {
+					this.deletingId = ''
+					uni.hideLoading()
+				}
 			},
 			resetForm: function () {
 				this.currentId = ''
@@ -893,6 +949,11 @@
 		color: #5e472e;
 	}
 
+	.danger-btn {
+		background: #fde8e6;
+		color: #b5483f;
+	}
+
 	.stats-wrap {
 		display: flex;
 		flex-wrap: wrap;
@@ -1043,12 +1104,20 @@
 		width: 220rpx;
 	}
 	.col-action {
-		width: 130rpx;
+		width: 180rpx;
 	}
 
 	.name-cell,
 	.action-cell {
 		justify-content: center;
+	}
+
+	.action-cell .mini-btn {
+		margin: 0 0 12rpx 0;
+	}
+
+	.action-cell .mini-btn:last-child {
+		margin-bottom: 0;
 	}
 
 	.primary-text {

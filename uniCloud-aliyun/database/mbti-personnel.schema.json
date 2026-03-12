@@ -130,6 +130,12 @@
 			"title": "remark说明",
 			"trim": "both"
 		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false,
+			"description": "逻辑删除标记，true 表示已删除"
+		},
 		"submitted_at": {
 			"bsonType": "timestamp",
 			"title": "提交时间",

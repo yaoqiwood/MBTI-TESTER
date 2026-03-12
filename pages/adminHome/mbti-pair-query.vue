@@ -171,11 +171,20 @@ export default {
 			try {
 				var res = await db
 					.collection('mbti-personnel')
-					.field('person_id,nickname,name,mbti')
+					.field('person_id,nickname,name,mbti,is_deleted')
 					.orderBy('person_id', 'asc')
 					.get()
 				var list = (res.result && res.result.data) || res.data || []
-				var members = list
+				var activeList = list.filter(function (item) {
+					var deletedValue = item && item.is_deleted
+					return !(
+						deletedValue === true ||
+						deletedValue === 1 ||
+						deletedValue === '1' ||
+						String(deletedValue || '').toLowerCase() === 'true'
+					)
+				})
+				var members = activeList
 					.map(
 						function (item) {
 							var mbti = this.normalizeMbti(item.mbti)
@@ -195,7 +204,7 @@ export default {
 					})
 
 				var result = this.buildPairGroups(members)
-				this.totalMembers = list.length
+				this.totalMembers = activeList.length
 				this.validMembers = members.length
 				this.totalPairs = result.totalPairs
 				this.groupList = result.groupList
