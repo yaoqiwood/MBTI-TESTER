@@ -426,12 +426,32 @@
 
 	function buildQuestionFlow() {
 		const flow = []
+		const seenQuestionIds = new Set()
 		for (let stageIndex = 0; stageIndex < stageList.length; stageIndex += 1) {
 			const start = stageIndex * stageSize
 			const stageQuestions = questions.slice(start, start + stageSize)
-			flow.push(...shuffleList(stageQuestions))
+			const shuffledStageQuestions = shuffleList(stageQuestions).filter((question) => {
+				if (!question || seenQuestionIds.has(question.id)) {
+					return false
+				}
+				seenQuestionIds.add(question.id)
+				return true
+			})
+			flow.push(...shuffledStageQuestions)
 		}
-		return flow
+
+		if (flow.length !== totalQuestions) {
+			const remainingQuestions = questions.filter((question) => {
+				if (!question || seenQuestionIds.has(question.id)) {
+					return false
+				}
+				seenQuestionIds.add(question.id)
+				return true
+			})
+			flow.push(...remainingQuestions)
+		}
+
+		return flow.slice(0, totalQuestions)
 	}
 
 	function buildTypeFromCounts(counts) {
@@ -949,4 +969,3 @@
 		}
 	}
 </style>
-
