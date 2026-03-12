@@ -9,13 +9,6 @@
 			}
 		},
 		{
-			"path": "pages/adminHome/adminHomeIndex",
-			"style": {
-				"navigationBarTitleText": "人员管理",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
 			"path": "pages/adminHome/personnelManagement",
 			"style": {
 				"navigationBarTitleText": "人员管理",
