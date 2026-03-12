@@ -132,11 +132,17 @@
 		},
 		"submitted_at": {
 			"bsonType": "timestamp",
-			"title": "提交时间"
+			"title": "提交时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
 		},
 		"updated_at": {
 			"bsonType": "timestamp",
-			"title": "修改时间"
+			"title": "修改时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
 		}
 	}
 }
