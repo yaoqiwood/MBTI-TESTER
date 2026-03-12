@@ -44,8 +44,9 @@
 						key: 'mbti-pair-query',
 						title: 'MBTI组合配对查询',
 						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
-						meta: '预留功能位',
-						available: false
+						meta: '已接入初版',
+						available: true,
+						url: '/pages/adminHome/mbti-pair-query'
 					},
 					{
 						key: 'heart-message-manage',

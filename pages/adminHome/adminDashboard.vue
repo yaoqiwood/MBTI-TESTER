@@ -57,7 +57,8 @@
 						title: '人员管理',
 						desc: '统一处理人员资料、账号关系、权限范围与业务归属信息。',
 						meta: '预留功能位',
-						available: false
+						available: true,
+						url: '/pages/adminHome/personnelManagement'
 					},
 					{
 						key: 'admin-user',
