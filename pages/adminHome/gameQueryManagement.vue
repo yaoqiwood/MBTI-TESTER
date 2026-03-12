@@ -1,0 +1,207 @@
+<template>
+	<view class="page">
+		<view class="toolbar">
+			<button class="back-btn" @click="goBack">返回上一级</button>
+		</view>
+
+		<view class="panel-card">
+			<view class="card-head">
+				<text class="card-title">游戏查询管理</text>
+				<text class="card-tip">当前提供两个功能入口，点击后可继续扩展接入。</text>
+			</view>
+
+			<view class="feature-grid">
+				<view
+					v-for="(item, index) in featureList"
+					:key="item.key"
+					class="feature-card"
+					@click="handleFeatureTap(item)"
+				>
+					<view class="feature-top">
+						<text class="feature-tag">{{ formatModuleTag(index) }}</text>
+						<text class="feature-status" :class="item.available ? 'is-ready' : 'is-pending'">
+							{{ item.available ? '可进入' : '建设中' }}
+						</text>
+					</view>
+					<text class="feature-title">{{ item.title }}</text>
+					<text class="feature-desc">{{ item.desc }}</text>
+					<view class="feature-foot">
+						<text class="feature-meta">{{ item.meta }}</text>
+						<text class="feature-link">{{ item.available ? '立即进入' : '敬请期待' }}</text>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	export default {
+		data() {
+			return {
+				featureList: [
+					{
+						key: 'mbti-pair-query',
+						title: 'MBTI组合配对查询',
+						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
+						meta: '预留功能位',
+						available: false
+					},
+					{
+						key: 'heart-message-manage',
+						title: '心动私信管理',
+						desc: '用于管理心动私信内容、发送关系与审核策略。',
+						meta: '预留功能位',
+						available: false
+					}
+				]
+			}
+		},
+		methods: {
+			formatModuleTag(index) {
+				const moduleNo = index + 1
+				return `MODULE ${moduleNo < 10 ? `0${moduleNo}` : moduleNo}`
+			},
+			goBack() {
+				const pageStack = getCurrentPages()
+				if (pageStack.length > 1) {
+					uni.navigateBack({
+						delta: 1
+					})
+					return
+				}
+				uni.reLaunch({
+					url: '/pages/adminHome/adminDashboard'
+				})
+			},
+			handleFeatureTap(item) {
+				if (item && item.available && item.url) {
+					uni.navigateTo({
+						url: item.url
+					})
+					return
+				}
+				uni.showToast({
+					title: '功能建设中',
+					icon: 'none'
+				})
+			}
+		}
+	}
+</script>
+
+<style>
+	.page {
+		min-height: 100vh;
+		padding: 24rpx;
+		background: #f5efe5;
+		box-sizing: border-box;
+	}
+
+	.toolbar {
+		margin-bottom: 20rpx;
+	}
+
+	.back-btn {
+		height: 68rpx;
+		line-height: 68rpx;
+		padding: 0 28rpx;
+		border-radius: 999rpx;
+		font-size: 24rpx;
+		color: #6d4e2c;
+		background: #efe5d3;
+	}
+
+	.panel-card,
+	.feature-card {
+		background: #fffcf7;
+		border: 1rpx solid #eadfce;
+		border-radius: 28rpx;
+		box-shadow: 0 18rpx 40rpx rgba(91, 70, 40, 0.08);
+	}
+
+	.panel-card {
+		padding: 32rpx 28rpx;
+	}
+
+	.card-head {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.card-title {
+		font-size: 36rpx;
+		font-weight: 700;
+		color: #2d241c;
+	}
+
+	.card-tip,
+	.feature-desc {
+		margin-top: 16rpx;
+		font-size: 24rpx;
+		line-height: 1.7;
+		color: #716250;
+	}
+
+	.feature-grid {
+		margin-top: 24rpx;
+	}
+
+	.feature-card {
+		padding: 28rpx 24rpx;
+		margin-bottom: 20rpx;
+	}
+
+	.feature-top,
+	.feature-foot {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.feature-tag,
+	.feature-status {
+		padding: 10rpx 18rpx;
+		border-radius: 999rpx;
+		font-size: 22rpx;
+	}
+
+	.feature-tag {
+		background: #f3eadb;
+		color: #7b6244;
+	}
+
+	.feature-status.is-ready {
+		background: #dff4e8;
+		color: #1e6b45;
+	}
+
+	.feature-status.is-pending {
+		background: #fff1cc;
+		color: #8e6400;
+	}
+
+	.feature-title {
+		display: block;
+		margin-top: 20rpx;
+		font-size: 32rpx;
+		font-weight: 700;
+		color: #2d241c;
+	}
+
+	.feature-foot {
+		margin-top: 24rpx;
+	}
+
+	.feature-meta {
+		font-size: 22rpx;
+		color: #8e7962;
+	}
+
+	.feature-link {
+		font-size: 24rpx;
+		font-weight: 600;
+		color: #1f6b52;
+	}
+</style>
