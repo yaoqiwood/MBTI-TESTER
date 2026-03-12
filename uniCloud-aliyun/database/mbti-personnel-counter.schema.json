@@ -1,0 +1,23 @@
+{
+	"bsonType": "object",
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "计数器主键，固定为 mbti-personnel"
+		},
+		"seq": {
+			"bsonType": "int",
+			"title": "当前序号",
+			"defaultValue": 0
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "更新时间"
+		}
+	}
+}

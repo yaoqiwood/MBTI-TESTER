@@ -1,0 +1,38 @@
+[
+	{
+		"IndexName": "person_id",
+		"MgoKeySchema": {
+			"MgoIndexKeys": [
+				{
+					"Name": "person_id",
+					"Direction": "1"
+				}
+			],
+			"MgoIsUnique": true
+		}
+	},
+	{
+		"IndexName": "mobile",
+		"MgoKeySchema": {
+			"MgoIndexKeys": [
+				{
+					"Name": "mobile",
+					"Direction": "1"
+				}
+			],
+			"MgoIsUnique": false
+		}
+	},
+	{
+		"IndexName": "review_status",
+		"MgoKeySchema": {
+			"MgoIndexKeys": [
+				{
+					"Name": "review_status",
+					"Direction": "1"
+				}
+			],
+			"MgoIsUnique": false
+		}
+	}
+]

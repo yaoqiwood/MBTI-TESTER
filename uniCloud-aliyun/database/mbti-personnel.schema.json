@@ -1,0 +1,142 @@
+{
+	"bsonType": "object",
+	"required": ["person_id", "nickname", "name", "review_status", "submitted_at", "updated_at"],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "文档ID，系统自动生成"
+		},
+		"person_id": {
+			"bsonType": "int",
+			"title": "唯一ID",
+			"description": "自增唯一编号"
+		},
+		"nickname": {
+			"bsonType": "string",
+			"title": "昵称",
+			"trim": "both"
+		},
+		"name": {
+			"bsonType": "string",
+			"title": "姓名",
+			"trim": "both"
+		},
+		"gender": {
+			"bsonType": "string",
+			"title": "性别",
+			"trim": "both"
+		},
+		"age": {
+			"bsonType": "int",
+			"title": "年龄"
+		},
+		"personal_photo": {
+			"bsonType": "string",
+			"title": "个人照片",
+			"description": "云存储 fileID 或可访问图片地址",
+			"trim": "both"
+		},
+		"mobile": {
+			"bsonType": "string",
+			"title": "手机号",
+			"trim": "both"
+		},
+		"id_card": {
+			"bsonType": "string",
+			"title": "身份证号",
+			"trim": "both"
+		},
+		"mbti": {
+			"bsonType": "string",
+			"title": "MBTI",
+			"trim": "both"
+		},
+		"native_place": {
+			"bsonType": "string",
+			"title": "籍贯",
+			"trim": "both"
+		},
+		"profession": {
+			"bsonType": "string",
+			"title": "职业",
+			"trim": "both"
+		},
+		"address": {
+			"bsonType": "string",
+			"title": "住址",
+			"trim": "both"
+		},
+		"family_overview": {
+			"bsonType": "string",
+			"title": "家庭大致情况",
+			"trim": "both"
+		},
+		"church": {
+			"bsonType": "string",
+			"title": "所在教会",
+			"trim": "both"
+		},
+		"referrer": {
+			"bsonType": "string",
+			"title": "推荐人",
+			"trim": "both"
+		},
+		"self_introduction": {
+			"bsonType": "string",
+			"title": "自我介绍",
+			"trim": "both"
+		},
+		"relationship_status": {
+			"bsonType": "string",
+			"title": "感情情况",
+			"trim": "both"
+		},
+		"travel_mode": {
+			"bsonType": "string",
+			"title": "活动出行方式",
+			"trim": "both"
+		},
+		"review_status": {
+			"bsonType": "string",
+			"title": "当前审核状态",
+			"defaultValue": "pending",
+			"enum": [
+				{
+					"text": "待审核",
+					"value": "pending"
+				},
+				{
+					"text": "已通过",
+					"value": "approved"
+				},
+				{
+					"text": "已驳回",
+					"value": "rejected"
+				}
+			]
+		},
+		"reviewer": {
+			"bsonType": "string",
+			"title": "审核人",
+			"trim": "both"
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "remark说明",
+			"trim": "both"
+		},
+		"submitted_at": {
+			"bsonType": "timestamp",
+			"title": "提交时间"
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "修改时间"
+		}
+	}
+}
