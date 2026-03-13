@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
@@ -599,7 +599,7 @@
 				var modalRes = await new Promise(function (resolve) {
 					uni.showModal({
 						title: '提示',
-						content: '确认删除该人员吗？',
+						content: '确认删除该人员吗？删除后将以逻辑删除方式隐藏。',
 						success: function (res) {
 							resolve(res)
 						},
