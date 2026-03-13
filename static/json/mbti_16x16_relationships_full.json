@@ -1,0 +1,3711 @@
+{
+  "meta": {
+    "version": "2026-03-13",
+    "description": "MBTI 16x16 恋爱组合扩展数据。含 256 条定向组合（含同型），用于前端/小程序匹配。",
+    "note": "cp_name 只保留互联网中较常见、相对有传播度的称呼；其余组合不强行命名。compatibility_score 为基于常见互联网配对叙事与功能互补规则整理的产品化分数，不代表科学定论。"
+  },
+  "sources_hint": [
+    "16Personalities 中文人格名称",
+    "Truity 的类型互动/兼容性页面",
+    "Truity 关于“opposites attract”中 ESTJ-INFP、ESTP-INFJ 的文章",
+    "Boo 各类型 compatibility chart 中常见的最佳/挑战配对叙事"
+  ],
+  "mbti_relationships_full": [
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "彩虹组",
+      "dynamic_core": "Ni 与 Ne 互补，理性规划与灵感探索互相点亮。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 49,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTJ",
+      "type_a_name": "建筑师",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 36,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 95,
+      "relationship_level": "golden_pair",
+      "cp_name": "王炸组",
+      "dynamic_core": "底层逻辑与高效执行结合，容易形成脑力+行动力联盟。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 75,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INTP",
+      "type_a_name": "逻辑学家",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 95,
+      "relationship_level": "golden_pair",
+      "cp_name": "王炸组",
+      "dynamic_core": "底层逻辑与高效执行结合，容易形成脑力+行动力联盟。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 75,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTJ",
+      "type_a_name": "指挥官",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "磁铁组",
+      "dynamic_core": "深度洞察与脑洞输出互相吸引，容易形成强烈精神交流。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 36,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 49,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENTP",
+      "type_a_name": "辩论家",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "磁铁组",
+      "dynamic_core": "深度洞察与脑洞输出互相吸引，容易形成强烈精神交流。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 50,
+      "relationship_level": "challenging",
+      "cp_name": "反差吸引组",
+      "dynamic_core": "互联网常见的 opposites attract 组合之一。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFJ",
+      "type_a_name": "提倡者",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 56,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 75,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 95,
+      "relationship_level": "golden_pair",
+      "cp_name": "暖阳组",
+      "dynamic_core": "价值感受与外显关怀互相滋养，情感浓度通常很高。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 50,
+      "relationship_level": "challenging",
+      "cp_name": "反差吸引组",
+      "dynamic_core": "互联网常见的 opposites attract 组合之一。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "INFP",
+      "type_a_name": "调停者",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 75,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 95,
+      "relationship_level": "golden_pair",
+      "cp_name": "暖阳组",
+      "dynamic_core": "价值感受与外显关怀互相滋养，情感浓度通常很高。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFJ",
+      "type_a_name": "主人公",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "彩虹组",
+      "dynamic_core": "Ni 与 Ne 互补，理性规划与灵感探索互相点亮。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、直觉共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ENFP",
+      "type_a_name": "竞选者",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTJ",
+      "type_a_name": "物流师",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "反差萌组",
+      "dynamic_core": "秩序与即兴形成反差吸引，一个稳住节奏，一个点亮生活。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 36,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "狂野温柔组",
+      "dynamic_core": "冒险与照顾并存，刺激感和安定感都很强。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFJ",
+      "type_a_name": "守卫者",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 50,
+      "relationship_level": "challenging",
+      "cp_name": "反差吸引组",
+      "dynamic_core": "互联网常见的 opposites attract 组合之一。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "霸道与柔情组",
+      "dynamic_core": "秩序与审美、执行与感受互补明显。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTJ",
+      "type_a_name": "总经理",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都想按自己的节奏推进，容易出现控制感或僵化"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 76,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都想按自己的节奏推进，容易出现控制感或僵化",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "硬核与烟火组",
+      "dynamic_core": "冷静解决问题与人情温度互补，生活感很强。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFJ",
+      "type_a_name": "执政官",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 49,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 49,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "硬核与烟火组",
+      "dynamic_core": "冷静解决问题与人情温度互补，生活感很强。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISTP",
+      "type_a_name": "鉴赏家",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 42,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "霸道与柔情组",
+      "dynamic_core": "秩序与审美、执行与感受互补明显。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都内敛，容易想很多却说得太少"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ISFP",
+      "type_a_name": "探险家",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 62,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 50,
+      "relationship_level": "challenging",
+      "cp_name": "反差吸引组",
+      "dynamic_core": "互联网常见的 opposites attract 组合之一。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "狂野温柔组",
+      "dynamic_core": "冒险与照顾并存，刺激感和安定感都很强。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESTP",
+      "type_a_name": "企业家",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "INTJ",
+      "type_b_name": "建筑师",
+      "compatibility_score": 36,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "INTP",
+      "type_b_name": "逻辑学家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ENTJ",
+      "type_b_name": "指挥官",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ENTP",
+      "type_b_name": "辩论家",
+      "compatibility_score": 35,
+      "relationship_level": "high_risk",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "INFJ",
+      "type_b_name": "提倡者",
+      "compatibility_score": 56,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "INFP",
+      "type_b_name": "调停者",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ENFJ",
+      "type_b_name": "主人公",
+      "compatibility_score": 55,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ENFP",
+      "type_b_name": "竞选者",
+      "compatibility_score": 48,
+      "relationship_level": "challenging",
+      "cp_name": null,
+      "dynamic_core": "同频外放、抽象与现实拉扯、情感同步、节奏相似。",
+      "risk_points": [
+        "一个偏抽象一个偏现实，容易聊不到一个频道",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ISTJ",
+      "type_b_name": "物流师",
+      "compatibility_score": 89,
+      "relationship_level": "golden_pair",
+      "cp_name": "反差萌组",
+      "dynamic_core": "秩序与即兴形成反差吸引，一个稳住节奏，一个点亮生活。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ISFJ",
+      "type_b_name": "守卫者",
+      "compatibility_score": 92,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ESTJ",
+      "type_b_name": "总经理",
+      "compatibility_score": 68,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏互补。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ESFJ",
+      "type_b_name": "执政官",
+      "compatibility_score": 85,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、情感同步、节奏互补。",
+      "risk_points": [
+        "一个偏计划一个偏随性，日常安排和承诺感容易拉扯",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ISTP",
+      "type_b_name": "鉴赏家",
+      "compatibility_score": 65,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ISFP",
+      "type_b_name": "探险家",
+      "compatibility_score": 82,
+      "relationship_level": "high_match",
+      "cp_name": null,
+      "dynamic_core": "外放与内敛、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "双方都偏随性，关系推进和长期落地可能变慢"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ESTP",
+      "type_b_name": "企业家",
+      "compatibility_score": 58,
+      "relationship_level": "medium_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、理性与感受互补、节奏相似。",
+      "risk_points": [
+        "一个更讲逻辑一个更看感受，冲突时容易互相觉得对方不懂自己",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    },
+    {
+      "type_a": "ESFP",
+      "type_a_name": "表演者",
+      "type_b": "ESFP",
+      "type_b_name": "表演者",
+      "compatibility_score": 72,
+      "relationship_level": "good_match",
+      "cp_name": null,
+      "dynamic_core": "同频外放、现实共享、情感同步、节奏相似。",
+      "risk_points": [
+        "优点和盲点几乎镜像放大，甜的时候很懂，卡的时候也容易一起卡住",
+        "双方都偏随性，关系推进和长期落地可能变慢",
+        "双方都外放，争执时可能谁也不让谁"
+      ]
+    }
+  ]
+}
