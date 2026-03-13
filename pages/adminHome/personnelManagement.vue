@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
@@ -107,7 +107,13 @@
 						<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
 						<view class="col col-action action-cell">
 							<button class="mini-btn" @click="openEdit(item)">编辑</button>
-							<button class="mini-btn danger-btn" :disabled="deletingId === item._id" @click="removeRecord(item)">删除</button>
+							<button
+								class="mini-btn danger-btn"
+								:disabled="deletingId === item._id"
+								@click="removeRecord(item)"
+							>
+								删除
+							</button>
 						</view>
 					</view>
 				</view>
@@ -1096,6 +1102,7 @@
 	}
 	.col-status {
 		width: 150rpx;
+		white-space: nowrap;
 	}
 	.col-reviewer {
 		width: 160rpx;
@@ -1107,8 +1114,15 @@
 		width: 180rpx;
 	}
 
-	.name-cell,
+	.name-cell {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-start;
+	}
+
 	.action-cell {
+		display: flex;
+		flex-direction: column;
 		justify-content: center;
 	}
 
@@ -1137,6 +1151,7 @@
 		padding: 10rpx 18rpx;
 		border-radius: 999rpx;
 		font-size: 22rpx;
+		white-space: nowrap;
 	}
 
 	.status-pending {

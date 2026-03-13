@@ -19,16 +19,14 @@
 				>
 					<view class="feature-top">
 						<text class="feature-tag">{{ formatModuleTag(index) }}</text>
-						<text class="feature-status" :class="item.available ? 'is-ready' : 'is-pending'">
-							{{ item.available ? '可进入' : '建设中' }}
-						</text>
+						<text v-if="!item.available" class="feature-status is-pending">建设中</text>
 					</view>
 					<text class="feature-title">{{ item.title }}</text>
 					<text class="feature-desc">{{ item.desc }}</text>
-					<view class="feature-foot">
+					<!-- <view class="feature-foot">
 						<text class="feature-meta">{{ item.meta }}</text>
-						<text class="feature-link">{{ item.available ? '立即进入' : '敬请期待' }}</text>
-					</view>
+						<text class="feature-link">{{ item.available ? '' : '建设中' }}</text>
+					</view> -->
 				</view>
 			</view>
 		</view>
