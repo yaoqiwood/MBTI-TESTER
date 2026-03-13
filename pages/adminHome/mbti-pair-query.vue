@@ -28,15 +28,28 @@
 			</view>
 		</view>
 
+		<view class="filter-card">
+			<input
+				v-model.trim="filterKeyword"
+				class="search-input"
+				placeholder="筛选组合 / 别名 / 成员姓名 / MBTI"
+				confirm-type="search"
+			/>
+			<text class="filter-tip">支持按组合、别名、成员姓名或 MBTI 关键词筛选</text>
+		</view>
+
 		<view v-if="loading" class="state-box">
 			<text>正在计算组合，请稍候...</text>
 		</view>
 		<view v-else-if="!groupList.length" class="state-box">
 			<text>暂无可配对数据，请先补充人员 MBTI。</text>
 		</view>
+		<view v-else-if="!displayGroupList.length" class="state-box">
+			<text>当前筛选条件下暂无匹配组合。</text>
+		</view>
 
 		<view v-else class="group-list">
-			<view v-for="group in groupList" :key="group.key" class="group-card">
+			<view v-for="group in displayGroupList" :key="group.key" class="group-card">
 				<view class="group-head">
 					<text class="group-name">{{ group.name }}</text>
 					<text class="group-meta">{{ group.pairs.length }} 组</text>
@@ -79,7 +92,38 @@ export default {
 			totalMembers: 0,
 			validMembers: 0,
 			totalPairs: 0,
-			groupList: []
+			groupList: [],
+			filterKeyword: ''
+		}
+	},
+	computed: {
+		displayGroupList() {
+			var keyword = this.normalizeKeyword(this.filterKeyword)
+			if (!keyword) {
+				return this.groupList
+			}
+
+			return this.groupList
+				.map(
+					function (group) {
+						var matchedPairs = group.pairs.filter(
+							function (pair) {
+								return this.matchesGroupKeyword(group, pair, keyword)
+							}.bind(this)
+						)
+
+						if (!matchedPairs.length) {
+							return null
+						}
+
+						return Object.assign({}, group, {
+							pairs: matchedPairs
+						})
+					}.bind(this)
+				)
+				.filter(function (group) {
+					return !!group
+				})
 		}
 	},
 	onLoad() {
@@ -101,11 +145,35 @@ export default {
 				.trim()
 				.toUpperCase()
 		},
+		normalizeKeyword(value) {
+			return String(value || '')
+				.trim()
+				.toUpperCase()
+		},
 		getDisplayName(item) {
 			return item.nickname || item.name || ('#' + (item.person_id || '未知'))
 		},
+		getGroupAlias(comboKey) {
+			return GROUP_NAME_MAP[comboKey] || ''
+		},
 		resolveGroupName(comboKey) {
-			return GROUP_NAME_MAP[comboKey] || comboKey + '组'
+			var alias = this.getGroupAlias(comboKey)
+			return alias ? comboKey + '（' + alias + '）' : comboKey + '组'
+		},
+		matchesGroupKeyword(group, pair, keyword) {
+			var haystack = [
+				group.name,
+				group.comboSummary,
+				pair.comboKey,
+				pair.leftName,
+				pair.leftMbti,
+				pair.rightName,
+				pair.rightMbti
+			]
+				.join('|')
+				.toUpperCase()
+
+			return haystack.indexOf(keyword) !== -1
 		},
 		buildPairGroups(members) {
 			var groupMap = {}
@@ -257,6 +325,7 @@ export default {
 }
 
 .summary-card,
+.filter-card,
 .group-card,
 .state-box {
 	background: #fffcf7;
@@ -267,6 +336,28 @@ export default {
 
 .summary-card {
 	padding: 28rpx 24rpx;
+}
+
+.filter-card {
+	margin-top: 20rpx;
+	padding: 24rpx;
+}
+
+.search-input {
+	height: 76rpx;
+	padding: 0 24rpx;
+	border-radius: 18rpx;
+	background: #f6efe3;
+	font-size: 24rpx;
+	color: #2f261e;
+	box-sizing: border-box;
+}
+
+.filter-tip {
+	display: block;
+	margin-top: 12rpx;
+	font-size: 22rpx;
+	color: #8a7560;
 }
 
 .summary-title {
