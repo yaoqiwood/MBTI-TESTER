@@ -7,7 +7,7 @@
 
 		<view class="summary-card">
 			<text class="summary-title">MBTI 组合配对查询</text>
-			<text class="summary-desc">数据源：mbti-personnel（仅统计有 MBTI 的人员）</text>
+			<text class="summary-desc">数据源：mbti_16x16_relationships_full.json + mbti-personnel（按组合规则建组）</text>
 			<view class="summary-stats">
 				<view class="stat-item">
 					<text class="stat-label">总人数</text>
@@ -38,51 +38,120 @@
 			<text class="filter-tip">支持按组合、别名、成员姓名或 MBTI 关键词筛选</text>
 		</view>
 
-		<view v-if="loading" class="state-box">
+		<view v-if="loading" class="state-box state-panel">
 			<text>正在计算组合，请稍候...</text>
 		</view>
-		<view v-else-if="!groupList.length" class="state-box">
+		<view v-else-if="!groupList.length" class="state-box state-panel">
 			<text>暂无可配对数据，请先补充人员 MBTI。</text>
 		</view>
-		<view v-else-if="!displayGroupList.length" class="state-box">
+		<view v-else-if="!displayGroupList.length" class="state-box state-panel">
 			<text>当前筛选条件下暂无匹配组合。</text>
 		</view>
 
-		<view v-else class="group-list">
-			<view v-for="group in displayGroupList" :key="group.key" class="group-card">
-				<view class="group-head">
-					<text class="group-name">{{ group.name }}</text>
-					<text class="group-meta">{{ group.pairs.length }} 组</text>
-				</view>
-				<text class="group-combos">覆盖组合：{{ group.comboSummary }}</text>
+		<view v-else class="result-panel">
+			<scroll-view class="group-list-scroll" scroll-y>
+				<view class="group-list">
+					<view v-for="group in pagedGroupList" :key="group.key" class="group-card">
+						<view class="group-head">
+							<text class="group-name">{{ group.name }}</text>
+							<text class="group-meta">{{ group.pairs.length }} 对</text>
+						</view>
+						<text v-if="group.subname" class="group-subname">别名：{{ group.subname }}</text>
+						<text class="group-combos">组合：{{ group.comboSummary }}｜成员池：{{ group.memberSummary }}</text>
 
-				<scroll-view class="table-scroll" scroll-x>
-					<view class="table">
-						<view class="table-row table-header">
-							<text class="col col-combo">组合</text>
-							<text class="col col-member">成员 A</text>
-							<text class="col col-member">成员 B</text>
-						</view>
-						<view v-for="pair in group.pairs" :key="pair.key" class="table-row">
-							<text class="col col-combo">{{ pair.comboKey }}</text>
-							<text class="col col-member">{{ pair.leftName }}（{{ pair.leftMbti }}）</text>
-							<text class="col col-member">{{ pair.rightName }}（{{ pair.rightMbti }}）</text>
-						</view>
+						<scroll-view class="table-scroll" scroll-x>
+							<view class="table">
+								<view class="table-row table-header">
+									<text class="col col-combo">组合</text>
+									<text class="col col-member">{{ group.leftMbti }} 成员</text>
+									<text class="col col-member">{{ group.rightMbti }} 成员</text>
+								</view>
+								<view v-for="pair in group.pairs" :key="pair.key" class="table-row">
+									<text class="col col-combo">{{ pair.comboKey }}</text>
+									<text class="col col-member">{{ pair.leftName }}（{{ pair.leftMbti }}）</text>
+									<text class="col col-member">{{ pair.rightName }}（{{ pair.rightMbti }}）</text>
+								</view>
+							</view>
+						</scroll-view>
 					</view>
-				</scroll-view>
+				</view>
+			</scroll-view>
+			<view v-if="paginationTotal > pagination.pageSize" class="pagination-wrap">
+				<view class="pager-btn" :class="isFirstPage ? 'pager-btn is-disabled' : ''" @click="goPrevPage">上一页</view>
+				<text class="pager-text">第 {{ pagination.page }} / {{ totalPages }} 页</text>
+				<view class="pager-btn" :class="isLastPage ? 'pager-btn is-disabled' : ''" @click="goNextPage">下一页</view>
 			</view>
 		</view>
 	</view>
 </template>
 
 <script>
+import relationshipSource from '../../static/json/mbti_16x16_relationships_full.json'
+
 var db = null
 if (typeof uniCloud !== 'undefined' && uniCloud.database) {
 	db = uniCloud.database()
 }
 
-var GROUP_NAME_MAP = {
-	'ENFP+INTJ': '彩虹组'
+var RELATIONSHIP_LIST = (relationshipSource && relationshipSource.mbti_relationships_full) || []
+
+function normalizeMbtiValue(value) {
+	return String(value || '')
+		.trim()
+		.toUpperCase()
+}
+
+function buildComboKey(typeA, typeB) {
+	var comboTypes = [normalizeMbtiValue(typeA), normalizeMbtiValue(typeB)]
+		.filter(function (item) {
+			return !!item
+		})
+		.sort()
+
+	return comboTypes.join('+')
+}
+
+function buildRelationshipConfigs(list) {
+	var configList = []
+	var configMap = {}
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i] || {}
+		var comboKey = buildComboKey(item.type_a, item.type_b)
+		if (!comboKey || configMap[comboKey]) {
+			continue
+		}
+
+		var comboTypes = comboKey.split('+')
+		var config = {
+			key: comboKey,
+			comboKey: comboKey,
+			leftMbti: comboTypes[0] || '',
+			rightMbti: comboTypes[1] || comboTypes[0] || '',
+			subname: String(item.cp_name || '').trim(),
+			relationshipLevel: String(item.relationship_level || '').trim(),
+			compatibilityScore: Number(item.compatibility_score) || 0
+		}
+
+		configList.push(config)
+		configMap[comboKey] = config
+	}
+
+	return {
+		list: configList,
+		map: configMap
+	}
+}
+
+var RELATIONSHIP_CONFIGS = buildRelationshipConfigs(RELATIONSHIP_LIST)
+var RELATIONSHIP_CONFIG_LIST = RELATIONSHIP_CONFIGS.list
+var RELATIONSHIP_CONFIG_MAP = RELATIONSHIP_CONFIGS.map
+var SUPPORTED_MBTI_MAP = {}
+
+for (var relationshipIndex = 0; relationshipIndex < RELATIONSHIP_CONFIG_LIST.length; relationshipIndex++) {
+	var relationshipConfig = RELATIONSHIP_CONFIG_LIST[relationshipIndex]
+	SUPPORTED_MBTI_MAP[relationshipConfig.leftMbti] = true
+	SUPPORTED_MBTI_MAP[relationshipConfig.rightMbti] = true
 }
 
 export default {
@@ -93,7 +162,11 @@ export default {
 			validMembers: 0,
 			totalPairs: 0,
 			groupList: [],
-			filterKeyword: ''
+			filterKeyword: '',
+			pagination: {
+				page: 1,
+				pageSize: 5
+			}
 		}
 	},
 	computed: {
@@ -124,6 +197,43 @@ export default {
 				.filter(function (group) {
 					return !!group
 				})
+		},
+		paginationTotal() {
+			return this.displayGroupList.length
+		},
+		totalPages() {
+			return Math.max(1, Math.ceil(this.paginationTotal / Number(this.pagination.pageSize || 5)))
+		},
+		isFirstPage() {
+			return Number(this.pagination.page || 1) <= 1
+		},
+		isLastPage() {
+			return Number(this.pagination.page || 1) >= this.totalPages
+		},
+		pagedGroupList() {
+			var pageSize = Number(this.pagination.pageSize || 5)
+			var total = this.displayGroupList.length
+			var maxPage = Math.max(1, Math.ceil(total / pageSize))
+			var currentPage = Number(this.pagination.page || 1)
+			if (currentPage < 1) {
+				currentPage = 1
+			}
+			if (currentPage > maxPage) {
+				currentPage = maxPage
+			}
+			var start = (currentPage - 1) * pageSize
+			return this.displayGroupList.slice(start, start + pageSize)
+		}
+	},
+	watch: {
+		filterKeyword() {
+			this.resetPagination()
+		},
+		groupList() {
+			this.resetPagination()
+		},
+		displayGroupList(list) {
+			this.syncPagination(list.length)
 		}
 	},
 	onLoad() {
@@ -141,9 +251,7 @@ export default {
 			})
 		},
 		normalizeMbti(value) {
-			return String(value || '')
-				.trim()
-				.toUpperCase()
+			return normalizeMbtiValue(value)
 		},
 		normalizeKeyword(value) {
 			return String(value || '')
@@ -153,17 +261,48 @@ export default {
 		getDisplayName(item) {
 			return item.nickname || item.name || ('#' + (item.person_id || '未知'))
 		},
-		getGroupAlias(comboKey) {
-			return GROUP_NAME_MAP[comboKey] || ''
+		isSupportedMbti(value) {
+			return !!SUPPORTED_MBTI_MAP[this.normalizeMbti(value)]
+		},
+		getGroupConfig(comboKey) {
+			return RELATIONSHIP_CONFIG_MAP[comboKey] || null
+		},
+		resetPagination() {
+			this.pagination.page = 1
+		},
+		syncPagination(total) {
+			var pageSize = Number(this.pagination.pageSize || 5)
+			var maxPage = Math.max(1, Math.ceil(Number(total || 0) / pageSize))
+			if (this.pagination.page > maxPage) {
+				this.pagination.page = maxPage
+			}
+			if (this.pagination.page < 1) {
+				this.pagination.page = 1
+			}
+		},
+		goPrevPage() {
+			if (this.isFirstPage) {
+				return
+			}
+			this.pagination.page = Number(this.pagination.page || 1) - 1
+		},
+		goNextPage() {
+			if (this.isLastPage) {
+				return
+			}
+			this.pagination.page = Number(this.pagination.page || 1) + 1
 		},
 		resolveGroupName(comboKey) {
-			var alias = this.getGroupAlias(comboKey)
-			return alias ? comboKey + '（' + alias + '）' : comboKey + '组'
+			return comboKey + '组'
 		},
 		matchesGroupKeyword(group, pair, keyword) {
 			var haystack = [
 				group.name,
+				group.subname,
 				group.comboSummary,
+				group.memberSummary,
+				group.leftMbti,
+				group.rightMbti,
 				pair.comboKey,
 				pair.leftName,
 				pair.leftMbti,
@@ -175,57 +314,129 @@ export default {
 
 			return haystack.indexOf(keyword) !== -1
 		},
-		buildPairGroups(members) {
-			var groupMap = {}
-			var total = 0
+		buildMemberBucketMap(members) {
+			var bucketMap = {}
+
 			for (var i = 0; i < members.length; i++) {
-				for (var j = i + 1; j < members.length; j++) {
-					var left = members[i]
-					var right = members[j]
-					var comboKey = [left.mbti, right.mbti].sort().join('+')
-					var groupName = this.resolveGroupName(comboKey)
-					var groupKey = groupName + '__' + comboKey
+				var member = members[i]
+				if (!bucketMap[member.mbti]) {
+					bucketMap[member.mbti] = []
+				}
+				bucketMap[member.mbti].push(member)
+			}
 
-					if (!groupMap[groupKey]) {
-						groupMap[groupKey] = {
-							key: groupKey,
-							name: groupName,
-							pairs: [],
-							comboSet: {}
-						}
+			return bucketMap
+		},
+		createPairRecord(comboKey, left, right) {
+			return {
+				key: comboKey + '__' + left._id + '_' + right._id,
+				comboKey: comboKey,
+				leftName: left.displayName,
+				leftMbti: left.mbti,
+				rightName: right.displayName,
+				rightMbti: right.mbti
+			}
+		},
+		buildGroupPairs(config, bucketMap) {
+			var leftMembers = bucketMap[config.leftMbti] || []
+			var rightMembers = bucketMap[config.rightMbti] || []
+			var pairs = []
+
+			if (config.leftMbti === config.rightMbti) {
+				for (var i = 0; i < leftMembers.length; i++) {
+					for (var j = i + 1; j < leftMembers.length; j++) {
+						pairs.push(this.createPairRecord(config.comboKey, leftMembers[i], leftMembers[j]))
 					}
-
-					groupMap[groupKey].comboSet[comboKey] = true
-					groupMap[groupKey].pairs.push({
-						key: left._id + '_' + right._id,
-						comboKey: comboKey,
-						leftName: left.displayName,
-						leftMbti: left.mbti,
-						rightName: right.displayName,
-						rightMbti: right.mbti
-					})
-					total += 1
+				}
+			} else {
+				for (var leftIndex = 0; leftIndex < leftMembers.length; leftIndex++) {
+					for (var rightIndex = 0; rightIndex < rightMembers.length; rightIndex++) {
+						pairs.push(
+							this.createPairRecord(config.comboKey, leftMembers[leftIndex], rightMembers[rightIndex])
+						)
+					}
 				}
 			}
 
-			var list = Object.keys(groupMap).map(function (key) {
-				var group = groupMap[key]
-				group.comboSummary = Object.keys(group.comboSet).join(' / ')
-				delete group.comboSet
-				return group
-			})
+			return {
+				pairs: pairs,
+				leftCount: leftMembers.length,
+				rightCount: rightMembers.length
+			}
+		},
+		buildPairGroups(members) {
+			var bucketMap = this.buildMemberBucketMap(members)
+			var groupList = []
+			var total = 0
 
-			list.sort(function (a, b) {
+			for (var i = 0; i < RELATIONSHIP_CONFIG_LIST.length; i++) {
+				var config = RELATIONSHIP_CONFIG_LIST[i]
+				var pairData = this.buildGroupPairs(config, bucketMap)
+				if (!pairData.pairs.length) {
+					continue
+				}
+
+				total += pairData.pairs.length
+				groupList.push({
+					key: config.key,
+					name: this.resolveGroupName(config.comboKey),
+					subname: config.subname,
+					comboKey: config.comboKey,
+					comboSummary: config.comboKey,
+					leftMbti: config.leftMbti,
+					rightMbti: config.rightMbti,
+					memberSummary:
+						config.leftMbti === config.rightMbti
+							? config.leftMbti + '：' + pairData.leftCount + ' 人'
+							: config.leftMbti + '：' + pairData.leftCount + ' 人 / ' + config.rightMbti + '：' + pairData.rightCount + ' 人',
+					compatibilityScore: config.compatibilityScore,
+					pairs: pairData.pairs
+				})
+			}
+
+			groupList.sort(function (a, b) {
 				if (b.pairs.length !== a.pairs.length) {
 					return b.pairs.length - a.pairs.length
 				}
-				return a.name.localeCompare(b.name)
+				if (b.compatibilityScore !== a.compatibilityScore) {
+					return b.compatibilityScore - a.compatibilityScore
+				}
+				return a.comboKey.localeCompare(b.comboKey)
 			})
 
 			return {
 				totalPairs: total,
-				groupList: list
+				groupList: groupList
 			}
+		},
+		async fetchAllPersonnel() {
+			var pageSize = 500
+			var page = 0
+			var allList = []
+
+			while (true) {
+				var res = await db
+					.collection('mbti-personnel')
+					.field('_id,person_id,nickname,name,mbti,is_deleted')
+					.orderBy('person_id', 'asc')
+					.skip(page * pageSize)
+					.limit(pageSize)
+					.get()
+				var currentList = (res.result && res.result.data) || res.data || []
+
+				if (!currentList.length) {
+					break
+				}
+
+				allList = allList.concat(currentList)
+				if (currentList.length < pageSize) {
+					break
+				}
+
+				page += 1
+			}
+
+			return allList
 		},
 		async loadPairGroups() {
 			if (!db) {
@@ -237,12 +448,7 @@ export default {
 			}
 			this.loading = true
 			try {
-				var res = await db
-					.collection('mbti-personnel')
-					.field('person_id,nickname,name,mbti,is_deleted')
-					.orderBy('person_id', 'asc')
-					.get()
-				var list = (res.result && res.result.data) || res.data || []
+				var list = await this.fetchAllPersonnel()
 				var activeList = list.filter(function (item) {
 					var deletedValue = item && item.is_deleted
 					return !(
@@ -256,7 +462,7 @@ export default {
 					.map(
 						function (item) {
 							var mbti = this.normalizeMbti(item.mbti)
-							if (!mbti) {
+							if (!mbti || !this.isSupportedMbti(mbti)) {
 								return null
 							}
 							return {
@@ -276,6 +482,7 @@ export default {
 				this.validMembers = members.length
 				this.totalPairs = result.totalPairs
 				this.groupList = result.groupList
+				this.syncPagination(result.groupList.length)
 			} catch (error) {
 				uni.showModal({
 					content: error.message || '查询失败，请稍后重试',
@@ -291,10 +498,13 @@ export default {
 
 <style>
 .page {
-	min-height: 100vh;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
 	padding: 24rpx;
 	background: #f5efe5;
 	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .toolbar {
@@ -407,8 +617,58 @@ export default {
 	color: #6d5a47;
 }
 
-.group-list {
+.state-panel {
+	flex: 1;
+	min-height: 0;
+}
+
+.result-panel {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
 	margin-top: 20rpx;
+}
+
+.group-list-scroll {
+	flex: 1;
+	min-height: 0;
+}
+
+.group-list {
+	padding-bottom: 8rpx;
+}
+
+.pagination-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20rpx;
+	padding: 12rpx 0 4rpx;
+}
+
+.pager-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 160rpx;
+	height: 64rpx;
+	line-height: 64rpx;
+	padding: 0 24rpx;
+	border-radius: 999rpx;
+	font-size: 24rpx;
+	color: #6d4e2c;
+	background: #efe5d3;
+	margin: 0;
+}
+
+.pager-btn.is-disabled {
+	opacity: 0.45;
+}
+
+.pager-text {
+	font-size: 24rpx;
+	color: #7a6652;
 }
 
 .group-card {
@@ -431,6 +691,13 @@ export default {
 .group-meta {
 	font-size: 22rpx;
 	color: #8e7962;
+}
+
+.group-subname {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 22rpx;
+	color: #8f6840;
 }
 
 .group-combos {
