@@ -56,7 +56,7 @@
 								>{{ group.name
 								}}<text v-if="group.subname" class="group-subname"
 									>（{{ group.subname }}）</text
-								></text
+								><text class="group-score"> · 匹配度 {{ group.compatibilityScore }}</text></text
 							>
 							<text class="group-meta">{{ group.pairs.length }} 对</text>
 						</view>
@@ -67,13 +67,11 @@
 						<scroll-view class="table-scroll" scroll-x @click.stop>
 							<view class="table">
 								<view class="table-row table-header">
-									<!-- <text class="col col-combo">组合</text> -->
 									<text class="col col-member">{{ group.leftMbti }} 成员</text>
 									<text class="col col-member">{{ group.rightMbti }} 成员</text>
 								</view>
 								<block v-for="pair in group.pairs" :key="pair.key">
 									<view class="table-row">
-										<!-- <text class="col col-combo">{{ pair.comboKey }}</text> -->
 										<view
 											class="col col-member member-cell"
 											:class="
@@ -318,9 +316,12 @@
 								return null
 							}
 
-							return Object.assign({}, group, {
+							return this.reorderGroupForKeyword(
+								Object.assign({}, group, {
 								pairs: matchedPairs
-							})
+								}),
+								keyword
+							)
 						}.bind(this)
 					)
 					.filter(function (group) {
@@ -389,6 +390,57 @@
 			},
 			getDisplayName(item) {
 				return item.nickname || item.name || '#' + (item.person_id || '未知')
+			},
+			formatGroupName(leftMbti, rightMbti) {
+				var left = this.normalizeMbti(leftMbti)
+				var right = this.normalizeMbti(rightMbti)
+				if (!left && !right) {
+					return ''
+				}
+				if (!right || left === right) {
+					return left + ' 组'
+				}
+				return left + ' + ' + right + ' 组'
+			},
+			swapPairDisplay(pair) {
+				return Object.assign({}, pair, {
+					leftName: pair.rightName,
+					leftMbti: pair.rightMbti,
+					leftMember: pair.rightMember,
+					rightName: pair.leftName,
+					rightMbti: pair.leftMbti,
+					rightMember: pair.leftMember
+				})
+			},
+			reorderGroupForKeyword(group, keyword) {
+				var normalizedKeyword = this.normalizeMbti(keyword)
+				if (!normalizedKeyword || !this.isSupportedMbti(normalizedKeyword) || !group) {
+					return group
+				}
+
+				var shouldKeepOriginalLeft = group.leftMbti === normalizedKeyword
+				var shouldSwap = group.rightMbti === normalizedKeyword && group.leftMbti !== normalizedKeyword
+
+				if (!shouldKeepOriginalLeft && !shouldSwap) {
+					return group
+				}
+
+				if (!shouldSwap) {
+					return Object.assign({}, group, {
+						name: this.formatGroupName(group.leftMbti, group.rightMbti)
+					})
+				}
+
+				return Object.assign({}, group, {
+					name: this.formatGroupName(group.rightMbti, group.leftMbti),
+					leftMbti: group.rightMbti,
+					rightMbti: group.leftMbti,
+					pairs: group.pairs.map(
+						function (pair) {
+							return this.swapPairDisplay(pair)
+						}.bind(this)
+					)
+				})
 			},
 			toggleMemberDetail(pair, side) {
 				var member = side === 'right' ? pair && pair.rightMember : pair && pair.leftMember
@@ -488,10 +540,11 @@
 
 				return bucketMap
 			},
-			createPairRecord(comboKey, left, right) {
+			createPairRecord(comboKey, left, right, compatibilityScore) {
 				return {
 					key: comboKey + '__' + left._id + '_' + right._id,
 					comboKey: comboKey,
+					compatibilityScore: Number(compatibilityScore) || 0,
 					leftName: left.displayName,
 					leftMbti: left.mbti,
 					leftMember: left,
@@ -508,7 +561,14 @@
 				if (config.leftMbti === config.rightMbti) {
 					for (var i = 0; i < leftMembers.length; i++) {
 						for (var j = i + 1; j < leftMembers.length; j++) {
-							pairs.push(this.createPairRecord(config.comboKey, leftMembers[i], leftMembers[j]))
+							pairs.push(
+								this.createPairRecord(
+									config.comboKey,
+									leftMembers[i],
+									leftMembers[j],
+									config.compatibilityScore
+								)
+							)
 						}
 					}
 				} else {
@@ -518,7 +578,8 @@
 								this.createPairRecord(
 									config.comboKey,
 									leftMembers[leftIndex],
-									rightMembers[rightIndex]
+									rightMembers[rightIndex],
+									config.compatibilityScore
 								)
 							)
 						}
@@ -569,11 +630,11 @@
 				}
 
 				groupList.sort(function (a, b) {
-					if (b.pairs.length !== a.pairs.length) {
-						return b.pairs.length - a.pairs.length
-					}
 					if (b.compatibilityScore !== a.compatibilityScore) {
 						return b.compatibilityScore - a.compatibilityScore
+					}
+					if (b.pairs.length !== a.pairs.length) {
+						return b.pairs.length - a.pairs.length
 					}
 					return a.comboKey.localeCompare(b.comboKey)
 				})
@@ -896,6 +957,13 @@
 		color: #8f6840;
 	}
 
+	.group-score {
+		display: inline;
+		font-size: 24rpx;
+		font-weight: 600;
+		color: #8f6840;
+	}
+
 	.group-combos {
 		display: block;
 		margin-top: 10rpx;
@@ -1045,4 +1113,3 @@
 		word-break: break-all;
 	}
 </style>
-
