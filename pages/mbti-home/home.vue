@@ -27,7 +27,7 @@
 				<view class="hero-action-btn primary-btn" @click="goTest">
 					<text>进入测试</text>
 				</view>
-				<view class="hero-action-btn ghost-btn" @click="showGalleryTip">
+				<view class="hero-action-btn ghost-btn" @click="scrollToGallery">
 					<text>先看人格形象</text>
 				</view>
 			</view>
@@ -84,6 +84,12 @@
 </template>
 
 <script>
+import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js'
+
+const uniIdCo = uniCloud.importObject('uni-id-co', {
+	customUI: true
+})
+
 const personas = [
 	{
 		code: 'INFP',
@@ -216,18 +222,103 @@ export default {
 	computed: {
 		orbitTypes() {
 			return this.personas.slice(0, 12)
+		},
+		hasLogin() {
+			return store.hasLogin
 		}
 	},
 	methods: {
-		goTest() {
+		async goTest() {
+			// #ifdef MP-WEIXIN
+			const loggedIn = await this.ensureWeixinLogin()
+			if (!loggedIn) {
+				return
+			}
+			// #endif
+
+			this.navigateToTest()
+		},
+		navigateToTest() {
 			uni.navigateTo({
 				url: '/pages/access-form/access-form'
 			})
 		},
-		showGalleryTip() {
-			uni.showToast({
-				title: '下滑查看人格形象',
-				icon: 'none'
+		// #ifdef MP-WEIXIN
+		async ensureWeixinLogin() {
+			if (this.hasLogin && uniCloud.getCurrentUserInfo().tokenExpired > Date.now()) {
+				return true
+			}
+
+			uni.showLoading({
+				title: '登录中',
+				mask: true
+			})
+
+			try {
+				const loginRes = await this.getWeixinCode()
+				const result = await uniIdCo.loginByWeixin({
+					code: loginRes.code
+				})
+				mutations.loginSuccess({
+					...result,
+					showToast: false,
+					autoBack: false,
+					loginType: 'weixin'
+				})
+				uni.showToast({
+					title: '微信登录成功',
+					icon: 'none'
+				})
+				return true
+			} catch (error) {
+				uni.showToast({
+					title: (error && (error.errMsg || error.message)) || '微信登录失败',
+					icon: 'none',
+					duration: 3000
+				})
+				return false
+			} finally {
+				uni.hideLoading()
+			}
+		},
+		getWeixinCode() {
+			return new Promise((resolve, reject) => {
+				uni.login({
+					provider: 'weixin',
+					onlyAuthorize: true,
+					success: (res) => {
+						if (res.code) {
+							resolve(res)
+							return
+						}
+						reject(new Error('未获取到微信登录凭证'))
+					},
+					fail: (error) => {
+						reject(error)
+					}
+				})
+			})
+		},
+		// #endif
+		scrollToGallery() {
+			const query = uni.createSelectorQuery().in(this)
+			query.select('#gallery').boundingClientRect()
+			query.selectViewport().scrollOffset()
+			query.exec((res) => {
+				const galleryRect = res && res[0]
+				const viewport = res && res[1]
+				if (!galleryRect || !viewport) {
+					uni.showToast({
+						title: '请向下滑动查看人格形象',
+						icon: 'none'
+					})
+					return
+				}
+
+				uni.pageScrollTo({
+					scrollTop: galleryRect.top + viewport.scrollTop - 24,
+					duration: 300
+				})
 			})
 		},
 		orbitStyle(index) {

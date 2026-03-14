@@ -11,6 +11,81 @@
 		"_id": {
 			"description": "文档 ID，系统自动生成"
 		},
+		"user_id": {
+			"bsonType": "string",
+			"title": "关联用户ID",
+			"description": "关联 uni-id-users._id，用于绑定当前登录的小程序用户",
+			"foreignKey": "uni-id-users._id",
+			"trim": "both"
+		},
+		"wx_openid": {
+			"bsonType": "string",
+			"title": "微信 OpenID",
+			"description": "微信小程序登录用户唯一标识",
+			"trim": "both"
+		},
+		"wx_unionid": {
+			"bsonType": "string",
+			"title": "微信 UnionID",
+			"description": "微信开放平台统一用户标识，存在时可用于跨应用识别",
+			"trim": "both"
+		},
+		"wx_nickname": {
+			"bsonType": "string",
+			"title": "微信昵称",
+			"description": "微信小程序登录后同步的昵称",
+			"trim": "both"
+		},
+		"wx_avatar": {
+			"bsonType": "string",
+			"title": "微信头像",
+			"description": "微信小程序登录后同步的头像地址",
+			"trim": "both"
+		},
+		"wx_gender": {
+			"bsonType": "int",
+			"title": "微信性别",
+			"description": "微信资料中的性别：0未知，1男，2女",
+			"defaultValue": 0,
+			"enum": [
+				{
+					"text": "未知",
+					"value": 0
+				},
+				{
+					"text": "男",
+					"value": 1
+				},
+				{
+					"text": "女",
+					"value": 2
+				}
+			]
+		},
+		"wx_language": {
+			"bsonType": "string",
+			"title": "微信语言",
+			"description": "微信资料中的语言",
+			"trim": "both"
+		},
+		"wx_city": {
+			"bsonType": "string",
+			"title": "微信城市",
+			"description": "微信资料中的城市",
+			"trim": "both"
+		},
+		"wx_province": {
+			"bsonType": "string",
+			"title": "微信省份",
+			"description": "微信资料中的省份",
+			"trim": "both"
+		},
+		"wx_country": {
+			"bsonType": "string",
+			"title": "微信国家",
+			"description": "微信资料中的国家",
+			"trim": "both"
+		},
 		"person_id": {
 			"bsonType": "int",
 			"title": "唯一 ID",
