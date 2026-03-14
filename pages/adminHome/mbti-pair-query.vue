@@ -34,7 +34,7 @@
 				placeholder="筛选组合 / 别名 / 成员姓名 / MBTI"
 				confirm-type="search"
 			/>
-			<text class="filter-tip">支持按组合、别名、成员姓名或 MBTI 关键词筛选</text>
+			<text class="filter-tip">支持按组合、别名、成员姓名或 MBTI 或 姓名x姓名 关键词筛选</text>
 		</view>
 
 		<view v-if="loading" class="state-box state-panel">
@@ -56,9 +56,19 @@
 								>{{ group.name
 								}}<text v-if="group.subname" class="group-subname"
 									>（{{ group.subname }}）</text
-								><text class="group-score"> · 匹配度 {{ group.compatibilityScore }}</text></text
+								></text
 							>
 							<text class="group-meta">{{ group.pairs.length }} 对</text>
+						</view>
+						<view class="pair-rating-row group-rating-row">
+							<text
+								class="pair-rating-badge"
+								:class="'pair-rating-' + getScoreAssessment(group.compatibilityScore).key"
+								@click.stop="showMatchReason(group)"
+							>
+								{{ getScoreAssessment(group.compatibilityScore).label }} ·
+								{{ group.compatibilityScore }}分
+							</text>
 						</view>
 						<text class="group-combos"
 							>组合：{{ group.comboSummary }}｜成员池：{{ group.memberSummary }}</text
@@ -250,6 +260,8 @@
 				leftMbti: comboTypes[0] || '',
 				rightMbti: comboTypes[1] || comboTypes[0] || '',
 				subname: String(item.cp_name || '').trim(),
+				matchReason: String(item.match_reason || '').trim(),
+				riskPoints: Array.isArray(item.risk_points) ? item.risk_points : [],
 				relationshipLevel: String(item.relationship_level || '').trim(),
 				compatibilityScore: Number(item.compatibility_score) || 0
 			}
@@ -320,7 +332,7 @@
 
 							return this.reorderGroupForKeyword(
 								Object.assign({}, group, {
-								pairs: matchedPairs
+									pairs: matchedPairs
 								}),
 								keyword
 							)
@@ -480,6 +492,47 @@
 				}
 				return leftMbti + '：' + leftCount + ' 人 / ' + rightMbti + '：' + rightCount + ' 人'
 			},
+			getScoreAssessment(score) {
+				var value = Number(score) || 0
+				if (value >= 90) {
+					return { key: 's', label: '顶配组合' }
+				}
+				if (value >= 82) {
+					return { key: 'a', label: '高匹配' }
+				}
+				if (value >= 72) {
+					return { key: 'b', label: '值得尝试' }
+				}
+				if (value >= 60) {
+					return { key: 'c', label: '需要磨合' }
+				}
+				return { key: 'd', label: '挑战较高' }
+			},
+			showMatchReason(group) {
+				if (!group) {
+					return
+				}
+				var contentList = []
+				if (group.matchReason) {
+					contentList.push('匹配原因：' + group.matchReason)
+				}
+				if (group.riskPoints && group.riskPoints.length) {
+					contentList.push(
+						'风险点：\n' +
+							group.riskPoints
+								.map(function (item, index) {
+									return index + 1 + '. ' + item
+								})
+								.join('\n')
+					)
+				}
+				uni.showModal({
+					title: group.name || '匹配原因',
+					content: contentList.join('\n\n') || '当前暂无匹配原因说明',
+					showCancel: false,
+					confirmText: '我知道了'
+				})
+			},
 			formatGroupName(leftMbti, rightMbti) {
 				var left = this.normalizeMbti(leftMbti)
 				var right = this.normalizeMbti(rightMbti)
@@ -521,10 +574,7 @@
 				var rightMatchesLeft = this.pairMatchesKeywordSide(pair, pairKeyword.rightKeyword, 'left')
 				var rightMatchesRight = this.pairMatchesKeywordSide(pair, pairKeyword.rightKeyword, 'right')
 
-				return (
-					(leftMatchesLeft && rightMatchesRight) ||
-					(leftMatchesRight && rightMatchesLeft)
-				)
+				return (leftMatchesLeft && rightMatchesRight) || (leftMatchesRight && rightMatchesLeft)
 			},
 			resolvePreferredLeftMbti(group, keyword) {
 				var pairKeyword = this.parsePairKeyword(keyword)
@@ -562,7 +612,11 @@
 					return pair
 				}
 
-				if (preferredLeftMbti && pair.rightMbti === preferredLeftMbti && pair.leftMbti !== preferredLeftMbti) {
+				if (
+					preferredLeftMbti &&
+					pair.rightMbti === preferredLeftMbti &&
+					pair.leftMbti !== preferredLeftMbti
+				) {
 					return this.swapPairDisplay(pair)
 				}
 
@@ -593,7 +647,8 @@
 				)
 
 				var shouldKeepOriginalLeft = group.leftMbti === preferredLeftMbti
-				var shouldSwap = group.rightMbti === preferredLeftMbti && group.leftMbti !== preferredLeftMbti
+				var shouldSwap =
+					group.rightMbti === preferredLeftMbti && group.leftMbti !== preferredLeftMbti
 
 				if (!shouldKeepOriginalLeft && !shouldSwap) {
 					return Object.assign({}, group, {
@@ -801,6 +856,8 @@
 						key: config.key,
 						name: this.resolveGroupName(config.comboKey),
 						subname: config.subname,
+						matchReason: config.matchReason,
+						riskPoints: config.riskPoints,
 						comboKey: config.comboKey,
 						comboSummary: config.comboKey,
 						leftMbti: config.leftMbti,
@@ -1175,6 +1232,50 @@
 
 	.table {
 		min-width: 860rpx;
+	}
+
+	.pair-rating-row {
+		padding-top: 12rpx;
+	}
+
+	.group-rating-row {
+		padding-top: 10rpx;
+		padding-bottom: 2rpx;
+	}
+
+	.pair-rating-badge {
+		display: inline-flex;
+		align-items: center;
+		height: 42rpx;
+		padding: 0 18rpx;
+		border-radius: 999rpx;
+		font-size: 22rpx;
+		font-weight: 600;
+	}
+
+	.pair-rating-s {
+		color: #7a3f00;
+		background: linear-gradient(135deg, #ffe39a, #f7c85c);
+	}
+
+	.pair-rating-a {
+		color: #7a4a12;
+		background: #f6dfbf;
+	}
+
+	.pair-rating-b {
+		color: #1f6b52;
+		background: #d9efe6;
+	}
+
+	.pair-rating-c {
+		color: #8b5e1a;
+		background: #f8ebcf;
+	}
+
+	.pair-rating-d {
+		color: #8a4e4e;
+		background: #f3dddd;
 	}
 
 	.table-row {
