@@ -10,19 +10,19 @@
 			<view class="summary-stats">
 				<view class="stat-item">
 					<text class="stat-label">总人数</text>
-					<text class="stat-value">{{ totalMembers }}</text>
+					<text class="stat-value">{{ displayTotalMembers }}</text>
 				</view>
 				<view class="stat-item">
 					<text class="stat-label">可配对人数</text>
-					<text class="stat-value">{{ validMembers }}</text>
+					<text class="stat-value">{{ displayValidMembers }}</text>
 				</view>
 				<view class="stat-item">
 					<text class="stat-label">配对数量</text>
-					<text class="stat-value">{{ totalPairs }}</text>
+					<text class="stat-value">{{ displayTotalPairs }}</text>
 				</view>
 				<view class="stat-item">
 					<text class="stat-label">分组数</text>
-					<text class="stat-value">{{ groupList.length }}</text>
+					<text class="stat-value">{{ displayGroupCount }}</text>
 				</view>
 			</view>
 		</view>
@@ -298,6 +298,8 @@
 		},
 		computed: {
 			displayGroupList() {
+				// 当前页面的搜索是在前端本地完成：
+				// 先拿到全部人员并生成配对结果，再根据关键词过滤和调整展示顺序。
 				var keyword = this.normalizeKeyword(this.filterKeyword)
 				if (!keyword) {
 					return this.groupList
@@ -331,6 +333,60 @@
 			paginationTotal() {
 				return this.displayGroupList.length
 			},
+			displaySummary() {
+				var keyword = this.normalizeKeyword(this.filterKeyword)
+				if (!keyword) {
+					return {
+						totalMembers: this.totalMembers,
+						validMembers: this.validMembers,
+						totalPairs: this.totalPairs,
+						groupCount: this.groupList.length
+					}
+				}
+
+				var memberMap = {}
+				var matchedMemberCount = 0
+				var totalPairs = 0
+
+				for (var i = 0; i < this.displayGroupList.length; i++) {
+					var group = this.displayGroupList[i]
+					totalPairs += group.pairs.length
+					for (var j = 0; j < group.pairs.length; j++) {
+						var pair = group.pairs[j]
+						var leftId = pair.leftMember && pair.leftMember._id
+						var rightId = pair.rightMember && pair.rightMember._id
+
+						if (leftId && !memberMap[leftId]) {
+							memberMap[leftId] = true
+							matchedMemberCount += 1
+						}
+
+						if (rightId && !memberMap[rightId]) {
+							memberMap[rightId] = true
+							matchedMemberCount += 1
+						}
+					}
+				}
+
+				return {
+					totalMembers: matchedMemberCount,
+					validMembers: matchedMemberCount,
+					totalPairs: totalPairs,
+					groupCount: this.displayGroupList.length
+				}
+			},
+			displayTotalMembers() {
+				return this.displaySummary.totalMembers
+			},
+			displayValidMembers() {
+				return this.displaySummary.validMembers
+			},
+			displayTotalPairs() {
+				return this.displaySummary.totalPairs
+			},
+			displayGroupCount() {
+				return this.displaySummary.groupCount
+			},
 			totalPages() {
 				return Math.max(1, Math.ceil(this.paginationTotal / Number(this.pagination.pageSize || 5)))
 			},
@@ -341,6 +397,7 @@
 				return Number(this.pagination.page || 1) >= this.totalPages
 			},
 			pagedGroupList() {
+				// 这里的分页只是前端展示分页，不是云端按 5 条查询。
 				var pageSize = Number(this.pagination.pageSize || 5)
 				var total = this.displayGroupList.length
 				var maxPage = Math.max(1, Math.ceil(total / pageSize))
@@ -391,6 +448,38 @@
 			getDisplayName(item) {
 				return item.nickname || item.name || '#' + (item.person_id || '未知')
 			},
+			parsePairKeyword(keyword) {
+				var rawKeyword = String(keyword || '').trim()
+				if (!rawKeyword) {
+					return null
+				}
+
+				var parts = rawKeyword
+					.split(/[xX×]/)
+					.map(
+						function (item) {
+							return this.normalizeKeyword(item)
+						}.bind(this)
+					)
+					.filter(function (item) {
+						return !!item
+					})
+
+				if (parts.length !== 2) {
+					return null
+				}
+
+				return {
+					leftKeyword: parts[0],
+					rightKeyword: parts[1]
+				}
+			},
+			formatMemberSummary(leftMbti, leftCount, rightMbti, rightCount) {
+				if (leftMbti === rightMbti) {
+					return leftMbti + '：' + leftCount + ' 人'
+				}
+				return leftMbti + '：' + leftCount + ' 人 / ' + rightMbti + '：' + rightCount + ' 人'
+			},
 			formatGroupName(leftMbti, rightMbti) {
 				var left = this.normalizeMbti(leftMbti)
 				var right = this.normalizeMbti(rightMbti)
@@ -412,22 +501,117 @@
 					rightMember: pair.leftMember
 				})
 			},
-			reorderGroupForKeyword(group, keyword) {
+			pairMatchesKeywordSide(pair, keyword, side) {
+				if (!pair || !keyword) {
+					return false
+				}
+				var name = side === 'right' ? pair.rightName : pair.leftName
+				var mbti = side === 'right' ? pair.rightMbti : pair.leftMbti
+				var haystack = [name, mbti].join('|').toUpperCase()
+				return haystack.indexOf(keyword) !== -1
+			},
+			pairMatchesCombinedKeyword(pair, keyword) {
+				var pairKeyword = this.parsePairKeyword(keyword)
+				if (!pairKeyword || !pair) {
+					return false
+				}
+
+				var leftMatchesLeft = this.pairMatchesKeywordSide(pair, pairKeyword.leftKeyword, 'left')
+				var leftMatchesRight = this.pairMatchesKeywordSide(pair, pairKeyword.leftKeyword, 'right')
+				var rightMatchesLeft = this.pairMatchesKeywordSide(pair, pairKeyword.rightKeyword, 'left')
+				var rightMatchesRight = this.pairMatchesKeywordSide(pair, pairKeyword.rightKeyword, 'right')
+
+				return (
+					(leftMatchesLeft && rightMatchesRight) ||
+					(leftMatchesRight && rightMatchesLeft)
+				)
+			},
+			resolvePreferredLeftMbti(group, keyword) {
+				var pairKeyword = this.parsePairKeyword(keyword)
+				if (pairKeyword) {
+					for (var pairIndex = 0; pairIndex < group.pairs.length; pairIndex++) {
+						var keywordPair = group.pairs[pairIndex]
+						if (this.pairMatchesKeywordSide(keywordPair, pairKeyword.leftKeyword, 'left')) {
+							return keywordPair.leftMbti
+						}
+						if (this.pairMatchesKeywordSide(keywordPair, pairKeyword.leftKeyword, 'right')) {
+							return keywordPair.rightMbti
+						}
+					}
+				}
+
 				var normalizedKeyword = this.normalizeMbti(keyword)
-				if (!normalizedKeyword || !this.isSupportedMbti(normalizedKeyword) || !group) {
+				if (normalizedKeyword && this.isSupportedMbti(normalizedKeyword)) {
+					return normalizedKeyword
+				}
+
+				for (var i = 0; i < group.pairs.length; i++) {
+					var pair = group.pairs[i]
+					if (this.pairMatchesKeywordSide(pair, keyword, 'left')) {
+						return pair.leftMbti
+					}
+					if (this.pairMatchesKeywordSide(pair, keyword, 'right')) {
+						return pair.rightMbti
+					}
+				}
+
+				return ''
+			},
+			reorderPairForKeyword(pair, keyword, preferredLeftMbti) {
+				if (!pair) {
+					return pair
+				}
+
+				if (preferredLeftMbti && pair.rightMbti === preferredLeftMbti && pair.leftMbti !== preferredLeftMbti) {
+					return this.swapPairDisplay(pair)
+				}
+
+				if (
+					!preferredLeftMbti &&
+					this.pairMatchesKeywordSide(pair, keyword, 'right') &&
+					!this.pairMatchesKeywordSide(pair, keyword, 'left')
+				) {
+					return this.swapPairDisplay(pair)
+				}
+
+				return pair
+			},
+			reorderGroupForKeyword(group, keyword) {
+				if (!group || !keyword) {
 					return group
 				}
 
-				var shouldKeepOriginalLeft = group.leftMbti === normalizedKeyword
-				var shouldSwap = group.rightMbti === normalizedKeyword && group.leftMbti !== normalizedKeyword
+				var preferredLeftMbti = this.resolvePreferredLeftMbti(group, keyword)
+				if (!preferredLeftMbti) {
+					return group
+				}
+
+				var displayPairs = group.pairs.map(
+					function (pair) {
+						return this.reorderPairForKeyword(pair, keyword, preferredLeftMbti)
+					}.bind(this)
+				)
+
+				var shouldKeepOriginalLeft = group.leftMbti === preferredLeftMbti
+				var shouldSwap = group.rightMbti === preferredLeftMbti && group.leftMbti !== preferredLeftMbti
 
 				if (!shouldKeepOriginalLeft && !shouldSwap) {
-					return group
+					return Object.assign({}, group, {
+						pairs: displayPairs,
+						name: this.formatGroupName(group.leftMbti, group.rightMbti)
+					})
 				}
 
 				if (!shouldSwap) {
 					return Object.assign({}, group, {
-						name: this.formatGroupName(group.leftMbti, group.rightMbti)
+						name: this.formatGroupName(group.leftMbti, group.rightMbti),
+						pairs: displayPairs,
+						memberSummary: this.formatMemberSummary(
+							group.leftMbti,
+							group.leftCount,
+							group.rightMbti,
+							group.rightCount
+						)
 					})
 				}
 
@@ -435,11 +619,15 @@
 					name: this.formatGroupName(group.rightMbti, group.leftMbti),
 					leftMbti: group.rightMbti,
 					rightMbti: group.leftMbti,
-					pairs: group.pairs.map(
-						function (pair) {
-							return this.swapPairDisplay(pair)
-						}.bind(this)
-					)
+					leftCount: group.rightCount,
+					rightCount: group.leftCount,
+					memberSummary: this.formatMemberSummary(
+						group.rightMbti,
+						group.rightCount,
+						group.leftMbti,
+						group.leftCount
+					),
+					pairs: displayPairs
 				})
 			},
 			toggleMemberDetail(pair, side) {
@@ -509,6 +697,10 @@
 				return comboKey + '组'
 			},
 			matchesGroupKeyword(group, pair, keyword) {
+				if (this.pairMatchesCombinedKeyword(pair, keyword)) {
+					return true
+				}
+
 				var haystack = [
 					group.name,
 					group.subname,
@@ -613,6 +805,8 @@
 						comboSummary: config.comboKey,
 						leftMbti: config.leftMbti,
 						rightMbti: config.rightMbti,
+						leftCount: pairData.leftCount,
+						rightCount: pairData.rightCount,
 						memberSummary:
 							config.leftMbti === config.rightMbti
 								? config.leftMbti + '：' + pairData.leftCount + ' 人'
@@ -645,6 +839,9 @@
 				}
 			},
 			async fetchAllPersonnel() {
+				// 这里会分批把人员数据从云端全部取回。
+				// 单次最多取 500 条，循环直到取完为止。
+				// 之后的搜索、配对、排序都在前端本地进行。
 				var pageSize = 500
 				var page = 0
 				var allList = []
