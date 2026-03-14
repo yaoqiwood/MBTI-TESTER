@@ -8,6 +8,11 @@ const REVIEW_STATUS = ['pending', 'approved', 'rejected']
 const DEFAULT_PAGE_SIZE = 5
 const MAX_PAGE_SIZE = 50
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
+const ADMIN_ROLE = {
+	NORMAL: 0,
+	ADMIN: 1,
+	SUPER_ADMIN: 2
+}
 const HEADER_FIELD_MAP = {
 	'唯一编号': 'person_id',
 	'编号': 'person_id',
@@ -85,6 +90,17 @@ function normalizeTimestamp(value, fallback) {
 	return date
 }
 
+function normalizeAdminRole(value, fallback = ADMIN_ROLE.NORMAL) {
+	if (value === '' || value === null || typeof value === 'undefined') {
+		return fallback
+	}
+	const numericValue = Number(value)
+	if (!Number.isInteger(numericValue) || numericValue < ADMIN_ROLE.NORMAL || numericValue > ADMIN_ROLE.SUPER_ADMIN) {
+		return fallback
+	}
+	return numericValue
+}
+
 function isDeletedRecord(value) {
 	const normalized = String(value).trim().toLowerCase()
 	return value === true || value === 1 || normalized === '1' || normalized === 'true'
@@ -94,6 +110,7 @@ function normalizePayload(payload = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
+	const adminRole = normalizeAdminRole(payload.admin_role, ADMIN_ROLE.NORMAL)
 	const record = {
 		nickname: trimString(payload.nickname),
 		name: trimString(payload.name),
@@ -115,6 +132,7 @@ function normalizePayload(payload = {}) {
 		review_status: reviewStatus,
 		reviewer: trimString(payload.reviewer),
 		remark: trimString(payload.remark),
+		admin_role: adminRole,
 		submitted_at: normalizeTimestamp(payload.submitted_at, now),
 		updated_at: now
 	}
@@ -151,8 +169,31 @@ function buildStats(list = []) {
 		total: list.length,
 		pending: list.filter((item) => item.review_status === 'pending').length,
 		approved: list.filter((item) => item.review_status === 'approved').length,
-		rejected: list.filter((item) => item.review_status === 'rejected').length
+		rejected: list.filter((item) => item.review_status === 'rejected').length,
+		admins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN).length,
+		superAdmins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN).length
 	}
+}
+
+function isAdminRecord(record = {}) {
+	const adminRole = normalizeAdminRole(record.admin_role, ADMIN_ROLE.NORMAL)
+	return adminRole === ADMIN_ROLE.ADMIN || adminRole === ADMIN_ROLE.SUPER_ADMIN
+}
+
+function matchesKeyword(record = {}, normalizedKeyword = '') {
+	if (!normalizedKeyword) {
+		return true
+	}
+	return [
+		record.person_id,
+		record.nickname,
+		record.name,
+		record.mobile,
+		record.id_card,
+		record.mbti,
+		record.native_place,
+		record.profession
+	].some((field) => String(field || '').toLowerCase().includes(normalizedKeyword))
 }
 
 async function getWorkbookBuffer(fileID) {
@@ -286,18 +327,7 @@ module.exports = {
 		let list = data.filter((item) => !isDeletedRecord(item && item.is_deleted)).map(withFormattedDates)
 
 		if (normalizedKeyword) {
-			list = list.filter((item) => {
-				return [
-					item.person_id,
-					item.nickname,
-					item.name,
-					item.mobile,
-					item.id_card,
-					item.mbti,
-					item.native_place,
-					item.profession
-				].some((field) => String(field || '').toLowerCase().includes(normalizedKeyword))
-			})
+			list = list.filter((item) => matchesKeyword(item, normalizedKeyword))
 		}
 
 		if (reviewStatus && reviewStatus !== 'all') {
@@ -314,6 +344,85 @@ module.exports = {
 			page: currentPage,
 			pageSize: currentPageSize,
 			stats: buildStats(list)
+		}
+	},
+
+	async listAdmins({ keyword = '' } = {}) {
+		const data = await fetchAllPersonnelRecords()
+		const normalizedKeyword = trimString(keyword).toLowerCase()
+		const list = data
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedDates)
+			.filter((item) => isAdminRecord(item))
+			.filter((item) => matchesKeyword(item, normalizedKeyword))
+			.sort((left, right) => {
+				const leftRole = normalizeAdminRole(left.admin_role, ADMIN_ROLE.NORMAL)
+				const rightRole = normalizeAdminRole(right.admin_role, ADMIN_ROLE.NORMAL)
+				if (leftRole !== rightRole) {
+					return rightRole - leftRole
+				}
+				return Number(left.person_id || 0) - Number(right.person_id || 0)
+			})
+
+		return {
+			list,
+			stats: {
+				total: list.length,
+				admins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN).length,
+				superAdmins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN).length
+			}
+		}
+	},
+
+	async listAdminCandidates({ keyword = '' } = {}) {
+		const data = await fetchAllPersonnelRecords()
+		const normalizedKeyword = trimString(keyword).toLowerCase()
+		const list = data
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedDates)
+			.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.NORMAL)
+			.filter((item) => matchesKeyword(item, normalizedKeyword))
+			.sort((left, right) => Number(left.person_id || 0) - Number(right.person_id || 0))
+
+		return {
+			list
+		}
+	},
+
+	async updateAdminRole({ id, adminRole } = {}) {
+		if (!trimString(id)) {
+			throw new Error('缂哄皯璁板綍ID')
+		}
+		const nextAdminRole = normalizeAdminRole(adminRole, -1)
+		if (![ADMIN_ROLE.NORMAL, ADMIN_ROLE.ADMIN].includes(nextAdminRole)) {
+			throw new Error('鍙敮鎸?0 鎴?1')
+		}
+		const { data: currentList = [] } = await personnelCollection.doc(id).get()
+		const current = currentList[0]
+		if (!current || isDeletedRecord(current.is_deleted)) {
+			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+		}
+		const currentAdminRole = normalizeAdminRole(current.admin_role, ADMIN_ROLE.NORMAL)
+		if (currentAdminRole === ADMIN_ROLE.SUPER_ADMIN) {
+			throw new Error('瓒呯骇绠＄悊鍛樻潈闄愪笉鍙慨鏀?')
+		}
+		if (currentAdminRole === nextAdminRole) {
+			return {
+				id,
+				person_id: current.person_id,
+				admin_role: currentAdminRole
+			}
+		}
+
+		await personnelCollection.doc(id).update({
+			admin_role: nextAdminRole,
+			updated_at: new Date()
+		})
+
+		return {
+			id,
+			person_id: current.person_id,
+			admin_role: nextAdminRole
 		}
 	},
 

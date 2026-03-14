@@ -9,11 +9,11 @@
 	},
 	"properties": {
 		"_id": {
-			"description": "文档ID，系统自动生成"
+			"description": "文档 ID，系统自动生成"
 		},
 		"person_id": {
 			"bsonType": "int",
-			"title": "唯一ID",
+			"title": "唯一 ID",
 			"description": "自增唯一编号"
 		},
 		"nickname": {
@@ -73,7 +73,7 @@
 		},
 		"family_overview": {
 			"bsonType": "string",
-			"title": "家庭大致情况",
+			"title": "家庭概况",
 			"trim": "both"
 		},
 		"church": {
@@ -127,8 +127,28 @@
 		},
 		"remark": {
 			"bsonType": "string",
-			"title": "remark说明",
+			"title": "备注",
 			"trim": "both"
+		},
+		"admin_role": {
+			"bsonType": "int",
+			"title": "是否为管理员",
+			"defaultValue": 0,
+			"enum": [
+				{
+					"text": "普通测试者",
+					"value": 0
+				},
+				{
+					"text": "管理员",
+					"value": 1
+				},
+				{
+					"text": "超级管理员",
+					"value": 2
+				}
+			],
+			"description": "0 为普通，1 为管理员，2 为超级管理员"
 		},
 		"is_deleted": {
 			"bsonType": "bool",

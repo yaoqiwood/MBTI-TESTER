@@ -2,9 +2,16 @@
 	"pages": [
 		//pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+			"path": "pages/adminHome/gameQueryManagement",
+			"style": {
+				"navigationBarTitleText": "后台功能导航",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/adminHome/adminDashboard",
 			"style": {
-				"navigationBarTitleText": "管理员首页",
+				"navigationBarTitleText": "管理员管理",
 				"enablePullDownRefresh": false
 			}
 		},
@@ -12,13 +19,6 @@
 			"path": "pages/adminHome/personnelManagement",
 			"style": {
 				"navigationBarTitleText": "人员管理",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/adminHome/gameQueryManagement",
-			"style": {
-				"navigationBarTitleText": "游戏查询管理",
 				"enablePullDownRefresh": false
 			}
 		},

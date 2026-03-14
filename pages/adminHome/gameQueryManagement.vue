@@ -1,13 +1,13 @@
 <template>
 	<view class="page">
 		<view class="toolbar">
-			<button class="back-btn" @click="goBack">返回上一级</button>
+			<button class="back-btn" @click="goBack">返回上一页</button>
 		</view>
 
 		<view class="panel-card">
 			<view class="card-head">
-				<text class="card-title">游戏查询管理</text>
-				<text class="card-tip">当前提供两个功能入口，点击后可继续扩展接入。</text>
+				<text class="card-title">后台功能导航</text>
+				<text class="card-tip">点击模块卡片后进入对应管理页面。</text>
 			</view>
 
 			<view class="feature-grid">
@@ -20,13 +20,10 @@
 					<view class="feature-top">
 						<text class="feature-tag">{{ formatModuleTag(index) }}</text>
 						<text v-if="!item.available" class="feature-status is-pending">建设中</text>
+						<text v-else class="feature-status is-ready">可用</text>
 					</view>
 					<text class="feature-title">{{ item.title }}</text>
 					<text class="feature-desc">{{ item.desc }}</text>
-					<!-- <view class="feature-foot">
-						<text class="feature-meta">{{ item.meta }}</text>
-						<text class="feature-link">{{ item.available ? '' : '建设中' }}</text>
-					</view> -->
 				</view>
 			</view>
 		</view>
@@ -40,17 +37,22 @@
 				featureList: [
 					{
 						key: 'mbti-pair-query',
-						title: 'MBTI组合配对查询',
+						title: 'MBTI 组合配对查询',
 						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
-						meta: '已接入初版',
 						available: true,
 						url: '/pages/adminHome/mbti-pair-query'
+					},
+					{
+						key: 'admin-user',
+						title: '管理员管理',
+						desc: '进入管理员管理页面，维护管理员、超级管理员与候选人员。',
+						available: true,
+						url: '/pages/adminHome/adminDashboard'
 					},
 					{
 						key: 'heart-message-manage',
 						title: '心动私信管理',
 						desc: '用于管理心动私信内容、发送关系与审核策略。',
-						meta: '预留功能位',
 						available: false
 					}
 				]
@@ -64,26 +66,19 @@
 			goBack() {
 				const pageStack = getCurrentPages()
 				if (pageStack.length > 1) {
-					uni.navigateBack({
-						delta: 1
-					})
+					uni.navigateBack({ delta: 1 })
 					return
 				}
 				uni.reLaunch({
-					url: '/pages/adminHome/adminDashboard'
+					url: '/pages/adminHome/gameQueryManagement'
 				})
 			},
 			handleFeatureTap(item) {
 				if (item && item.available && item.url) {
-					uni.navigateTo({
-						url: item.url
-					})
+					uni.navigateTo({ url: item.url })
 					return
 				}
-				uni.showToast({
-					title: '功能建设中',
-					icon: 'none'
-				})
+				uni.showToast({ title: '功能建设中', icon: 'none' })
 			}
 		}
 	}
@@ -151,8 +146,7 @@
 		margin-bottom: 20rpx;
 	}
 
-	.feature-top,
-	.feature-foot {
+	.feature-top {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -187,20 +181,5 @@
 		font-size: 32rpx;
 		font-weight: 700;
 		color: #2d241c;
-	}
-
-	.feature-foot {
-		margin-top: 24rpx;
-	}
-
-	.feature-meta {
-		font-size: 22rpx;
-		color: #8e7962;
-	}
-
-	.feature-link {
-		font-size: 24rpx;
-		font-weight: 600;
-		color: #1f6b52;
 	}
 </style>
