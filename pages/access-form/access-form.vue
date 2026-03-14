@@ -1,12 +1,59 @@
 <template>
 	<view class="page">
+		<view v-if="showProfilePopup" class="profile-mask">
+			<view class="profile-dialog">
+				<text class="profile-title">请先完善资料</text>
+				<text class="profile-desc">进入测试前，请填写昵称并上传头像。</text>
+
+				<view class="profile-avatar-wrap">
+					<image v-if="profileForm.avatar" class="profile-avatar" :src="profileForm.avatar" mode="aspectFill"></image>
+					<view v-else class="profile-avatar profile-avatar-empty">
+						<text>头像</text>
+					</view>
+				</view>
+
+				<!-- #ifdef MP-WEIXIN -->
+				<button class="profile-picker-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+					选择微信头像
+				</button>
+				<!-- #endif -->
+
+				<!-- #ifndef MP-WEIXIN -->
+				<button class="profile-picker-btn" @click="chooseAvatarImage">选择头像</button>
+				<!-- #endif -->
+
+				<view class="profile-input-shell">
+					<!-- #ifdef MP-WEIXIN -->
+					<input
+						v-model="profileForm.nickname"
+						class="profile-input"
+						type="nickname"
+						placeholder="请输入昵称"
+						confirm-type="done"
+					/>
+					<!-- #endif -->
+					<!-- #ifndef MP-WEIXIN -->
+					<input
+						v-model="profileForm.nickname"
+						class="profile-input"
+						type="text"
+						placeholder="请输入昵称"
+						confirm-type="done"
+					/>
+					<!-- #endif -->
+				</view>
+
+				<button class="profile-confirm-btn" @click="confirmProfile">确认资料</button>
+			</view>
+		</view>
+
 		<view class="hero">
 			<view class="hero-backdrop hero-backdrop-left"></view>
 			<view class="hero-backdrop hero-backdrop-right"></view>
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">信息确认</text>
-				<text class="subhead">填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配，失焦后会自动清空。</text>
+				<text class="subhead">填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。</text>
 			</view>
 
 			<view class="form-card">
@@ -70,12 +117,17 @@ const nameOptions = ['林夏', '周然', '顾北', '程意', '许棠', '沈知�
 
 export default {
 	data() {
-		return {
+	return {
 			nameOptions,
 			nameInput: '',
 			selectedName: '',
 			password: '',
-			showNameOptions: false
+			showNameOptions: false,
+			showProfilePopup: true,
+			profileForm: {
+				nickname: '',
+				avatar: ''
+			}
 		}
 	},
 	computed: {
@@ -88,6 +140,47 @@ export default {
 		}
 	},
 	methods: {
+		onChooseAvatar(event) {
+			var avatarUrl = event && event.detail && event.detail.avatarUrl
+			if (!avatarUrl) {
+				return
+			}
+			this.profileForm.avatar = avatarUrl
+		},
+		chooseAvatarImage() {
+			uni.chooseImage({
+				count: 1,
+				sizeType: ['compressed'],
+				sourceType: ['album', 'camera'],
+				success: (res) => {
+					var filePath = res.tempFilePaths && res.tempFilePaths[0]
+					if (filePath) {
+						this.profileForm.avatar = filePath
+					}
+				}
+			})
+		},
+		confirmProfile() {
+			if (!this.profileForm.nickname.trim()) {
+				uni.showToast({
+					title: '请输入昵称',
+					icon: 'none'
+				})
+				return
+			}
+			if (!this.profileForm.avatar) {
+				uni.showToast({
+					title: '请上传头像',
+					icon: 'none'
+				})
+				return
+			}
+			this.showProfilePopup = false
+			uni.showToast({
+				title: '资料已完成',
+				icon: 'success'
+			})
+		},
 		handleNameFocus() {
 			this.showNameOptions = true
 		},
@@ -115,6 +208,13 @@ export default {
 			this.showNameOptions = false
 		},
 		submitForm() {
+			if (this.showProfilePopup) {
+				uni.showToast({
+					title: '请先填写昵称和头像',
+					icon: 'none'
+				})
+				return
+			}
 			const name = this.selectedName || this.nameInput.trim()
 			if (!this.nameOptions.includes(name)) {
 				this.nameInput = ''
@@ -158,6 +258,109 @@ export default {
 		radial-gradient(circle at top left, rgba(255, 194, 159, 0.42), transparent 30%),
 		radial-gradient(circle at top right, rgba(135, 202, 255, 0.4), transparent 24%),
 		linear-gradient(180deg, #fffdf8 0%, #fff4ec 46%, #fffaf4 100%);
+}
+
+.profile-mask {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	padding: 40rpx;
+	background: rgba(36, 28, 24, 0.42);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.profile-dialog {
+	width: 100%;
+	max-width: 640rpx;
+	padding: 38rpx 30rpx 34rpx;
+	border-radius: 36rpx;
+	background: linear-gradient(180deg, #fffdf9 0%, #fff5ed 100%);
+	box-shadow: 0 28rpx 56rpx rgba(71, 50, 39, 0.18);
+}
+
+.profile-title {
+	display: block;
+	font-size: 40rpx;
+	font-weight: 700;
+	color: #2f211d;
+	text-align: center;
+}
+
+.profile-desc {
+	display: block;
+	margin-top: 14rpx;
+	font-size: 26rpx;
+	line-height: 1.6;
+	color: #715d56;
+	text-align: center;
+}
+
+.profile-avatar-wrap {
+	display: flex;
+	justify-content: center;
+	margin-top: 30rpx;
+}
+
+.profile-avatar {
+	width: 164rpx;
+	height: 164rpx;
+	border-radius: 50%;
+	background: #f5e7db;
+}
+
+.profile-avatar-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #9c7a6a;
+	font-size: 26rpx;
+	border: 2rpx dashed rgba(156, 122, 106, 0.35);
+}
+
+.profile-picker-btn,
+.profile-confirm-btn {
+	margin-top: 24rpx;
+	height: 88rpx;
+	line-height: 88rpx;
+	border-radius: 999rpx;
+	font-size: 28rpx;
+	font-weight: 600;
+	border: none;
+}
+
+.profile-picker-btn {
+	background: rgba(255, 255, 255, 0.86);
+	color: #4e3d37;
+}
+
+.profile-confirm-btn {
+	background: linear-gradient(90deg, #2f2a47 0%, #594a83 100%);
+	color: #fff9f0;
+	box-shadow: 0 18rpx 32rpx rgba(77, 62, 109, 0.22);
+}
+
+.profile-picker-btn::after,
+.profile-confirm-btn::after {
+	border: none;
+}
+
+.profile-input-shell {
+	margin-top: 22rpx;
+	padding: 0 28rpx;
+	height: 94rpx;
+	border-radius: 999rpx;
+	border: 2rpx solid rgba(94, 68, 54, 0.1);
+	background: rgba(255, 255, 255, 0.92);
+	display: flex;
+	align-items: center;
+}
+
+.profile-input {
+	width: 100%;
+	font-size: 28rpx;
+	color: #342925;
 }
 
 .hero {
