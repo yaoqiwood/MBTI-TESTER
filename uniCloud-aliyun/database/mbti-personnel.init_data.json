@@ -288,5 +288,63 @@
 		"updated_at": {
 			"$date": 1742808600000
 		}
+	},
+	{
+		"person_id": 11,
+		"nickname": "向阳",
+		"name": "姜向阳",
+		"gender": "女",
+		"age": 26,
+		"personal_photo": "",
+		"mobile": "13800138011",
+		"id_card": "500101200001154622",
+		"mbti": "ENFP",
+		"native_place": "重庆",
+		"profession": "幼儿园教师",
+		"address": "重庆市渝中区解放碑步行街12号",
+		"family_overview": "父母均在教会服事，家中气氛活泼温暖，有一位哥哥。",
+		"church": "重庆沐恩堂",
+		"referrer": "张姐妹",
+		"self_introduction": "活泼开朗，热爱孩子，喜欢用创意方式传递爱与信仰。",
+		"relationship_status": "单身",
+		"travel_mode": "地铁",
+		"review_status": "pending",
+		"reviewer": "",
+		"remark": "首次提交，待面谈",
+		"submitted_at": {
+			"$date": 1742981400000
+		},
+		"updated_at": {
+			"$date": 1742981400000
+		}
+	},
+	{
+		"person_id": 12,
+		"nickname": "深冬",
+		"name": "方深远",
+		"gender": "男",
+		"age": 30,
+		"personal_photo": "",
+		"mobile": "13800138012",
+		"id_card": "350203199601224518",
+		"mbti": "INTJ",
+		"native_place": "福建厦门",
+		"profession": "数据分析师",
+		"address": "厦门市思明区软件园三期观日路66号",
+		"family_overview": "家中独生子，父亲从事教育行业，母亲经营家庭，信仰背景稳固。",
+		"church": "厦门思明福音堂",
+		"referrer": "林弟兄",
+		"self_introduction": "思维缜密，独立自主，信仰上追求深度，喜欢研读神学与哲学书籍。",
+		"relationship_status": "单身",
+		"travel_mode": "自驾",
+		"review_status": "approved",
+		"reviewer": "陈同工",
+		"remark": "资料完整，已通过审核",
+		"submitted_at": {
+			"$date": 1743154200000
+		},
+		"updated_at": {
+			"$date": 1743240600000
+		}
 	}
 ]
