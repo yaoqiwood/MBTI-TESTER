@@ -17,11 +17,11 @@
 					class="feature-card"
 					@click="handleFeatureTap(item)"
 				>
-					<view class="feature-top">
+					<!-- <view class="feature-top">
 						<text class="feature-tag">{{ formatModuleTag(index) }}</text>
 						<text v-if="!item.available" class="feature-status is-pending">建设中</text>
 						<text v-else class="feature-status is-ready">可用</text>
-					</view>
+					</view> -->
 					<text class="feature-title">{{ item.title }}</text>
 					<text class="feature-desc">{{ item.desc }}</text>
 				</view>
@@ -183,3 +183,4 @@
 		color: #2d241c;
 	}
 </style>
+
