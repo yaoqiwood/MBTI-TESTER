@@ -141,6 +141,7 @@
 <script>
 const usersTable = uniCloud.database().collection('uni-id-users')
 const personnelAdmin = uniCloud.importObject('personnel-admin')
+const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
 export default {
 	data() {
@@ -171,6 +172,16 @@ export default {
 		}
 	},
 	methods: {
+		savePersonnelProfileToStorage(payload) {
+			try {
+				uni.setStorageSync(PERSONNEL_PROFILE_STORAGE_KEY, {
+					...payload,
+					cached_at: Date.now()
+				})
+			} catch (error) {
+				console.error('savePersonnelProfileToStorage failed', error)
+			}
+		},
 		async loadCurrentUser() {
 			try {
 				const res = await usersTable
@@ -385,7 +396,29 @@ export default {
 						wx_avatar: avatarFileId
 					}
 				})
+				if (result && result.ok === false) {
+					this.showErrorModal(result.message || '淇濆瓨澶辫触')
+					return
+				}
 
+				this.savePersonnelProfileToStorage({
+					id: result && result.id ? result.id : personnelId,
+					personnel_id: personnelId,
+					person_id: result && typeof result.person_id !== 'undefined' ? result.person_id : '',
+					admin_role:
+						result && typeof result.admin_role !== 'undefined'
+							? Number(result.admin_role) || 0
+							: Number(this.selectedRecord && this.selectedRecord.admin_role) || 0,
+					name: name,
+					nickname: this.profileForm.nickname.trim(),
+					passcode: this.password.trim(),
+					personal_photo: avatarFileId,
+					user_id: uid,
+					wx_openid: (user.wx_openid && user.wx_openid.mp) || '',
+					wx_unionid: user.wx_unionid || '',
+					wx_nickname: this.profileForm.nickname.trim(),
+					wx_avatar: avatarFileId
+				})
 				uni.showToast({
 					title: '提交成功',
 					icon: 'success'

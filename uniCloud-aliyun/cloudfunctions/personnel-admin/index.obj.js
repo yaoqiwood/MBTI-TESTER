@@ -121,6 +121,14 @@ function isDeletedRecord(value) {
 	return value === true || value === 1 || normalized === '1' || normalized === 'true'
 }
 
+function createBusinessError(message, code = 'BUSINESS_ERROR') {
+	return {
+		ok: false,
+		code,
+		message
+	}
+}
+
 function normalizePositiveInt(value, fallback) {
 	const parsed = parseInt(value, 10)
 	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
@@ -363,6 +371,40 @@ async function fetchAllPersonnelRecords() {
 	return list
 }
 
+async function updatePersonnelRecord({ id, data } = {}) {
+	if (!trimString(id)) {
+		throw new Error('缺少记录ID')
+	}
+	const { data: currentList = [] } = await personnelCollection.doc(id).get()
+	const current = currentList[0]
+	if (!current || isDeletedRecord(current.is_deleted)) {
+		throw new Error('记录不存在或已被删除')
+	}
+
+	const payload = normalizePayload({
+		...current,
+		...data,
+		submitted_at: current.submitted_at
+	})
+
+	await personnelCollection.doc(id).update({
+		...payload,
+		person_id: current.person_id
+	})
+	await syncPersonalPhotoAttachment({
+		personnelRecordId: id,
+		personId: current.person_id,
+		fileID: payload.personal_photo
+	})
+
+	return {
+		id,
+		person_id: current.person_id,
+		passcode: payload.passcode,
+		admin_role: payload.admin_role
+	}
+}
+
 module.exports = {
 	async list({ keyword = '', reviewStatus = 'all', page = 1, pageSize = DEFAULT_PAGE_SIZE } = {}) {
 		const currentPage = normalizePositiveInt(page, 1)
@@ -412,7 +454,8 @@ module.exports = {
 			}
 			names.push({
 				_id: item._id,
-				name
+				name,
+				admin_role: normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL)
 			})
 			if (names.length >= maxLimit) {
 				break
@@ -727,7 +770,7 @@ module.exports = {
 		const normalizedPersonnelId = trimString(personnelId)
 		const normalizedPasscode = trimString(data && data.passcode)
 		if (!normalizedPersonnelId || !/^\d{4}$/.test(normalizedPasscode)) {
-			throw new Error('口令错误，如有疑问请联系相关同工')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		const normalizedUserId = trimString(userId)
 		if (!normalizedUserId) {
@@ -745,9 +788,9 @@ module.exports = {
 
 		if (current && current._id) {
 			if (current.passcode !== normalizedPasscode) {
-				throw new Error('口令错误，如有疑问请联系相关同工')
+				return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 			}
-			return await this.update({
+			return await updatePersonnelRecord({
 				id: current._id,
 				data: {
 					...data,
@@ -760,13 +803,13 @@ module.exports = {
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedPersonnelId).get()
 		const matchedRecord = matchedList[0]
 		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
-			throw new Error('口令错误，如有疑问请联系相关同工')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
-			throw new Error('该用户已绑定其他账号，如有疑问请联系相关同工')
+			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')
 		}
 
-		return await this.update({
+		return await updatePersonnelRecord({
 			id: matchedRecord._id,
 			data: {
 				...data,
@@ -781,19 +824,20 @@ module.exports = {
 		const normalizedPasscode = trimString(passcode)
 		const normalizedUserId = trimString(userId)
 		if (!normalizedId || !/^\d{4}$/.test(normalizedPasscode)) {
-			throw new Error('口令错误，如有疑问请联系相关同工')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedId).get()
 		const matchedRecord = matchedList[0]
 		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
-			throw new Error('口令错误，如有疑问请联系相关同工')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
-			throw new Error('该用户已绑定其他账号，如有疑问请联系相关同工')
+			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')
 		}
 
 		return {
+			ok: true,
 			id: matchedRecord._id,
 			person_id: matchedRecord.person_id,
 			name: matchedRecord.name

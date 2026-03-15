@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view class="hero">
 			<view class="hero-backdrop hero-backdrop-left"></view>
@@ -12,7 +12,7 @@
 
 			<view class="progress-card">
 				<view class="progress-meta">
-					<text class="progress-title">答题进度</text>
+					<text class="progress-title">绛旈杩涘害</text>
 					<text class="progress-count">{{ answeredCount }}/{{ totalQuestions }}</text>
 				</view>
 				<view class="progress-track">
@@ -37,7 +37,7 @@
 				<text class="summary-copy">{{ stageSummary.description }}</text>
 
 				<view class="summary-portrait">
-					<text class="summary-portrait-label">阶段画像</text>
+					<text class="summary-portrait-label">闃舵鐢诲儚</text>
 					<text class="summary-portrait-copy">{{ stageSummary.personalityDescription }}</text>
 				</view>
 
@@ -50,7 +50,7 @@
 				<text class="summary-encourage">{{ stageSummary.encouragement }}</text>
 
 				<view class="action-btn primary-btn" @click="continueToNextStage">
-					<text>{{ pendingStageNumber === stageList.length ? '查看最终结果' : '继续答题' }}</text>
+					<text>{{ pendingStageNumber === stageList.length ? '鏌ョ湅鏈€缁堢粨鏋? : '缁х画绛旈' }}</text>
 				</view>
 			</view>
 
@@ -81,17 +81,14 @@
 							></view>
 						</view>
 						<text class="trait-note"
-							>更偏向 {{ trait.dominant }} · {{ trait.dominantPercent }}%</text
+							>鏇村亸鍚?{{ trait.dominant }} 路 {{ trait.dominantPercent }}%</text
 						>
 					</view>
 				</view>
 
 				<view class="result-actions">
-					<view class="action-btn primary-btn" @click="restartTest">
-						<text>重新测试</text>
-					</view>
 					<view class="action-btn ghost-btn" @click="goHome">
-						<text>返回首页</text>
+						<text>杩斿洖棣栭〉</text>
 					</view>
 				</view>
 			</view>
@@ -99,11 +96,11 @@
 			<view v-else class="question-card" :class="{ locked: isTransitioning }">
 				<view class="question-meta">
 					<text class="question-index">Q{{ currentIndex + 1 }}</text>
-					<!-- <text class="question-type">{{ currentQuestion.type }} 维度</text> -->
+					<!-- <text class="question-type">{{ currentQuestion.type }} 缁村害</text> -->
 				</view>
 
 				<text class="question-title">{{ currentQuestion.title }}</text>
-				<text class="question-caption">选择更接近你真实状态的一项</text>
+				<text class="question-caption">閫夋嫨鏇存帴杩戜綘鐪熷疄鐘舵€佺殑涓€椤?/text>
 
 				<view class="option-list">
 					<view
@@ -115,7 +112,7 @@
 					>
 						<view class="option-head">
 							<!-- <text class="option-dimension">{{ option.dimension }}</text> -->
-							<!-- <text class="option-tip">点击选择</text> -->
+							<!-- <text class="option-tip">鐐瑰嚮閫夋嫨</text> -->
 						</view>
 						<text class="option-text">{{ option.text }}</text>
 					</view>
@@ -142,32 +139,32 @@
 
 	const stageList = [
 		{
-			label: '初始感知',
+			label: '鍒濆鎰熺煡',
 			start: 0,
 			end: stageSize,
-			prompt: '先按第一直觉作答，别花太久犹豫。',
-			encouragement: '你已经完成热身阶段，继续答题，轮廓会更清晰。'
+			prompt: '鍏堟寜绗竴鐩磋浣滅瓟锛屽埆鑺卞お涔呯姽璞€?,
+			encouragement: '浣犲凡缁忓畬鎴愮儹韬樁娈碉紝缁х画绛旈锛岃疆寤撲細鏇存竻鏅般€?
 		},
 		{
-			label: '关系线索',
+			label: '鍏崇郴绾跨储',
 			start: stageSize,
 			end: stageSize * 2,
-			prompt: '这一段会更明显地拉开你的关系偏好。',
-			encouragement: '你的偏好已经开始稳定，继续把细节补完整。'
+			prompt: '杩欎竴娈典細鏇存槑鏄惧湴鎷夊紑浣犵殑鍏崇郴鍋忓ソ銆?,
+			encouragement: '浣犵殑鍋忓ソ宸茬粡寮€濮嬬ǔ瀹氾紝缁х画鎶婄粏鑺傝ˉ瀹屾暣銆?
 		},
 		{
-			label: '决策倾向',
+			label: '鍐崇瓥鍊惧悜',
 			start: stageSize * 2,
 			end: stageSize * 3,
-			prompt: '继续保持真实选择，别按理想中的自己去答。',
-			encouragement: '还差最后一个阶段，你的结果已经很接近成型。'
+			prompt: '缁х画淇濇寔鐪熷疄閫夋嫨锛屽埆鎸夌悊鎯充腑鐨勮嚜宸卞幓绛斻€?,
+			encouragement: '杩樺樊鏈€鍚庝竴涓樁娈碉紝浣犵殑缁撴灉宸茬粡寰堟帴杩戞垚鍨嬨€?
 		},
 		{
-			label: '节奏定型',
+			label: '鑺傚瀹氬瀷',
 			start: stageSize * 3,
 			end: totalQuestions,
-			prompt: '最后一段会决定你在关系节奏中的整体走向。',
-			encouragement: '四个阶段都已完成，下一步就能看到完整测试结果。'
+			prompt: '鏈€鍚庝竴娈典細鍐冲畾浣犲湪鍏崇郴鑺傚涓殑鏁翠綋璧板悜銆?,
+			encouragement: '鍥涗釜闃舵閮藉凡瀹屾垚锛屼笅涓€姝ュ氨鑳界湅鍒板畬鏁存祴璇曠粨鏋溿€?
 		}
 	]
 
@@ -175,91 +172,91 @@
 		{
 			left: 'E',
 			right: 'I',
-			label: '社交能量',
-			badgeLeft: '更愿意主动表达',
-			badgeRight: '更偏向慢热观察',
-			sentenceLeft: '更愿意先打开话题、带动互动',
-			sentenceRight: '更偏向先观察气氛，在舒服的节奏里慢慢靠近'
+			label: '绀句氦鑳介噺',
+			badgeLeft: '鏇存効鎰忎富鍔ㄨ〃杈?,
+			badgeRight: '鏇村亸鍚戞參鐑瀵?,
+			sentenceLeft: '鏇存効鎰忓厛鎵撳紑璇濋銆佸甫鍔ㄤ簰鍔?,
+			sentenceRight: '鏇村亸鍚戝厛瑙傚療姘旀皼锛屽湪鑸掓湇鐨勮妭濂忛噷鎱㈡參闈犺繎'
 		},
 		{
 			left: 'S',
 			right: 'N',
-			label: '关注重点',
-			badgeLeft: '更看重现实细节',
-			badgeRight: '更容易留意未来可能',
-			sentenceLeft: '更容易被真实、稳定、能落地的细节打动',
-			sentenceRight: '更容易被想法、潜力和未来感吸引'
+			label: '鍏虫敞閲嶇偣',
+			badgeLeft: '鏇寸湅閲嶇幇瀹炵粏鑺?,
+			badgeRight: '鏇村鏄撶暀鎰忔湭鏉ュ彲鑳?,
+			sentenceLeft: '鏇村鏄撹鐪熷疄銆佺ǔ瀹氥€佽兘钀藉湴鐨勭粏鑺傛墦鍔?,
+			sentenceRight: '鏇村鏄撹鎯虫硶銆佹綔鍔涘拰鏈潵鎰熷惛寮?
 		},
 		{
 			left: 'T',
 			right: 'F',
-			label: '判断方式',
-			badgeLeft: '会先理清逻辑',
-			badgeRight: '会先照顾感受',
-			sentenceLeft: '遇到分歧时会先梳理问题本身和解决路径',
-			sentenceRight: '遇到分歧时会先感受彼此有没有被理解和接住'
+			label: '鍒ゆ柇鏂瑰紡',
+			badgeLeft: '浼氬厛鐞嗘竻閫昏緫',
+			badgeRight: '浼氬厛鐓ч【鎰熷彈',
+			sentenceLeft: '閬囧埌鍒嗘鏃朵細鍏堟⒊鐞嗛棶棰樻湰韬拰瑙ｅ喅璺緞',
+			sentenceRight: '閬囧埌鍒嗘鏃朵細鍏堟劅鍙楀郊姝ゆ湁娌℃湁琚悊瑙ｅ拰鎺ヤ綇'
 		},
 		{
 			left: 'J',
 			right: 'P',
-			label: '相处节奏',
-			badgeLeft: '更希望稳定推进',
-			badgeRight: '更希望保留弹性',
-			sentenceLeft: '在关系推进上更喜欢清晰、稳定、慢慢落地',
-			sentenceRight: '在关系推进上更希望保留空间，让互动自然生长'
+			label: '鐩稿鑺傚',
+			badgeLeft: '鏇村笇鏈涚ǔ瀹氭帹杩?,
+			badgeRight: '鏇村笇鏈涗繚鐣欏脊鎬?,
+			sentenceLeft: '鍦ㄥ叧绯绘帹杩涗笂鏇村枩娆㈡竻鏅般€佺ǔ瀹氥€佹參鎱㈣惤鍦?,
+			sentenceRight: '鍦ㄥ叧绯绘帹杩涗笂鏇村笇鏈涗繚鐣欑┖闂达紝璁╀簰鍔ㄨ嚜鐒剁敓闀?
 		}
 	]
 
 	const dimensionKeywords = {
-		E: '外向表达',
-		I: '内向沉淀',
-		S: '现实感知',
-		N: '未来想象',
-		T: '理性判断',
-		F: '情感判断',
-		J: '规划节奏',
-		P: '开放节奏'
+		E: '澶栧悜琛ㄨ揪',
+		I: '鍐呭悜娌夋穩',
+		S: '鐜板疄鎰熺煡',
+		N: '鏈潵鎯宠薄',
+		T: '鐞嗘€у垽鏂?,
+		F: '鎯呮劅鍒ゆ柇',
+		J: '瑙勫垝鑺傚',
+		P: '寮€鏀捐妭濂?
 	}
 
 	const typeHeadlines = {
-		INTJ: '你会先看整体方向，再决定关系要不要继续投入。',
-		INTP: '你在关系里很重视精神交流和自由空间。',
-		ENTJ: '你倾向主动推动关系向更明确的方向发展。',
-		ENTP: '你容易被新鲜感、思想碰撞和可能性吸引。',
-		INFJ: '你会认真感受连接深度，也在意关系的长期意义。',
-		INFP: '你需要真诚、共鸣和不被打扰的情感空间。',
-		ENFJ: '你擅长经营氛围，也愿意主动照顾关系温度。',
-		ENFP: '你会为心动和可能性投入很多热情。',
-		ISTJ: '你更重视可靠、稳定和可以落地的陪伴。',
-		ISFJ: '你倾向用体贴和持续投入来维系关系。',
-		ESTJ: '你习惯把关系推进得更有秩序和确定感。',
-		ESFJ: '你会主动营造安心、温暖、可回应的关系体验。',
-		ISTP: '你更偏好轻松、真实、不过度束缚的互动方式。',
-		ISFP: '你在关系里很重视感受是否自然舒服。',
-		ESTP: '你会被即时互动、行动力和真实体验吸引。',
-		ESFP: '你擅长制造轻松快乐的氛围，也重视当下感受。'
+		INTJ: '浣犱細鍏堢湅鏁翠綋鏂瑰悜锛屽啀鍐冲畾鍏崇郴瑕佷笉瑕佺户缁姇鍏ャ€?,
+		INTP: '浣犲湪鍏崇郴閲屽緢閲嶈绮剧浜ゆ祦鍜岃嚜鐢辩┖闂淬€?,
+		ENTJ: '浣犲€惧悜涓诲姩鎺ㄥ姩鍏崇郴鍚戞洿鏄庣‘鐨勬柟鍚戝彂灞曘€?,
+		ENTP: '浣犲鏄撹鏂伴矞鎰熴€佹€濇兂纰版挒鍜屽彲鑳芥€у惛寮曘€?,
+		INFJ: '浣犱細璁ょ湡鎰熷彈杩炴帴娣卞害锛屼篃鍦ㄦ剰鍏崇郴鐨勯暱鏈熸剰涔夈€?,
+		INFP: '浣犻渶瑕佺湡璇氥€佸叡楦ｅ拰涓嶈鎵撴壈鐨勬儏鎰熺┖闂淬€?,
+		ENFJ: '浣犳搮闀跨粡钀ユ皼鍥达紝涔熸効鎰忎富鍔ㄧ収椤惧叧绯绘俯搴︺€?,
+		ENFP: '浣犱細涓哄績鍔ㄥ拰鍙兘鎬ф姇鍏ュ緢澶氱儹鎯呫€?,
+		ISTJ: '浣犳洿閲嶈鍙潬銆佺ǔ瀹氬拰鍙互钀藉湴鐨勯櫔浼淬€?,
+		ISFJ: '浣犲€惧悜鐢ㄤ綋璐村拰鎸佺画鎶曞叆鏉ョ淮绯诲叧绯汇€?,
+		ESTJ: '浣犱範鎯妸鍏崇郴鎺ㄨ繘寰楁洿鏈夌З搴忓拰纭畾鎰熴€?,
+		ESFJ: '浣犱細涓诲姩钀ラ€犲畨蹇冦€佹俯鏆栥€佸彲鍥炲簲鐨勫叧绯讳綋楠屻€?,
+		ISTP: '浣犳洿鍋忓ソ杞绘澗銆佺湡瀹炪€佷笉杩囧害鏉熺細鐨勪簰鍔ㄦ柟寮忋€?,
+		ISFP: '浣犲湪鍏崇郴閲屽緢閲嶈鎰熷彈鏄惁鑷劧鑸掓湇銆?,
+		ESTP: '浣犱細琚嵆鏃朵簰鍔ㄣ€佽鍔ㄥ姏鍜岀湡瀹炰綋楠屽惛寮曘€?,
+		ESFP: '浣犳搮闀垮埗閫犺交鏉惧揩涔愮殑姘涘洿锛屼篃閲嶈褰撲笅鎰熷彈銆?
 	}
 
 	const letterCopy = {
-		E: '你通常通过互动确认关系温度，交流本身会给你反馈。',
-		I: '你更需要稳定、舒服、低压力的相处节奏，深入比热闹更重要。',
-		S: '你会优先看见现实里的可靠、细节和可持续性。',
-		N: '你更容易被想法、愿景、潜力和未来感打动。',
-		T: '你处理关系问题时会先理清逻辑、边界和解决路径。',
-		F: '你会优先判断彼此的感受是否被看见、被接住。',
-		J: '你喜欢关系朝更明确、更稳定、更有规划的方向推进。',
-		P: '你更希望关系保留弹性，让互动自然生长。'
+		E: '浣犻€氬父閫氳繃浜掑姩纭鍏崇郴娓╁害锛屼氦娴佹湰韬細缁欎綘鍙嶉銆?,
+		I: '浣犳洿闇€瑕佺ǔ瀹氥€佽垝鏈嶃€佷綆鍘嬪姏鐨勭浉澶勮妭濂忥紝娣卞叆姣旂儹闂规洿閲嶈銆?,
+		S: '浣犱細浼樺厛鐪嬭鐜板疄閲岀殑鍙潬銆佺粏鑺傚拰鍙寔缁€с€?,
+		N: '浣犳洿瀹规槗琚兂娉曘€佹効鏅€佹綔鍔涘拰鏈潵鎰熸墦鍔ㄣ€?,
+		T: '浣犲鐞嗗叧绯婚棶棰樻椂浼氬厛鐞嗘竻閫昏緫銆佽竟鐣屽拰瑙ｅ喅璺緞銆?,
+		F: '浣犱細浼樺厛鍒ゆ柇褰兼鐨勬劅鍙楁槸鍚﹁鐪嬭銆佽鎺ヤ綇銆?,
+		J: '浣犲枩娆㈠叧绯绘湞鏇存槑纭€佹洿绋冲畾銆佹洿鏈夎鍒掔殑鏂瑰悜鎺ㄨ繘銆?,
+		P: '浣犳洿甯屾湜鍏崇郴淇濈暀寮规€э紝璁╀簰鍔ㄨ嚜鐒剁敓闀裤€?
 	}
 
 	const feedbackMap = {
-		E: '记录了更主动外放的一面，继续保持直觉作答。',
-		I: '记录了更内敛沉静的一面，稳定偏好正在累积。',
-		S: '记录了更现实落地的偏好，这会让结果更扎实。',
-		N: '记录了更偏未来感和想象力的一面，轮廓更鲜明了。',
-		T: '记录了更理性的判断方式，结果正在收束。',
-		F: '记录了更感受导向的一面，关系温度线索更清楚了。',
-		J: '记录了更偏规划和确定感的倾向，节奏感更稳定了。',
-		P: '记录了更偏开放和灵活的倾向，风格开始显现。'
+		E: '璁板綍浜嗘洿涓诲姩澶栨斁鐨勪竴闈紝缁х画淇濇寔鐩磋浣滅瓟銆?,
+		I: '璁板綍浜嗘洿鍐呮暃娌夐潤鐨勪竴闈紝绋冲畾鍋忓ソ姝ｅ湪绱Н銆?,
+		S: '璁板綍浜嗘洿鐜板疄钀藉湴鐨勫亸濂斤紝杩欎細璁╃粨鏋滄洿鎵庡疄銆?,
+		N: '璁板綍浜嗘洿鍋忔湭鏉ユ劅鍜屾兂璞″姏鐨勪竴闈紝杞粨鏇撮矞鏄庝簡銆?,
+		T: '璁板綍浜嗘洿鐞嗘€х殑鍒ゆ柇鏂瑰紡锛岀粨鏋滄鍦ㄦ敹鏉熴€?,
+		F: '璁板綍浜嗘洿鎰熷彈瀵煎悜鐨勪竴闈紝鍏崇郴娓╁害绾跨储鏇存竻妤氫簡銆?,
+		J: '璁板綍浜嗘洿鍋忚鍒掑拰纭畾鎰熺殑鍊惧悜锛岃妭濂忔劅鏇寸ǔ瀹氫簡銆?,
+		P: '璁板綍浜嗘洿鍋忓紑鏀惧拰鐏垫椿鐨勫€惧悜锛岄鏍煎紑濮嬫樉鐜般€?
 	}
 
 	const userName = ref('')
@@ -310,30 +307,30 @@
 
 	const pageTitle = computed(() => {
 		if (showResult.value) {
-			return '你的恋爱 MBTI'
+			return '浣犵殑鎭嬬埍 MBTI'
 		}
 		if (showStageSummary.value) {
-			return '阶段小结'
+			return '闃舵灏忕粨'
 		}
-		return userName.value ? `${userName.value} 的测试中` : '恋爱 MBTI 测试'
+		return userName.value ? `${userName.value} 鐨勬祴璇曚腑` : '鎭嬬埍 MBTI 娴嬭瘯'
 	})
 
 	const pageSubtitle = computed(() => {
 		if (showResult.value) {
-			return '四个阶段已经全部完成，现在看看你的关系偏好轮廓。'
+			return '鍥涗釜闃舵宸茬粡鍏ㄩ儴瀹屾垚锛岀幇鍦ㄧ湅鐪嬩綘鐨勫叧绯诲亸濂借疆寤撱€?
 		}
 		if (showStageSummary.value) {
-			return '每完成四分之一题量都会生成一次阶段反馈，方便你感受自己的偏好走向。'
+			return '姣忓畬鎴愬洓鍒嗕箣涓€棰橀噺閮戒細鐢熸垚涓€娆￠樁娈靛弽棣堬紝鏂逛究浣犳劅鍙楄嚜宸辩殑鍋忓ソ璧板悜銆?
 		}
 		const currentStage = stageList[currentStageIndex.value]
-		return `${currentStage.label} · 第 ${(currentIndex.value % stageSize) + 1} / ${stageSize} 题，${currentStage.prompt}`
+		return `${currentStage.label} 路 绗?${(currentIndex.value % stageSize) + 1} / ${stageSize} 棰橈紝${currentStage.prompt}`
 	})
 
 	const liveHintTitle = computed(() => {
 		if (selectedDimension.value) {
-			return `已记录：${selectedDimension.value}`
+			return `宸茶褰曪細${selectedDimension.value}`
 		}
-		return `${stageList[currentStageIndex.value].label} · 已完成 ${answeredCount.value} / ${totalQuestions}`
+		return `${stageList[currentStageIndex.value].label} 路 宸插畬鎴?${answeredCount.value} / ${totalQuestions}`
 	})
 
 	const liveHintCopy = computed(() => {
@@ -349,7 +346,7 @@
 	)
 	const resultSummary = computed(() => {
 		const letters = resultType.value.split('')
-		const intro = userName.value ? `${userName.value}，` : ''
+		const intro = userName.value ? `${userName.value}锛宍 : ''
 		return `${intro}${typeHeadlines[resultType.value]} ${letters.map((letter) => letterCopy[letter]).join(' ')}`
 	})
 
@@ -378,10 +375,10 @@
 		const cumulativeAnswers = answers.value.slice(0, stage.end)
 		const cumulativeCounts = countDimensions(cumulativeAnswers)
 		return {
-			title: `${stage.label}完成`,
-			description: `${userName.value ? `${userName.value}，` : ''}你已经完成 ${stage.end} / ${totalQuestions} 题，这一阶段呈现出的性格倾向已经越来越清楚。`,
+			title: `${stage.label}瀹屾垚`,
+			description: `${userName.value ? `${userName.value}锛宍 : ''}浣犲凡缁忓畬鎴?${stage.end} / ${totalQuestions} 棰橈紝杩欎竴闃舵鍛堢幇鍑虹殑鎬ф牸鍊惧悜宸茬粡瓒婃潵瓒婃竻妤氥€俙,
 			personalityDescription: buildStagePersonalityDescription(cumulativeCounts),
-			badges: axisPairs.map((pair) => `${pair.label}：${getAxisBadgeText(cumulativeCounts, pair)}`),
+			badges: axisPairs.map((pair) => `${pair.label}锛?{getAxisBadgeText(cumulativeCounts, pair)}`),
 			encouragement: stage.encouragement
 		}
 	})
@@ -475,7 +472,7 @@
 		const focus = counts.S >= counts.N ? axisPairs[1].sentenceLeft : axisPairs[1].sentenceRight
 		const decision = counts.T >= counts.F ? axisPairs[2].sentenceLeft : axisPairs[2].sentenceRight
 		const rhythm = counts.J >= counts.P ? axisPairs[3].sentenceLeft : axisPairs[3].sentenceRight
-		return `你在人际互动里${social}；在关注一个人或一段关系时，${focus}；${decision}；整体相处节奏上，${rhythm}。`
+		return `浣犲湪浜洪檯浜掑姩閲?{social}锛涘湪鍏虫敞涓€涓汉鎴栦竴娈靛叧绯绘椂锛?{focus}锛?{decision}锛涙暣浣撶浉澶勮妭濂忎笂锛?{rhythm}銆俙
 	}
 
 	function selectOption(option) {
@@ -530,7 +527,7 @@
 		}
 		isSavingResult.value = true
 		uni.showLoading({
-			title: '保存结果中',
+			title: '淇濆瓨缁撴灉涓?,
 			mask: true
 		})
 		try {
@@ -540,7 +537,7 @@
 			})
 		} catch (error) {
 			uni.showToast({
-				title: (error && error.message) || '结果保存失败',
+				title: (error && error.message) || '缁撴灉淇濆瓨澶辫触',
 				icon: 'none',
 				duration: 3000
 			})
@@ -550,20 +547,6 @@
 		}
 	}
 
-	function restartTest() {
-		questionFlow.value = buildQuestionFlow()
-		answers.value = []
-		currentIndex.value = 0
-		showStageSummary.value = false
-		showResult.value = false
-		pendingStageNumber.value = 0
-		selectedDimension.value = ''
-		latestFeedback.value = ''
-		isTransitioning.value = false
-		Object.keys(dimensionScores).forEach((key) => {
-			dimensionScores[key] = 0
-		})
-	}
 
 	function goHome() {
 		uni.navigateTo({

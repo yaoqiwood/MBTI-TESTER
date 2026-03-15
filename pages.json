@@ -2,9 +2,9 @@
 	"pages": [
 		//pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
-			"path": "pages/mbti-home/home",
+			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "MBTI首页",
+				"navigationBarTitleText": "首页",
 				"enablePullDownRefresh": false,
 				"navigationStyle": "custom"
 			}
