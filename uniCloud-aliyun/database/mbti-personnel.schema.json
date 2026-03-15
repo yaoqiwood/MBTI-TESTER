@@ -121,6 +121,12 @@
 			"title": "手机号",
 			"trim": "both"
 		},
+		"passcode": {
+			"bsonType": "string",
+			"title": "鍙ｄ护",
+			"description": "杩涘叆娴嬭瘯鏃剁敤浜庨獙璇佺殑鍙ｄ护",
+			"trim": "both"
+		},
 		"id_card": {
 			"bsonType": "string",
 			"title": "身份证号",

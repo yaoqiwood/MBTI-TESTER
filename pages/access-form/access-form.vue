@@ -58,7 +58,7 @@
 
 			<view class="form-card">
 				<view class="field-block">
-					<text class="field-label">姓名：</text>
+					<text class="field-label">姓名</text>
 					<view class="input-shell" :class="{ active: showNameOptions }">
 						<input
 							v-model="nameInput"
@@ -114,21 +114,28 @@
 
 <script>
 const nameOptions = ['林夏', '周然', '顾北', '程意', '许棠', '沈知意', '宋安', '陆鸣']
+const usersTable = uniCloud.database().collection('uni-id-users')
+const personnelAdmin = uniCloud.importObject('personnel-admin')
 
 export default {
 	data() {
-	return {
+		return {
 			nameOptions,
 			nameInput: '',
 			selectedName: '',
 			password: '',
 			showNameOptions: false,
 			showProfilePopup: true,
+			saving: false,
+			currentUser: null,
 			profileForm: {
 				nickname: '',
 				avatar: ''
 			}
 		}
+	},
+	async onLoad() {
+		await this.loadCurrentUser()
 	},
 	computed: {
 		filteredNames() {
@@ -140,12 +147,26 @@ export default {
 		}
 	},
 	methods: {
-		onChooseAvatar(event) {
-			var avatarUrl = event && event.detail && event.detail.avatarUrl
-			if (!avatarUrl) {
-				return
+		async loadCurrentUser() {
+			try {
+				const res = await usersTable.where('_id == $cloudEnv_uid').field('_id,nickname,avatar_file,wx_openid,wx_unionid').get()
+				const user = (res.result && res.result.data && res.result.data[0]) || null
+				this.currentUser = user
+				if (!user) {
+					return
+				}
+				this.profileForm.nickname = user.nickname || ''
+				this.profileForm.avatar = (user.avatar_file && user.avatar_file.url) || user.avatar_file || ''
+				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
+			} catch (error) {
+				console.error(error)
 			}
-			this.profileForm.avatar = avatarUrl
+		},
+		onChooseAvatar(event) {
+			const avatarUrl = event && event.detail && event.detail.avatarUrl
+			if (avatarUrl) {
+				this.profileForm.avatar = avatarUrl
+			}
 		},
 		chooseAvatarImage() {
 			uni.chooseImage({
@@ -153,7 +174,7 @@ export default {
 				sizeType: ['compressed'],
 				sourceType: ['album', 'camera'],
 				success: (res) => {
-					var filePath = res.tempFilePaths && res.tempFilePaths[0]
+					const filePath = res.tempFilePaths && res.tempFilePaths[0]
 					if (filePath) {
 						this.profileForm.avatar = filePath
 					}
@@ -176,10 +197,22 @@ export default {
 				return
 			}
 			this.showProfilePopup = false
-			uni.showToast({
-				title: '资料已完成',
-				icon: 'success'
+		},
+		async uploadAvatarIfNeeded() {
+			const avatar = this.profileForm.avatar
+			if (!avatar) {
+				return ''
+			}
+			if (/^(cloud|https?:)/.test(avatar)) {
+				return avatar
+			}
+			const ext = avatar.split('.').pop() || 'jpg'
+			const uploadRes = await uniCloud.uploadFile({
+				filePath: avatar,
+				cloudPath: 'mbti-personnel/avatar-' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext
 			})
+			this.profileForm.avatar = uploadRes.fileID
+			return uploadRes.fileID
 		},
 		handleNameFocus() {
 			this.showNameOptions = true
@@ -207,7 +240,7 @@ export default {
 			this.selectedName = name
 			this.showNameOptions = false
 		},
-		submitForm() {
+		async submitForm() {
 			if (this.showProfilePopup) {
 				uni.showToast({
 					title: '请先填写昵称和头像',
@@ -215,6 +248,7 @@ export default {
 				})
 				return
 			}
+
 			const name = this.selectedName || this.nameInput.trim()
 			if (!this.nameOptions.includes(name)) {
 				this.nameInput = ''
@@ -232,15 +266,57 @@ export default {
 				})
 				return
 			}
-			uni.showToast({
-				title: '提交成功',
-				icon: 'success'
+			if (this.saving) {
+				return
+			}
+
+			this.saving = true
+			uni.showLoading({
+				title: '保存中',
+				mask: true
 			})
-			setTimeout(() => {
-				uni.navigateTo({
-					url: `/pages/test/test?name=${encodeURIComponent(name)}`
+
+			try {
+				const uid = uniCloud.getCurrentUserInfo().uid
+				if (!uid) {
+					throw new Error('请先完成微信登录')
+				}
+
+				const avatarFileId = await this.uploadAvatarIfNeeded()
+				const user = this.currentUser || {}
+				const result = await personnelAdmin.upsertByUser({
+					userId: uid,
+					data: {
+						nickname: this.profileForm.nickname.trim(),
+						name: name,
+						passcode: this.password.trim(),
+						personal_photo: avatarFileId,
+						user_id: uid,
+						wx_openid: (user.wx_openid && user.wx_openid.mp) || '',
+						wx_unionid: user.wx_unionid || '',
+						wx_nickname: this.profileForm.nickname.trim(),
+						wx_avatar: avatarFileId
+					}
 				})
-			}, 450)
+
+				uni.showToast({
+					title: '提交成功',
+					icon: 'success'
+				})
+				setTimeout(() => {
+					uni.navigateTo({
+						url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}`
+					})
+				}, 450)
+			} catch (error) {
+				uni.showModal({
+					content: (error && error.message) || '保存失败',
+					showCancel: false
+				})
+			} finally {
+				this.saving = false
+				uni.hideLoading()
+			}
 		},
 		goHome() {
 			uni.navigateTo({

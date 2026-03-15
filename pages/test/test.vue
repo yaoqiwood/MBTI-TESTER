@@ -134,6 +134,7 @@
 	import { computed, reactive, ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import questionsSource from '../../static/json/mbti-88-questions.json'
+	const personnelAdmin = uniCloud.importObject('personnel-admin')
 
 	const questions = questionsSource.questions || []
 	const totalQuestions = questions.length
@@ -262,6 +263,7 @@
 	}
 
 	const userName = ref('')
+	const personnelId = ref('')
 	const currentIndex = ref(0)
 	const answers = ref([])
 	const questionFlow = ref(buildQuestionFlow())
@@ -271,6 +273,7 @@
 	const selectedDimension = ref('')
 	const latestFeedback = ref('')
 	const isTransitioning = ref(false)
+	const isSavingResult = ref(false)
 
 	const dimensionScores = reactive({
 		E: 0,
@@ -286,6 +289,9 @@
 	onLoad((options) => {
 		if (options && options.name) {
 			userName.value = decodeURIComponent(options.name)
+		}
+		if (options && options.personnelId) {
+			personnelId.value = decodeURIComponent(options.personnelId)
 		}
 	})
 
@@ -508,13 +514,40 @@
 		}, 220)
 	}
 
-	function continueToNextStage() {
+	async function continueToNextStage() {
 		showStageSummary.value = false
 		if (pendingStageNumber.value === stageList.length && answeredCount.value === totalQuestions) {
+			await persistMbtiResult()
 			showResult.value = true
 			return
 		}
 		latestFeedback.value = ''
+	}
+
+	async function persistMbtiResult() {
+		if (!personnelId.value || isSavingResult.value) {
+			return
+		}
+		isSavingResult.value = true
+		uni.showLoading({
+			title: '保存结果中',
+			mask: true
+		})
+		try {
+			await personnelAdmin.saveMbtiResult({
+				id: personnelId.value,
+				mbti: resultType.value
+			})
+		} catch (error) {
+			uni.showToast({
+				title: (error && error.message) || '结果保存失败',
+				icon: 'none',
+				duration: 3000
+			})
+		} finally {
+			isSavingResult.value = false
+			uni.hideLoading()
+		}
 	}
 
 	function restartTest() {

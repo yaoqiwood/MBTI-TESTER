@@ -112,12 +112,23 @@ function normalizePayload(payload = {}) {
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
 	const adminRole = normalizeAdminRole(payload.admin_role, ADMIN_ROLE.NORMAL)
 	const record = {
+		user_id: trimString(payload.user_id),
+		wx_openid: trimString(payload.wx_openid),
+		wx_unionid: trimString(payload.wx_unionid),
+		wx_nickname: trimString(payload.wx_nickname),
+		wx_avatar: trimString(payload.wx_avatar),
+		wx_gender: normalizePositiveInt(payload.wx_gender, 0),
+		wx_language: trimString(payload.wx_language),
+		wx_city: trimString(payload.wx_city),
+		wx_province: trimString(payload.wx_province),
+		wx_country: trimString(payload.wx_country),
 		nickname: trimString(payload.nickname),
 		name: trimString(payload.name),
 		gender: trimString(payload.gender),
 		age: Number.isFinite(ageValue) && ageValue > 0 ? Math.floor(ageValue) : null,
 		personal_photo: trimString(payload.personal_photo),
 		mobile: trimString(payload.mobile),
+		passcode: trimString(payload.passcode),
 		id_card: trimString(payload.id_card),
 		mbti: trimString(payload.mbti).toUpperCase(),
 		native_place: trimString(payload.native_place),
@@ -617,6 +628,67 @@ module.exports = {
 			importedCount,
 			skippedCount: errors.length,
 			errors: errors.slice(0, 20)
+		}
+	},
+
+	async upsertByUser({ userId, data } = {}) {
+		const normalizedUserId = trimString(userId)
+		if (!normalizedUserId) {
+			throw new Error('缂哄皯鐢ㄦ埛ID')
+		}
+
+		const { data: currentList = [] } = await personnelCollection
+			.where({
+				user_id: normalizedUserId,
+				is_deleted: false
+			})
+			.limit(1)
+			.get()
+		const current = currentList[0]
+
+		if (current && current._id) {
+			return await this.update({
+				id: current._id,
+				data: {
+					...data,
+					user_id: normalizedUserId
+				}
+			})
+		}
+
+		return await this.create({
+			data: {
+				...data,
+				user_id: normalizedUserId
+			}
+		})
+	},
+
+	async saveMbtiResult({ id, mbti } = {}) {
+		if (!trimString(id)) {
+			throw new Error('缂哄皯璁板綍ID')
+		}
+
+		const normalizedMbti = trimString(mbti).toUpperCase()
+		if (!/^(E|I)(N|S)(T|F)(J|P)$/.test(normalizedMbti)) {
+			throw new Error('MBTI 鏍煎紡涓嶆纭?')
+		}
+
+		const { data: currentList = [] } = await personnelCollection.doc(id).get()
+		const current = currentList[0]
+		if (!current || isDeletedRecord(current.is_deleted)) {
+			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+		}
+
+		await personnelCollection.doc(id).update({
+			mbti: normalizedMbti,
+			updated_at: new Date()
+		})
+
+		return {
+			id,
+			person_id: current.person_id,
+			mbti: normalizedMbti
 		}
 	}
 }
