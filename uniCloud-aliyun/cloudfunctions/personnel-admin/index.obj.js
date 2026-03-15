@@ -79,6 +79,21 @@ function normalizeReviewStatus(value) {
 	return 'pending'
 }
 
+function generateRandomPasscode() {
+	return String(Math.floor(Math.random() * 10000)).padStart(4, '0')
+}
+
+function normalizePasscode(value, { autoGenerate = false } = {}) {
+	const normalized = trimString(String(value || ''))
+	if (!normalized) {
+		return autoGenerate ? generateRandomPasscode() : ''
+	}
+	if (!/^\d{4}$/.test(normalized)) {
+		throw new Error('口令必须是4位数字')
+	}
+	return normalized
+}
+
 function normalizeTimestamp(value, fallback) {
 	if (!value) {
 		return fallback
@@ -106,11 +121,12 @@ function isDeletedRecord(value) {
 	return value === true || value === 1 || normalized === '1' || normalized === 'true'
 }
 
-function normalizePayload(payload = {}) {
+function normalizePayload(payload = {}, options = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
 	const adminRole = normalizeAdminRole(payload.admin_role, ADMIN_ROLE.NORMAL)
+	const passcode = normalizePasscode(payload.passcode, options)
 	const record = {
 		user_id: trimString(payload.user_id),
 		wx_openid: trimString(payload.wx_openid),
@@ -128,7 +144,7 @@ function normalizePayload(payload = {}) {
 		age: Number.isFinite(ageValue) && ageValue > 0 ? Math.floor(ageValue) : null,
 		personal_photo: trimString(payload.personal_photo),
 		mobile: trimString(payload.mobile),
-		passcode: trimString(payload.passcode),
+		passcode: passcode,
 		id_card: trimString(payload.id_card),
 		mbti: trimString(payload.mbti).toUpperCase(),
 		native_place: trimString(payload.native_place),
@@ -162,6 +178,10 @@ function normalizePayload(payload = {}) {
 	}
 	if (record.mbti && !/^(E|I)(N|S)(T|F)(J|P)$/.test(record.mbti)) {
 		throw new Error('MBTI 格式不正确')
+	}
+
+	if (record.passcode && !/^\d{4}$/.test(record.passcode)) {
+		throw new Error('口令必须是4位数字')
 	}
 
 	return record
@@ -438,7 +458,9 @@ module.exports = {
 	},
 
 	async create({ data } = {}) {
-		const record = normalizePayload(data)
+		const record = normalizePayload(data, {
+			autoGenerate: true
+		})
 		const transaction = await db.startTransaction()
 
 		try {
@@ -476,7 +498,8 @@ module.exports = {
 
 			return {
 				id: createRes.id,
-				person_id: nextId
+				person_id: nextId,
+				passcode: record.passcode
 			}
 		} catch (error) {
 			await transaction.rollback()
@@ -512,7 +535,26 @@ module.exports = {
 
 		return {
 			id,
-			person_id: current.person_id
+			person_id: current.person_id,
+			passcode: payload.passcode
+		}
+	},
+
+	async resetAllPasscodes() {
+		const records = await fetchAllPersonnelRecords()
+		const activeRecords = records.filter((item) => !isDeletedRecord(item && item.is_deleted))
+		let updatedCount = 0
+
+		for (let i = 0; i < activeRecords.length; i++) {
+			await personnelCollection.doc(activeRecords[i]._id).update({
+				passcode: generateRandomPasscode(),
+				updated_at: new Date()
+			})
+			updatedCount += 1
+		}
+
+		return {
+			updatedCount
 		}
 	},
 
@@ -581,7 +623,9 @@ module.exports = {
 					continue
 				}
 				try {
-					const record = normalizePayload(payload)
+					const record = normalizePayload(payload, {
+						autoGenerate: true
+					})
 					nextId += 1
 					docsToAdd.push({
 						...record,

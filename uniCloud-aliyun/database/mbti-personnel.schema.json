@@ -123,8 +123,8 @@
 		},
 		"passcode": {
 			"bsonType": "string",
-			"title": "鍙ｄ护",
-			"description": "杩涘叆娴嬭瘯鏃剁敤浜庨獙璇佺殑鍙ｄ护",
+			"title": "口令",
+			"description": "进入测试时用于验证的口令",
 			"trim": "both"
 		},
 		"id_card": {
@@ -217,19 +217,29 @@
 			"defaultValue": 0,
 			"enum": [
 				{
-					"text": "普通测试者",
+					"text": "普通参与者",
 					"value": 0
 				},
 				{
-					"text": "管理员",
+					"text": "同工",
 					"value": 1
 				},
 				{
-					"text": "超级管理员",
+					"text": "管理员",
 					"value": 2
+				},
+				{
+					"text": "超级管理员",
+					"value": 3
 				}
 			],
-			"description": "0 为普通，1 为管理员，2 为超级管理员"
+			"description": "0 为普通参与者-没有后台权限，1 为同工-可以进入后台查看，2 为管理员-拥有可以进入后台增删人员，3 为超级管理员-是为开发者权限"
+		},
+		"private_message_quota": {
+			"bsonType": "int",
+			"title": "可发私信次数",
+			"defaultValue": 0,
+			"description": "用户当前可发起私信的次数"
 		},
 		"is_deleted": {
 			"bsonType": "bool",

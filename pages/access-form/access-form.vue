@@ -93,6 +93,8 @@
 							class="text-input"
 							type="text"
 							password
+							maxlength="4"
+							@input="handlePasswordInput"
 							placeholder="请输入口令"
 							confirm-type="done"
 						/>
@@ -240,6 +242,10 @@ export default {
 			this.selectedName = name
 			this.showNameOptions = false
 		},
+		handlePasswordInput(event) {
+			const value = ((event && event.detail && event.detail.value) || '').replace(/\D/g, '').slice(0, 4)
+			this.password = value
+		},
 		async submitForm() {
 			if (this.showProfilePopup) {
 				uni.showToast({
@@ -262,6 +268,13 @@ export default {
 			if (!this.password.trim()) {
 				uni.showToast({
 					title: '请输入口令',
+					icon: 'none'
+				})
+				return
+			}
+			if (!/^\d{4}$/.test(this.password.trim())) {
+				uni.showToast({
+					title: '口令必须是4位数字',
 					icon: 'none'
 				})
 				return

@@ -1,5 +1,52 @@
 <template>
 	<view class="page">
+		<view v-if="showDetailPopup && detailRecord" class="detail-mask" @click="closeDetail">
+			<view class="detail-dialog" @click.stop>
+				<view class="detail-head">
+					<text class="detail-title">人员详情</text>
+					<text class="detail-close" @click="closeDetail">×</text>
+				</view>
+				<view class="detail-grid">
+					<view class="detail-item">
+						<text class="detail-label">编号</text>
+						<text class="detail-value">#{{ detailRecord.person_id || '-' }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">昵称</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.nickname) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">姓名</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.name) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">口令</text>
+						<text class="detail-value detail-passcode">{{ formatDetailValue(detailRecord.passcode) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">手机号</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.mobile) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">MBTI</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.mbti) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">审核状态</text>
+						<text class="detail-value">{{ reviewStatusText(detailRecord.review_status) }}</text>
+					</view>
+					<view class="detail-item">
+						<text class="detail-label">审核人</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.reviewer) }}</text>
+					</view>
+					<view class="detail-item detail-item-full">
+						<text class="detail-label">备注</text>
+						<text class="detail-value">{{ formatDetailValue(detailRecord.remark) }}</text>
+					</view>
+				</view>
+				<button class="solid-btn detail-confirm-btn" @click="closeDetail">关闭</button>
+			</view>
+		</view>
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
 				<text class="hero-kicker">MBTI PERSONNEL ADMIN</text>
@@ -9,6 +56,7 @@
 				>
 			</view>
 			<view class="hero-actions">
+				<button class="light-btn" :disabled="resettingPasscodes" @click="resetAllPasscodes">生成全部口令</button>
 				<button class="solid-btn" @click="importSignupSheet">报名表格导入</button>
 				<button class="ghost-btn" @click="goLegacyHome">原 MBTI 首页</button>
 			</view>
@@ -106,6 +154,7 @@
 						<text class="col col-reviewer">{{ item.reviewer || '-' }}</text>
 						<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
 						<view class="col col-action action-cell">
+							<button class="mini-btn" @click="openDetail(item)">详情</button>
 							<button class="mini-btn" @click="openEdit(item)">编辑</button>
 							<button
 								class="mini-btn danger-btn"
@@ -332,7 +381,10 @@
 				loading: false,
 				saving: false,
 				importing: false,
+				resettingPasscodes: false,
 				deletingId: '',
+				showDetailPopup: false,
+				detailRecord: null,
 				records: [],
 				stats: createDefaultStats(),
 				keyword: '',
@@ -564,6 +616,14 @@
 				this.currentId = ''
 				this.form = createForm()
 			},
+			openDetail: function (item) {
+				this.detailRecord = item || null
+				this.showDetailPopup = !!item
+			},
+			closeDetail: function () {
+				this.showDetailPopup = false
+				this.detailRecord = null
+			},
 			openEdit: function (item) {
 				this.showFormOnly = true
 				this.currentId = item._id
@@ -593,6 +653,55 @@
 					scrollTop: 0,
 					duration: 200
 				})
+			},
+			resetAllPasscodes: async function () {
+				if (!personnelAdmin) {
+					this.showUnavailable()
+					return
+				}
+				if (this.resettingPasscodes) {
+					return
+				}
+				var modalRes = await new Promise(function (resolve) {
+					uni.showModal({
+						title: '提示',
+						content: '将为所有未删除人员重新生成随机四位数口令，是否继续？',
+						success: function (res) {
+							resolve(res)
+						},
+						fail: function () {
+							resolve({ confirm: false })
+						}
+					})
+				})
+				if (!modalRes.confirm) {
+					return
+				}
+
+				this.resettingPasscodes = true
+				uni.showLoading({
+					title: '生成中',
+					mask: true
+				})
+				try {
+					var res = await personnelAdmin.resetAllPasscodes()
+					await this.loadList({
+						page: this.pagination.page
+					})
+					uni.showModal({
+						title: '生成完成',
+						content: '已为 ' + (res.updatedCount || 0) + ' 人生成新的四位数口令',
+						showCancel: false
+					})
+				} catch (error) {
+					uni.showModal({
+						content: error.message || '批量生成口令失败',
+						showCancel: false
+					})
+				} finally {
+					this.resettingPasscodes = false
+					uni.hideLoading()
+				}
 			},
 			removeRecord: async function (item) {
 				if (!personnelAdmin) {
@@ -660,6 +769,9 @@
 				this.keyword = ''
 				this.reviewStatusFilter = 'all'
 				this.searchList()
+			},
+			formatDetailValue: function (value) {
+				return value || '-'
 			},
 			onGenderChange: function (event) {
 				this.form.gender = this.genderOptions[event.detail.value]
@@ -783,6 +895,7 @@
 					mask: true
 				})
 				try {
+					var saveRes = null
 					var payload = {
 						nickname: this.form.nickname,
 						name: this.form.name,
@@ -806,12 +919,12 @@
 						remark: this.form.remark
 					}
 					if (this.isEditMode) {
-						await personnelAdmin.update({
+						saveRes = await personnelAdmin.update({
 							id: this.currentId,
 							data: payload
 						})
 					} else {
-						await personnelAdmin.create({
+						saveRes = await personnelAdmin.create({
 							data: payload
 						})
 					}
@@ -823,6 +936,13 @@
 					this.loadList({
 						page: isEditMode ? this.pagination.page : 1
 					})
+					if (!isEditMode && saveRes && saveRes.passcode) {
+						uni.showModal({
+							title: '随机口令已生成',
+							content: '该用户的四位数口令为：' + saveRes.passcode,
+							showCancel: false
+						})
+					}
 				} catch (error) {
 					uni.showModal({
 						content: error.message || '保存失败',
@@ -854,6 +974,88 @@
 		padding: 24rpx;
 		background: #f5efe5;
 		box-sizing: border-box;
+	}
+
+	.detail-mask {
+		position: fixed;
+		inset: 0;
+		z-index: 30;
+		padding: 32rpx;
+		background: rgba(44, 36, 28, 0.45);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+
+	.detail-dialog {
+		width: 100%;
+		max-width: 680rpx;
+		padding: 32rpx;
+		border-radius: 28rpx;
+		background: #fffcf7;
+		box-shadow: 0 24rpx 56rpx rgba(91, 70, 40, 0.16);
+		box-sizing: border-box;
+	}
+
+	.detail-head,
+	.detail-item {
+		display: flex;
+		justify-content: space-between;
+		gap: 20rpx;
+	}
+
+	.detail-head {
+		align-items: center;
+	}
+
+	.detail-title {
+		font-size: 34rpx;
+		font-weight: 700;
+		color: #2d241c;
+	}
+
+	.detail-close {
+		font-size: 42rpx;
+		line-height: 1;
+		color: #7b664d;
+	}
+
+	.detail-grid {
+		margin-top: 24rpx;
+	}
+
+	.detail-item {
+		padding: 18rpx 0;
+		border-bottom: 1rpx solid #eadfce;
+	}
+
+	.detail-item-full {
+		flex-direction: column;
+	}
+
+	.detail-label {
+		font-size: 24rpx;
+		color: #7c6b57;
+	}
+
+	.detail-value {
+		flex: 1;
+		font-size: 26rpx;
+		color: #2f251d;
+		text-align: right;
+		word-break: break-all;
+	}
+
+	.detail-passcode {
+		font-weight: 700;
+		letter-spacing: 4rpx;
+		color: #1f6b52;
+	}
+
+	.detail-confirm-btn {
+		margin-top: 28rpx;
+		margin-right: 0;
 	}
 
 	.hero-card,
@@ -1111,7 +1313,7 @@
 		width: 220rpx;
 	}
 	.col-action {
-		width: 180rpx;
+		width: 200rpx;
 	}
 
 	.name-cell {
