@@ -121,6 +121,11 @@ function isDeletedRecord(value) {
 	return value === true || value === 1 || normalized === '1' || normalized === 'true'
 }
 
+function normalizePositiveInt(value, fallback) {
+	const parsed = parseInt(value, 10)
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 function normalizePayload(payload = {}, options = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
@@ -144,7 +149,7 @@ function normalizePayload(payload = {}, options = {}) {
 		age: Number.isFinite(ageValue) && ageValue > 0 ? Math.floor(ageValue) : null,
 		personal_photo: trimString(payload.personal_photo),
 		mobile: trimString(payload.mobile),
-		passcode: passcode,
+		passcode,
 		id_card: trimString(payload.id_card),
 		mbti: trimString(payload.mbti).toUpperCase(),
 		native_place: trimString(payload.native_place),
@@ -179,7 +184,6 @@ function normalizePayload(payload = {}, options = {}) {
 	if (record.mbti && !/^(E|I)(N|S)(T|F)(J|P)$/.test(record.mbti)) {
 		throw new Error('MBTI 格式不正确')
 	}
-
 	if (record.passcode && !/^\d{4}$/.test(record.passcode)) {
 		throw new Error('口令必须是4位数字')
 	}
@@ -277,11 +281,6 @@ function mapRowToPayload(headerMap, row = []) {
 
 function isEmptyPayload(payload) {
 	return !Object.keys(payload).some((key) => trimString(String(payload[key] || '')))
-}
-
-function normalizePositiveInt(value, fallback) {
-	const parsed = parseInt(value, 10)
-	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
 async function getFileTempUrl(fileID) {
@@ -393,6 +392,38 @@ module.exports = {
 		}
 	},
 
+	async searchNames({ keyword = '', limit = 5 } = {}) {
+		const normalizedKeyword = trimString(keyword).toLowerCase()
+		const maxLimit = Math.min(Math.max(Number(limit) || 5, 1), 5)
+		const records = await fetchAllPersonnelRecords()
+		const names = []
+
+		for (let i = 0; i < records.length; i++) {
+			const item = records[i]
+			const name = trimString(item && item.name)
+			if (!name || isDeletedRecord(item && item.is_deleted)) {
+				continue
+			}
+			if (normalizedKeyword && name.toLowerCase().indexOf(normalizedKeyword) === -1) {
+				continue
+			}
+			if (names.some((entry) => entry.name === name)) {
+				continue
+			}
+			names.push({
+				_id: item._id,
+				name
+			})
+			if (names.length >= maxLimit) {
+				break
+			}
+		}
+
+		return {
+			list: names
+		}
+	},
+
 	async listAdmins({ keyword = '' } = {}) {
 		const data = await fetchAllPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
@@ -437,20 +468,20 @@ module.exports = {
 
 	async updateAdminRole({ id, adminRole } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 		const nextAdminRole = normalizeAdminRole(adminRole, -1)
 		if (![ADMIN_ROLE.NORMAL, ADMIN_ROLE.ADMIN].includes(nextAdminRole)) {
-			throw new Error('鍙敮鎸?0 鎴?1')
+			throw new Error('只支持 0 或 1')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 		const currentAdminRole = normalizeAdminRole(current.admin_role, ADMIN_ROLE.NORMAL)
 		if (currentAdminRole === ADMIN_ROLE.SUPER_ADMIN) {
-			throw new Error('瓒呯骇绠＄悊鍛樻潈闄愪笉鍙慨鏀?')
+			throw new Error('超级管理员权限不可修改')
 		}
 		if (currentAdminRole === nextAdminRole) {
 			return {
@@ -692,15 +723,15 @@ module.exports = {
 		}
 	},
 
-	async upsertByUser({ userId, data } = {}) {
-		const normalizedName = trimString(data && data.name)
+	async upsertByUser({ userId, personnelId, data } = {}) {
+		const normalizedPersonnelId = trimString(personnelId)
 		const normalizedPasscode = trimString(data && data.passcode)
-		if (!normalizedName || !/^\d{4}$/.test(normalizedPasscode)) {
+		if (!normalizedPersonnelId || !/^\d{4}$/.test(normalizedPasscode)) {
 			throw new Error('口令错误，如有疑问请联系相关同工')
 		}
 		const normalizedUserId = trimString(userId)
 		if (!normalizedUserId) {
-			throw new Error('缂哄皯鐢ㄦ埛ID')
+			throw new Error('缺少用户ID')
 		}
 
 		const { data: currentList = [] } = await personnelCollection
@@ -726,8 +757,9 @@ module.exports = {
 			})
 		}
 
-		const matchedRecord = await findActiveRecordByName(normalizedName)
-		if (!matchedRecord || matchedRecord.passcode !== normalizedPasscode) {
+		const { data: matchedList = [] } = await personnelCollection.doc(normalizedPersonnelId).get()
+		const matchedRecord = matchedList[0]
+		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
 			throw new Error('口令错误，如有疑问请联系相关同工')
 		}
 		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
@@ -744,16 +776,17 @@ module.exports = {
 		})
 	},
 
-	async verifyAccess({ name, passcode, userId = '' } = {}) {
-		const normalizedName = trimString(name)
+	async verifyAccess({ id, passcode, userId = '' } = {}) {
+		const normalizedId = trimString(id)
 		const normalizedPasscode = trimString(passcode)
 		const normalizedUserId = trimString(userId)
-		if (!normalizedName || !/^\d{4}$/.test(normalizedPasscode)) {
+		if (!normalizedId || !/^\d{4}$/.test(normalizedPasscode)) {
 			throw new Error('口令错误，如有疑问请联系相关同工')
 		}
 
-		const matchedRecord = await findActiveRecordByName(normalizedName)
-		if (!matchedRecord || matchedRecord.passcode !== normalizedPasscode) {
+		const { data: matchedList = [] } = await personnelCollection.doc(normalizedId).get()
+		const matchedRecord = matchedList[0]
+		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
 			throw new Error('口令错误，如有疑问请联系相关同工')
 		}
 		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
@@ -769,18 +802,18 @@ module.exports = {
 
 	async saveMbtiResult({ id, mbti } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 
 		const normalizedMbti = trimString(mbti).toUpperCase()
 		if (!/^(E|I)(N|S)(T|F)(J|P)$/.test(normalizedMbti)) {
-			throw new Error('MBTI 鏍煎紡涓嶆纭?')
+			throw new Error('MBTI 格式不正确')
 		}
 
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 
 		await personnelCollection.doc(id).update({
