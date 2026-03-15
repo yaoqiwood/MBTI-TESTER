@@ -8,7 +8,11 @@
 
 				<view class="profile-avatar-wrap">
 					<!-- #ifdef MP-WEIXIN -->
-					<button class="profile-avatar-trigger" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+					<button
+						class="profile-avatar-trigger"
+						open-type="chooseAvatar"
+						@chooseavatar="onChooseAvatar"
+					>
 						<image
 							v-if="profileForm.avatar"
 							class="profile-avatar"
@@ -77,7 +81,9 @@
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">信息确认</text>
-				<text class="subhead">填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。</text>
+				<text class="subhead"
+					>填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。</text
+				>
 			</view>
 
 			<view class="form-card">
@@ -106,7 +112,9 @@
 							<text>{{ item.name }}</text>
 						</view>
 					</view>
-					<text v-else-if="showNameOptions && nameInput" class="empty-tip">没有匹配姓名，离开输入框后会自动清空</text>
+					<text v-else-if="showNameOptions && nameInput" class="empty-tip"
+						>没有匹配姓名，离开输入框后会自动清空</text
+					>
 				</view>
 
 				<view class="field-block">
@@ -139,307 +147,449 @@
 </template>
 
 <script>
-const personnelAdmin = uniCloud.importObject('personnel-admin')
-const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
+	const personnelAdmin = uniCloud.importObject('personnel-admin')
+	const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
-export default {
-	data() {
-		return {
-			nameOptions: [],
-			nameInput: '',
-			selectedName: '',
-			selectedRecord: null,
-			password: '',
-			showNameOptions: false,
-			showProfilePopup: true,
-			saving: false,
-			lastErrorMessage: '',
-			lastErrorAt: 0,
-			currentUser: null,
-			profileForm: {
-				nickname: '',
-				avatar: ''
-			}
-		}
-	},
-	async onLoad() {
-		await this.loadCurrentUser()
-	},
-	computed: {
-		filteredNames() {
-			return this.nameOptions
-		}
-	},
-	methods: {
-		savePersonnelProfileToStorage(payload) {
-			try {
-				uni.setStorageSync(PERSONNEL_PROFILE_STORAGE_KEY, {
-					...payload,
-					cached_at: Date.now()
-				})
-			} catch (error) {
-				console.error('savePersonnelProfileToStorage failed', error)
-			}
-		},
-		async loadCurrentUser() {
-			try {
-				const currentUserInfo = uniCloud.getCurrentUserInfo()
-				const cachedUser = uni.getStorageSync('uni-id-pages-userInfo') || {}
-				const user = {
-					...cachedUser,
-					_id: currentUserInfo.uid || cachedUser._id || ''
+	export default {
+		data() {
+			return {
+				nameOptions: [],
+				nameInput: '',
+				selectedName: '',
+				selectedRecord: null,
+				password: '',
+				showNameOptions: false,
+				showProfilePopup: false,
+				saving: false,
+				lastErrorMessage: '',
+				lastErrorAt: 0,
+				currentUser: null,
+				restoredByOpenid: false,
+				profileForm: {
+					nickname: '',
+					avatar: ''
 				}
-				this.currentUser = user
-				this.profileForm.nickname = user.nickname || ''
-				this.profileForm.avatar =
-					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
-				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
-			} catch (error) {
-				console.error(error)
 			}
 		},
-		onChooseAvatar(event) {
-			const avatarUrl = event && event.detail && event.detail.avatarUrl
-			if (avatarUrl) {
-				this.profileForm.avatar = avatarUrl
+		async onLoad() {
+			await this.loadCurrentUser()
+			await this.tryRestoreProfileByOpenid()
+			if (!this.restoredByOpenid) {
+				this.syncProfilePopupState()
 			}
 		},
-		chooseAvatarImage() {
-			uni.chooseImage({
-				count: 1,
-				sizeType: ['compressed'],
-				sourceType: ['album', 'camera'],
-				success: (res) => {
-					const filePath = res.tempFilePaths && res.tempFilePaths[0]
-					if (filePath) {
-						this.profileForm.avatar = filePath
+		computed: {
+			filteredNames() {
+				return this.nameOptions
+			}
+		},
+		methods: {
+			savePersonnelProfileToStorage(payload) {
+				try {
+					uni.setStorageSync(PERSONNEL_PROFILE_STORAGE_KEY, {
+						...payload,
+						cached_at: Date.now()
+					})
+				} catch (error) {
+					console.error('savePersonnelProfileToStorage failed', error)
+				}
+			},
+			getCandidateOpenIds(user = {}) {
+				const wxOpenid = user && user.wx_openid
+				if (!wxOpenid) {
+					return []
+				}
+				if (typeof wxOpenid === 'string') {
+					const value = wxOpenid.trim()
+					return value ? [value] : []
+				}
+				if (typeof wxOpenid !== 'object') {
+					return []
+				}
+
+				const preferredKeys = ['mp-weixin', 'mp_weixin', 'mp', 'weixin']
+				const values = preferredKeys
+					.map((key) => wxOpenid[key])
+					.concat(Object.values(wxOpenid || {}))
+					.map((item) => (typeof item === 'string' ? item.trim() : ''))
+					.filter(Boolean)
+
+				return Array.from(new Set(values))
+			},
+			getLoginOpenId(user = {}) {
+				return this.getCandidateOpenIds(user)[0] || ''
+			},
+			buildPersonnelProfilePayload(record = {}) {
+				return {
+					...record,
+					id: record._id || '',
+					personnel_id: record._id || '',
+					person_id: typeof record.person_id !== 'undefined' ? record.person_id : '',
+					admin_role: Number(record.admin_role) || 0,
+					name: record.name || '',
+					nickname: record.nickname || '',
+					passcode: record.passcode || '',
+					personal_photo: record.personal_photo || '',
+					user_id: record.user_id || '',
+					wx_openid: record.wx_openid || '',
+					wx_unionid: record.wx_unionid || '',
+					wx_nickname: record.wx_nickname || '',
+					wx_avatar: record.wx_avatar || ''
+				}
+			},
+			hasMbtiResult(record = {}) {
+				return !!String(record.mbti || '')
+					.trim()
+					.toUpperCase()
+			},
+			async loadCurrentUser() {
+				try {
+					const currentUserInfo = uniCloud.getCurrentUserInfo()
+					const cachedUser = uni.getStorageSync('uni-id-pages-userInfo') || {}
+					const currentUserInfoUser = currentUserInfo.userInfo || {}
+					const user = {
+						...currentUserInfoUser,
+						...cachedUser,
+						_id: currentUserInfo.uid || cachedUser._id || '',
+						wx_openid:
+							cachedUser.wx_openid ||
+							currentUserInfoUser.wx_openid ||
+							currentUserInfo.wx_openid ||
+							'',
+						wx_unionid:
+							cachedUser.wx_unionid ||
+							currentUserInfoUser.wx_unionid ||
+							currentUserInfo.wx_unionid ||
+							''
 					}
+					this.currentUser = user
+					this.profileForm.nickname = user.nickname || ''
+					this.profileForm.avatar =
+						(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
+					console.log('[access-form] loadCurrentUser', {
+						currentUserInfo,
+						cachedUser,
+						user
+					})
+				} catch (error) {
+					console.error('[access-form] loadCurrentUser failed', error)
 				}
-			})
-		},
-		confirmProfile() {
-			if (!this.profileForm.nickname.trim()) {
-				uni.showToast({
-					title: '请输入昵称',
-					icon: 'none'
-				})
-				return
-			}
-			if (!this.profileForm.avatar) {
-				uni.showToast({
-					title: '请上传头像',
-					icon: 'none'
-				})
-				return
-			}
-			this.showProfilePopup = false
-		},
-		closeProfilePopup() {
-			this.showProfilePopup = false
-		},
-		async searchNameOptions(keyword) {
-			try {
-				const res = await personnelAdmin.searchNames({
-					keyword: keyword || '',
-					limit: 5
-				})
-				this.nameOptions = (res && res.list) || []
-			} catch (error) {
-				this.nameOptions = []
-			}
-		},
-		async uploadAvatarIfNeeded() {
-			const avatar = this.profileForm.avatar
-			if (!avatar) {
-				return ''
-			}
-			if (/^(cloud|https?:)/.test(avatar)) {
-				return avatar
-			}
-			const ext = avatar.split('.').pop() || 'jpg'
-			const uploadRes = await uniCloud.uploadFile({
-				filePath: avatar,
-				cloudPath:
-					'mbti-personnel/avatar-' +
-					Date.now() +
-					'-' +
-					Math.random().toString(36).slice(2) +
-					'.' +
-					ext
-			})
-			this.profileForm.avatar = uploadRes.fileID
-			return uploadRes.fileID
-		},
-		handleNameFocus() {
-			this.showNameOptions = true
-			this.searchNameOptions(this.nameInput.trim())
-		},
-		handleNameInput(event) {
-			this.nameInput = event.detail.value
-			this.selectedName = ''
-			this.selectedRecord = null
-			this.showNameOptions = true
-			this.searchNameOptions(this.nameInput.trim())
-		},
-		handleNameBlur() {
-			setTimeout(() => {
-				const value = this.nameInput.trim()
-				if (this.selectedName && this.selectedName === value) {
-					this.nameInput = value
-				} else if (!this.nameOptions.some((item) => item.name === value)) {
-					this.nameInput = ''
-					this.selectedName = ''
-					this.selectedRecord = null
-				} else {
-					this.nameInput = value
-					this.selectedName = value
-					this.selectedRecord =
-						this.nameOptions.find((item) => item.name === value) || this.selectedRecord
+			},
+			async fetchLoginOpenIdsFromServer() {
+				try {
+					const uid =
+						(this.currentUser && this.currentUser._id) || (uniCloud.getCurrentUserInfo() || {}).uid || ''
+					const result = await personnelAdmin.getCurrentLoginWxOpenid({
+						uid
+					})
+					console.log('[access-form] getCurrentLoginWxOpenid result', result)
+					return (result && result.openIds) || []
+				} catch (error) {
+					console.error('[access-form] getCurrentLoginWxOpenid failed', error)
+					return []
 				}
-				this.showNameOptions = false
-				this.nameOptions = []
-			}, 120)
-		},
-		selectName(item) {
-			this.nameInput = item.name
-			this.selectedName = item.name
-			this.selectedRecord = item
-			this.showNameOptions = false
-			this.nameOptions = []
-		},
-		handlePasswordInput(event) {
-			const value = ((event && event.detail && event.detail.value) || '')
-				.replace(/\D/g, '')
-				.slice(0, 4)
-			this.password = value
-		},
-		showErrorModal(message) {
-			const content = message || '保存失败'
-			const now = Date.now()
-			if (this.lastErrorMessage === content && now - this.lastErrorAt < 3000) {
-				return
-			}
-			this.lastErrorMessage = content
-			this.lastErrorAt = now
-			uni.showModal({
-				content: content,
-				showCancel: false
-			})
-		},
-		async submitForm() {
-			if (this.showProfilePopup) {
-				uni.showToast({
-					title: '请先填写昵称和头像',
-					icon: 'none'
-				})
-				return
-			}
+			},
+			syncProfilePopupState() {
+				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
+			},
+			async tryRestoreProfileByOpenid() {
+				try {
+					let openIds = this.getCandidateOpenIds(this.currentUser)
+					if (!openIds.length) {
+						openIds = await this.fetchLoginOpenIdsFromServer()
+					}
+					console.log('[access-form] tryRestoreProfileByOpenid openIds', openIds)
+					if (!openIds.length) {
+						console.log('[access-form] no openid found, skip restore')
+						return false
+					}
 
-			const name = this.selectedName || this.nameInput.trim()
-			const personnelId = this.selectedRecord && this.selectedRecord._id
-			if (!this.selectedName || this.selectedName !== name || !personnelId) {
-				this.nameInput = ''
+					let record = null
+					for (let i = 0; i < openIds.length; i++) {
+						console.log('[access-form] querying personnel by openid', openIds[i])
+						const result = await personnelAdmin.getByWxOpenid({
+							wxOpenid: openIds[i]
+						})
+						console.log('[access-form] getByWxOpenid result', {
+							wxOpenid: openIds[i],
+							result
+						})
+						if (result && result.record && result.record._id) {
+							record = result.record
+							break
+						}
+					}
+					if (!record || !record._id) {
+						console.log('[access-form] no personnel record matched openid')
+						return false
+					}
+					if (!this.hasMbtiResult(record)) {
+						console.log('[access-form] personnel matched but no mbti result, stay on page', record)
+						return false
+					}
+
+					console.log('[access-form] matched personnel record, relaunch to index', record)
+					this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(record))
+					uni.showToast({
+						title: '已有MBTI测试记录，正在进入首页',
+						icon: 'none',
+						duration: 1800
+					})
+					this.restoredByOpenid = true
+					setTimeout(() => {
+						uni.reLaunch({
+							url: '/pages/index/index'
+						})
+					}, 500)
+					return true
+				} catch (error) {
+					console.error('tryRestoreProfileByOpenid failed', error)
+					return false
+				}
+			},
+			onChooseAvatar(event) {
+				const avatarUrl = event && event.detail && event.detail.avatarUrl
+				if (avatarUrl) {
+					this.profileForm.avatar = avatarUrl
+				}
+			},
+			chooseAvatarImage() {
+				uni.chooseImage({
+					count: 1,
+					sizeType: ['compressed'],
+					sourceType: ['album', 'camera'],
+					success: (res) => {
+						const filePath = res.tempFilePaths && res.tempFilePaths[0]
+						if (filePath) {
+							this.profileForm.avatar = filePath
+						}
+					}
+				})
+			},
+			confirmProfile() {
+				if (!this.profileForm.nickname.trim()) {
+					uni.showToast({
+						title: '请输入昵称',
+						icon: 'none'
+					})
+					return
+				}
+				if (!this.profileForm.avatar) {
+					uni.showToast({
+						title: '请上传头像',
+						icon: 'none'
+					})
+					return
+				}
+				this.syncProfilePopupState()
+			},
+			closeProfilePopup() {
+				this.showProfilePopup = false
+			},
+			async searchNameOptions(keyword) {
+				try {
+					const res = await personnelAdmin.searchNames({
+						keyword: keyword || '',
+						limit: 5
+					})
+					this.nameOptions = (res && res.list) || []
+				} catch (error) {
+					this.nameOptions = []
+				}
+			},
+			async uploadAvatarIfNeeded() {
+				const avatar = this.profileForm.avatar
+				if (!avatar) {
+					return ''
+				}
+				if (/^(cloud|https?:)/.test(avatar)) {
+					return avatar
+				}
+				const ext = avatar.split('.').pop() || 'jpg'
+				const uploadRes = await uniCloud.uploadFile({
+					filePath: avatar,
+					cloudPath:
+						'mbti-personnel/avatar-' +
+						Date.now() +
+						'-' +
+						Math.random().toString(36).slice(2) +
+						'.' +
+						ext
+				})
+				this.profileForm.avatar = uploadRes.fileID
+				return uploadRes.fileID
+			},
+			handleNameFocus() {
+				this.showNameOptions = true
+				this.searchNameOptions(this.nameInput.trim())
+			},
+			handleNameInput(event) {
+				this.nameInput = event.detail.value
 				this.selectedName = ''
 				this.selectedRecord = null
-				uni.showToast({
-					title: '请选择有效姓名',
-					icon: 'none'
-				})
-				return
-			}
-			if (!this.password.trim()) {
-				uni.showToast({
-					title: '请输入口令',
-					icon: 'none'
-				})
-				return
-			}
-			if (!/^\d{4}$/.test(this.password.trim())) {
-				uni.showToast({
-					title: '口令必须是4位数字',
-					icon: 'none'
-				})
-				return
-			}
-			if (this.saving) {
-				return
-			}
-
-			this.saving = true
-			uni.showLoading({
-				title: '保存中',
-				mask: true
-			})
-
-			try {
-				const uid = uniCloud.getCurrentUserInfo().uid
-				if (!uid) {
-					throw new Error('请先完成微信登录')
-				}
-
-				const avatarFileId = await this.uploadAvatarIfNeeded()
-				const user = this.currentUser || {}
-				const result = await personnelAdmin.upsertByUser({
-					userId: uid,
-					personnelId: personnelId,
-					data: {
-						nickname: this.profileForm.nickname.trim(),
-						name: name,
-						passcode: this.password.trim(),
-						personal_photo: avatarFileId,
-						user_id: uid,
-						wx_openid: (user.wx_openid && user.wx_openid.mp) || '',
-						wx_unionid: user.wx_unionid || '',
-						wx_nickname: this.profileForm.nickname.trim(),
-						wx_avatar: avatarFileId
+				this.showNameOptions = true
+				this.searchNameOptions(this.nameInput.trim())
+			},
+			handleNameBlur() {
+				setTimeout(() => {
+					const value = this.nameInput.trim()
+					if (this.selectedName && this.selectedName === value) {
+						this.nameInput = value
+					} else if (!this.nameOptions.some((item) => item.name === value)) {
+						this.nameInput = ''
+						this.selectedName = ''
+						this.selectedRecord = null
+					} else {
+						this.nameInput = value
+						this.selectedName = value
+						this.selectedRecord =
+							this.nameOptions.find((item) => item.name === value) || this.selectedRecord
 					}
+					this.showNameOptions = false
+					this.nameOptions = []
+				}, 120)
+			},
+			selectName(item) {
+				this.nameInput = item.name
+				this.selectedName = item.name
+				this.selectedRecord = item
+				this.showNameOptions = false
+				this.nameOptions = []
+			},
+			handlePasswordInput(event) {
+				const value = ((event && event.detail && event.detail.value) || '')
+					.replace(/\D/g, '')
+					.slice(0, 4)
+				this.password = value
+			},
+			showErrorModal(message) {
+				const content = message || '保存失败'
+				const now = Date.now()
+				if (this.lastErrorMessage === content && now - this.lastErrorAt < 3000) {
+					return
+				}
+				this.lastErrorMessage = content
+				this.lastErrorAt = now
+				uni.showModal({
+					content: content,
+					showCancel: false
 				})
-				if (result && result.ok === false) {
-					this.showErrorModal(result.message || '淇濆瓨澶辫触')
+			},
+			async submitForm() {
+				if (this.showProfilePopup) {
+					uni.showToast({
+						title: '请先填写昵称和头像',
+						icon: 'none'
+					})
 					return
 				}
 
-				this.savePersonnelProfileToStorage({
-					id: result && result.id ? result.id : personnelId,
-					personnel_id: personnelId,
-					person_id: result && typeof result.person_id !== 'undefined' ? result.person_id : '',
-					admin_role:
-						result && typeof result.admin_role !== 'undefined'
-							? Number(result.admin_role) || 0
-							: Number(this.selectedRecord && this.selectedRecord.admin_role) || 0,
-					name: name,
-					nickname: this.profileForm.nickname.trim(),
-					passcode: this.password.trim(),
-					personal_photo: avatarFileId,
-					user_id: uid,
-					wx_openid: (user.wx_openid && user.wx_openid.mp) || '',
-					wx_unionid: user.wx_unionid || '',
-					wx_nickname: this.profileForm.nickname.trim(),
-					wx_avatar: avatarFileId
-				})
-				uni.showToast({
-					title: '提交成功',
-					icon: 'success'
-				})
-				setTimeout(() => {
-					uni.navigateTo({
-						url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}`
+				const name = this.selectedName || this.nameInput.trim()
+				const personnelId = this.selectedRecord && this.selectedRecord._id
+				if (!this.selectedName || this.selectedName !== name || !personnelId) {
+					this.nameInput = ''
+					this.selectedName = ''
+					this.selectedRecord = null
+					uni.showToast({
+						title: '请选择有效姓名',
+						icon: 'none'
 					})
-				}, 450)
-			} catch (error) {
-				this.showErrorModal((error && error.message) || '保存失败')
-			} finally {
-				this.saving = false
-				uni.hideLoading()
+					return
+				}
+				if (!this.password.trim()) {
+					uni.showToast({
+						title: '请输入口令',
+						icon: 'none'
+					})
+					return
+				}
+				if (!/^\d{4}$/.test(this.password.trim())) {
+					uni.showToast({
+						title: '口令必须是4位数字',
+						icon: 'none'
+					})
+					return
+				}
+				if (this.saving) {
+					return
+				}
+
+				this.saving = true
+				uni.showLoading({
+					title: '保存中',
+					mask: true
+				})
+
+				try {
+					const uid = uniCloud.getCurrentUserInfo().uid
+					if (!uid) {
+						throw new Error('请先完成微信登录')
+					}
+
+					const avatarFileId = await this.uploadAvatarIfNeeded()
+					const user = this.currentUser || {}
+					const loginOpenId = this.getLoginOpenId(user)
+					const result = await personnelAdmin.upsertByUser({
+						userId: uid,
+						personnelId: personnelId,
+						data: {
+							nickname: this.profileForm.nickname.trim(),
+							name: name,
+							passcode: this.password.trim(),
+							personal_photo: avatarFileId,
+							user_id: uid,
+							wx_openid: loginOpenId,
+							wx_unionid: user.wx_unionid || '',
+							wx_nickname: this.profileForm.nickname.trim(),
+							wx_avatar: avatarFileId
+						}
+					})
+					if (result && result.ok === false) {
+						this.showErrorModal(result.message || '淇濆瓨澶辫触')
+						return
+					}
+
+					this.savePersonnelProfileToStorage({
+						id: result && result.id ? result.id : personnelId,
+						personnel_id: personnelId,
+						person_id: result && typeof result.person_id !== 'undefined' ? result.person_id : '',
+						admin_role:
+							result && typeof result.admin_role !== 'undefined'
+								? Number(result.admin_role) || 0
+								: Number(this.selectedRecord && this.selectedRecord.admin_role) || 0,
+						name: name,
+						nickname: this.profileForm.nickname.trim(),
+						passcode: this.password.trim(),
+						personal_photo: avatarFileId,
+						user_id: uid,
+						wx_openid: loginOpenId,
+						wx_unionid: user.wx_unionid || '',
+						wx_nickname: this.profileForm.nickname.trim(),
+						wx_avatar: avatarFileId
+					})
+					uni.showToast({
+						title: '提交成功',
+						icon: 'success'
+					})
+					setTimeout(() => {
+						uni.navigateTo({
+							url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}`
+						})
+					}, 450)
+				} catch (error) {
+					this.showErrorModal((error && error.message) || '保存失败')
+				} finally {
+					this.saving = false
+					uni.hideLoading()
+				}
+			},
+			goHome() {
+				uni.navigateTo({
+					url: '/pages/mbti-home/home'
+				})
 			}
-		},
-		goHome() {
-			uni.navigateTo({
-				url: '/pages/mbti-home/home'
-			})
 		}
 	}
-}
 </script>
 
 <style>

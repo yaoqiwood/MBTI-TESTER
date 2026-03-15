@@ -2,6 +2,7 @@ const XLSX = require('xlsx')
 const db = uniCloud.database()
 const personnelCollection = db.collection('mbti-personnel')
 const attachmentCollection = db.collection('mbti-personnel-attachment')
+const userCollection = db.collection('uni-id-users')
 const COUNTER_COLLECTION = 'mbti-personnel-counter'
 const COUNTER_DOC_ID = 'mbti-personnel'
 const REVIEW_STATUS = ['pending', 'approved', 'rejected']
@@ -266,6 +267,42 @@ async function findActiveRecordByName(name) {
 	return list[0] || null
 }
 
+async function findActiveRecordByWxOpenid(wxOpenid) {
+	const normalizedWxOpenid = trimString(wxOpenid)
+	if (!normalizedWxOpenid) {
+		return null
+	}
+	const { data: list = [] } = await personnelCollection
+		.where({
+			wx_openid: normalizedWxOpenid
+		})
+		.limit(20)
+		.get()
+	return list.find((item) => !isDeletedRecord(item && item.is_deleted)) || null
+}
+
+function getCandidateOpenIdsFromWxOpenid(wxOpenid) {
+	if (!wxOpenid) {
+		return []
+	}
+	if (typeof wxOpenid === 'string') {
+		const value = wxOpenid.trim()
+		return value ? [value] : []
+	}
+	if (typeof wxOpenid !== 'object') {
+		return []
+	}
+
+	const preferredKeys = ['mp-weixin', 'mp_weixin', 'mp', 'weixin']
+	const values = preferredKeys
+		.map((key) => wxOpenid[key])
+		.concat(Object.values(wxOpenid || {}))
+		.map((item) => (typeof item === 'string' ? item.trim() : ''))
+		.filter(Boolean)
+
+	return Array.from(new Set(values))
+}
+
 async function getWorkbookBuffer(fileID) {
 	if (!trimString(fileID)) {
 		throw new Error('缺少导入文件')
@@ -485,6 +522,46 @@ module.exports = {
 
 		return {
 			list: names
+		}
+	},
+
+	async getByWxOpenid({ wxOpenid = '' } = {}) {
+		const record = await findActiveRecordByWxOpenid(wxOpenid)
+		if (!record) {
+			return {
+				ok: true,
+				record: null
+			}
+		}
+
+		return {
+			ok: true,
+			record: withFormattedDates(record)
+		}
+	},
+
+	async getCurrentLoginWxOpenid({ uid = '' } = {}) {
+		const normalizedUid = trimString(uid)
+		if (!normalizedUid) {
+			return {
+				ok: true,
+				uid: '',
+				openIds: [],
+				wxOpenid: {}
+			}
+		}
+
+		const { data: userList = [] } = await userCollection.doc(normalizedUid).get()
+		const userRecord = userList[0] || {}
+		const wxOpenid = userRecord.wx_openid || {}
+		const openIds = getCandidateOpenIdsFromWxOpenid(wxOpenid)
+
+		return {
+			ok: true,
+			uid: normalizedUid,
+			openIds,
+			wxOpenid,
+			wxUnionid: trimString(userRecord.wx_unionid)
 		}
 	},
 
@@ -908,4 +985,3 @@ module.exports = {
 		}
 	}
 }
-
