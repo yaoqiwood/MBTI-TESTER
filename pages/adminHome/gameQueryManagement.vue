@@ -1,9 +1,5 @@
 <template>
 	<view class="page">
-		<view class="toolbar">
-			<button class="back-btn" @click="goBack">返回上一页</button>
-		</view>
-
 		<view class="panel-card">
 			<view class="card-head">
 				<text class="card-title">后台功能导航</text>
@@ -63,16 +59,6 @@
 				const moduleNo = index + 1
 				return `MODULE ${moduleNo < 10 ? `0${moduleNo}` : moduleNo}`
 			},
-			goBack() {
-				const pageStack = getCurrentPages()
-				if (pageStack.length > 1) {
-					uni.navigateBack({ delta: 1 })
-					return
-				}
-				uni.reLaunch({
-					url: '/pages/adminHome/gameQueryManagement'
-				})
-			},
 			handleFeatureTap(item) {
 				if (item && item.available && item.url) {
 					uni.navigateTo({ url: item.url })
@@ -90,20 +76,6 @@
 		padding: 24rpx;
 		background: #f5efe5;
 		box-sizing: border-box;
-	}
-
-	.toolbar {
-		margin-bottom: 20rpx;
-	}
-
-	.back-btn {
-		height: 68rpx;
-		line-height: 68rpx;
-		padding: 0 28rpx;
-		border-radius: 999rpx;
-		font-size: 24rpx;
-		color: #6d4e2c;
-		background: #efe5d3;
 	}
 
 	.panel-card,
@@ -183,4 +155,3 @@
 		color: #2d241c;
 	}
 </style>
-

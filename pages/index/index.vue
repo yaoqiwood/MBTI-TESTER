@@ -47,11 +47,11 @@ export default {
 			const profile = this.getPersonnelProfileFromStorage()
 			const targetUrl =
 				profile && this.isAdminRole(profile.admin_role)
-					? '/pages/adminHome/adminDashboard'
+					? '/pages/adminHome/gameQueryManagement'
 					: '/pages/mbti-home/home'
 
 			this.loadingText =
-				targetUrl === '/pages/adminHome/adminDashboard' ? '已识别为管理员，正在进入后台...' : '正在进入测试首页...'
+				targetUrl === '/pages/adminHome/gameQueryManagement' ? '已识别为管理员，正在进入后台...' : '正在进入测试首页...'
 
 			setTimeout(() => {
 				uni.reLaunch({
