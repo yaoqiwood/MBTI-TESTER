@@ -56,7 +56,7 @@
 				>
 			</view>
 			<view class="hero-actions">
-				<button class="light-btn" :disabled="resettingPasscodes" @click="resetAllPasscodes">生成全部口令</button>
+				<!-- <button class="light-btn" :disabled="resettingPasscodes" @click="resetAllPasscodes">生成全部口令</button> -->
 				<button class="solid-btn" @click="importSignupSheet">报名表格导入</button>
 				<button class="ghost-btn" @click="goLegacyHome">原 MBTI 首页</button>
 			</view>
@@ -381,7 +381,7 @@
 				loading: false,
 				saving: false,
 				importing: false,
-				resettingPasscodes: false,
+				// resettingPasscodes: false,
 				deletingId: '',
 				showDetailPopup: false,
 				detailRecord: null,
@@ -654,6 +654,7 @@
 					duration: 200
 				})
 			},
+			/*
 			resetAllPasscodes: async function () {
 				if (!personnelAdmin) {
 					this.showUnavailable()
@@ -703,6 +704,7 @@
 					uni.hideLoading()
 				}
 			},
+			*/
 			removeRecord: async function (item) {
 				if (!personnelAdmin) {
 					this.showUnavailable()

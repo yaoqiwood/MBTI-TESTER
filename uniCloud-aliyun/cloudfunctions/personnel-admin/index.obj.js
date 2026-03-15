@@ -227,6 +227,21 @@ function matchesKeyword(record = {}, normalizedKeyword = '') {
 	].some((field) => String(field || '').toLowerCase().includes(normalizedKeyword))
 }
 
+async function findActiveRecordByName(name) {
+	const normalizedName = trimString(name)
+	if (!normalizedName) {
+		return null
+	}
+	const { data: list = [] } = await personnelCollection
+		.where({
+			name: normalizedName,
+			is_deleted: false
+		})
+		.limit(1)
+		.get()
+	return list[0] || null
+}
+
 async function getWorkbookBuffer(fileID) {
 	if (!trimString(fileID)) {
 		throw new Error('缺少导入文件')
@@ -540,6 +555,7 @@ module.exports = {
 		}
 	},
 
+	/*
 	async resetAllPasscodes() {
 		const records = await fetchAllPersonnelRecords()
 		const activeRecords = records.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -557,6 +573,7 @@ module.exports = {
 			updatedCount
 		}
 	},
+	*/
 
 	async softDelete({ id } = {}) {
 		if (!trimString(id)) {
@@ -676,6 +693,11 @@ module.exports = {
 	},
 
 	async upsertByUser({ userId, data } = {}) {
+		const normalizedName = trimString(data && data.name)
+		const normalizedPasscode = trimString(data && data.passcode)
+		if (!normalizedName || !/^\d{4}$/.test(normalizedPasscode)) {
+			throw new Error('口令错误，如有疑问请联系相关同工')
+		}
 		const normalizedUserId = trimString(userId)
 		if (!normalizedUserId) {
 			throw new Error('缂哄皯鐢ㄦ埛ID')
@@ -691,21 +713,58 @@ module.exports = {
 		const current = currentList[0]
 
 		if (current && current._id) {
+			if (current.passcode !== normalizedPasscode) {
+				throw new Error('口令错误，如有疑问请联系相关同工')
+			}
 			return await this.update({
 				id: current._id,
 				data: {
 					...data,
-					user_id: normalizedUserId
+					user_id: normalizedUserId,
+					passcode: current.passcode
 				}
 			})
 		}
 
-		return await this.create({
+		const matchedRecord = await findActiveRecordByName(normalizedName)
+		if (!matchedRecord || matchedRecord.passcode !== normalizedPasscode) {
+			throw new Error('口令错误，如有疑问请联系相关同工')
+		}
+		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
+			throw new Error('该用户已绑定其他账号，如有疑问请联系相关同工')
+		}
+
+		return await this.update({
+			id: matchedRecord._id,
 			data: {
 				...data,
-				user_id: normalizedUserId
+				user_id: normalizedUserId,
+				passcode: matchedRecord.passcode
 			}
 		})
+	},
+
+	async verifyAccess({ name, passcode, userId = '' } = {}) {
+		const normalizedName = trimString(name)
+		const normalizedPasscode = trimString(passcode)
+		const normalizedUserId = trimString(userId)
+		if (!normalizedName || !/^\d{4}$/.test(normalizedPasscode)) {
+			throw new Error('口令错误，如有疑问请联系相关同工')
+		}
+
+		const matchedRecord = await findActiveRecordByName(normalizedName)
+		if (!matchedRecord || matchedRecord.passcode !== normalizedPasscode) {
+			throw new Error('口令错误，如有疑问请联系相关同工')
+		}
+		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
+			throw new Error('该用户已绑定其他账号，如有疑问请联系相关同工')
+		}
+
+		return {
+			id: matchedRecord._id,
+			person_id: matchedRecord.person_id,
+			name: matchedRecord.name
+		}
 	},
 
 	async saveMbtiResult({ id, mbti } = {}) {

@@ -295,6 +295,12 @@ export default {
 					throw new Error('请先完成微信登录')
 				}
 
+				await personnelAdmin.verifyAccess({
+					name: name,
+					passcode: this.password.trim(),
+					userId: uid
+				})
+
 				const avatarFileId = await this.uploadAvatarIfNeeded()
 				const user = this.currentUser || {}
 				const result = await personnelAdmin.upsertByUser({
