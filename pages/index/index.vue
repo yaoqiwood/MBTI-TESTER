@@ -6,7 +6,7 @@
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">正在为你进入首页</text>
-				<text class="subhead">我们会先读取本地资料，再自动进入管理员后台或测试首页。</text>
+				<text class="subhead">我们会先读取本地资料。</text>
 			</view>
 
 			<view class="loading-card">

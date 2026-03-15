@@ -14,40 +14,40 @@ const ADMIN_ROLE = {
 	SUPER_ADMIN: 2
 }
 const HEADER_FIELD_MAP = {
-	'唯一编号': 'person_id',
-	'编号': 'person_id',
-	'序号': 'row_no',
-	'昵称': 'nickname',
-	'姓名': 'name',
-	'性别': 'gender',
-	'年龄': 'age',
-	'个人照片': 'personal_photo',
-	'照片': 'personal_photo',
-	'手机号': 'mobile',
-	'手机号码': 'mobile',
-	'身份证号': 'id_card',
-	'身份证号码': 'id_card',
-	'mbti': 'mbti',
-	'籍贯': 'native_place',
-	'职业': 'profession',
-	'住址': 'address',
-	'家庭大致情况': 'family_overview',
-	'家庭情况': 'family_overview',
-	'所在教会': 'church',
-	'推荐人': 'referrer',
-	'自我介绍': 'self_introduction',
-	'感情情况': 'relationship_status',
-	'活动出行方式': 'travel_mode',
-	'出行方式': 'travel_mode',
-	'当前审核状态': 'review_status',
-	'审核状态': 'review_status',
-	'审核人': 'reviewer',
-	'remark': 'remark',
-	'说明': 'remark',
-	'备注': 'remark',
-	'remark说明': 'remark',
-	'提交时间': 'submitted_at',
-	'修改时间': 'updated_at'
+	唯一编号: 'person_id',
+	编号: 'person_id',
+	序号: 'row_no',
+	昵称: 'nickname',
+	姓名: 'name',
+	性别: 'gender',
+	年龄: 'age',
+	个人照片: 'personal_photo',
+	照片: 'personal_photo',
+	手机号: 'mobile',
+	手机号码: 'mobile',
+	身份证号: 'id_card',
+	身份证号码: 'id_card',
+	mbti: 'mbti',
+	籍贯: 'native_place',
+	职业: 'profession',
+	住址: 'address',
+	家庭大致情况: 'family_overview',
+	家庭情况: 'family_overview',
+	所在教会: 'church',
+	推荐人: 'referrer',
+	自我介绍: 'self_introduction',
+	感情情况: 'relationship_status',
+	活动出行方式: 'travel_mode',
+	出行方式: 'travel_mode',
+	当前审核状态: 'review_status',
+	审核状态: 'review_status',
+	审核人: 'reviewer',
+	remark: 'remark',
+	说明: 'remark',
+	备注: 'remark',
+	remark说明: 'remark',
+	提交时间: 'submitted_at',
+	修改时间: 'updated_at'
 }
 
 function trimString(value) {
@@ -110,7 +110,11 @@ function normalizeAdminRole(value, fallback = ADMIN_ROLE.NORMAL) {
 		return fallback
 	}
 	const numericValue = Number(value)
-	if (!Number.isInteger(numericValue) || numericValue < ADMIN_ROLE.NORMAL || numericValue > ADMIN_ROLE.SUPER_ADMIN) {
+	if (
+		!Number.isInteger(numericValue) ||
+		numericValue < ADMIN_ROLE.NORMAL ||
+		numericValue > ADMIN_ROLE.SUPER_ADMIN
+	) {
 		return fallback
 	}
 	return numericValue
@@ -213,8 +217,12 @@ function buildStats(list = []) {
 		pending: list.filter((item) => item.review_status === 'pending').length,
 		approved: list.filter((item) => item.review_status === 'approved').length,
 		rejected: list.filter((item) => item.review_status === 'rejected').length,
-		admins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN).length,
-		superAdmins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN).length
+		admins: list.filter(
+			(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN
+		).length,
+		superAdmins: list.filter(
+			(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN
+		).length
 	}
 }
 
@@ -236,7 +244,11 @@ function matchesKeyword(record = {}, normalizedKeyword = '') {
 		record.mbti,
 		record.native_place,
 		record.profession
-	].some((field) => String(field || '').toLowerCase().includes(normalizedKeyword))
+	].some((field) =>
+		String(field || '')
+			.toLowerCase()
+			.includes(normalizedKeyword)
+	)
 }
 
 async function findActiveRecordByName(name) {
@@ -360,7 +372,11 @@ async function fetchAllPersonnelRecords() {
 	let list = []
 
 	while (true) {
-		const { data = [] } = await personnelCollection.orderBy('person_id', 'asc').skip(skip).limit(batchSize).get()
+		const { data = [] } = await personnelCollection
+			.orderBy('person_id', 'asc')
+			.skip(skip)
+			.limit(batchSize)
+			.get()
 		list = list.concat(data)
 		if (data.length < batchSize) {
 			break
@@ -408,10 +424,15 @@ async function updatePersonnelRecord({ id, data } = {}) {
 module.exports = {
 	async list({ keyword = '', reviewStatus = 'all', page = 1, pageSize = DEFAULT_PAGE_SIZE } = {}) {
 		const currentPage = normalizePositiveInt(page, 1)
-		const currentPageSize = Math.min(normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE)
+		const currentPageSize = Math.min(
+			normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE),
+			MAX_PAGE_SIZE
+		)
 		const data = await fetchAllPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
-		let list = data.filter((item) => !isDeletedRecord(item && item.is_deleted)).map(withFormattedDates)
+		let list = data
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedDates)
 
 		if (normalizedKeyword) {
 			list = list.filter((item) => matchesKeyword(item, normalizedKeyword))
@@ -488,8 +509,13 @@ module.exports = {
 			list,
 			stats: {
 				total: list.length,
-				admins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN).length,
-				superAdmins: list.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN).length
+				admins: list.filter(
+					(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN
+				).length,
+				superAdmins: list.filter(
+					(item) =>
+						normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN
+				).length
 			}
 		}
 	},
@@ -500,7 +526,9 @@ module.exports = {
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedDates)
-			.filter((item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.NORMAL)
+			.filter(
+				(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.NORMAL
+			)
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
 			.sort((left, right) => Number(left.person_id || 0) - Number(right.person_id || 0))
 
@@ -802,7 +830,11 @@ module.exports = {
 
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedPersonnelId).get()
 		const matchedRecord = matchedList[0]
-		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
+		if (
+			!matchedRecord ||
+			isDeletedRecord(matchedRecord.is_deleted) ||
+			matchedRecord.passcode !== normalizedPasscode
+		) {
 			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
@@ -829,7 +861,11 @@ module.exports = {
 
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedId).get()
 		const matchedRecord = matchedList[0]
-		if (!matchedRecord || isDeletedRecord(matchedRecord.is_deleted) || matchedRecord.passcode !== normalizedPasscode) {
+		if (
+			!matchedRecord ||
+			isDeletedRecord(matchedRecord.is_deleted) ||
+			matchedRecord.passcode !== normalizedPasscode
+		) {
 			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
@@ -872,3 +908,4 @@ module.exports = {
 		}
 	}
 }
+

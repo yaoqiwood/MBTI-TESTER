@@ -10,6 +10,14 @@
 			}
 		},
 		{
+			"path": "pages/mbti-home/home",
+			"style": {
+				"navigationBarTitleText": "MBTI 首页",
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/adminHome/gameQueryManagement",
 			"style": {
 				"navigationBarTitleText": "后台功能导航",

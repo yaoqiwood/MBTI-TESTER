@@ -2,8 +2,6 @@ import pagesJson from '@/pages.json'
 import config from '@/uni_modules/uni-id-pages/config.js'
 
 const uniIdCo = uniCloud.importObject("uni-id-co")
-const db = uniCloud.database();
-const usersTable = db.collection('uni-id-users')
 
 let hostUserInfo = uni.getStorageSync('uni-id-pages-userInfo')||{}
 
@@ -38,27 +36,19 @@ export const mutations = {
 		} else {
       // 不等待联网查询，立即更新用户_id确保store.userInfo中的_id是最新的
       const _id = uniCloud.getCurrentUserInfo().uid
-      this.setUserInfo({_id},{cover:true})
-      // 查库获取用户信息，更新store.userInfo
-			const uniIdCo = uniCloud.importObject("uni-id-co", {
-				customUI: true
-			})
-			try {
-				let res = await usersTable.where("'_id' == $cloudEnv_uid")
-					.field('mobile,nickname,username,email,avatar_file')
-					.get()
-
-				const realNameRes = await uniIdCo.getRealNameInfo()
-
-				// console.log('fromDbData',res.result.data);
-				this.setUserInfo({
-					...res.result.data[0],
-					realNameAuth: realNameRes
-				})
-			} catch (e) {
-				this.setUserInfo({},{cover:true})
-				console.error(e.message, e.errCode);
-			}
+      const cachedUserInfo = uni.getStorageSync('uni-id-pages-userInfo') || {}
+      this.setUserInfo({
+        ...cachedUserInfo,
+        _id
+      },{cover:true})
+      try {
+        const realNameRes = await uniIdCo.getRealNameInfo()
+        this.setUserInfo({
+          realNameAuth: realNameRes
+        })
+      } catch (e) {
+        console.error(e.message, e.errCode);
+      }
 		}
 	},
 	setUserInfo(data, {cover}={cover:false}) {

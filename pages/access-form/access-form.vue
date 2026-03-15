@@ -139,7 +139,6 @@
 </template>
 
 <script>
-const usersTable = uniCloud.database().collection('uni-id-users')
 const personnelAdmin = uniCloud.importObject('personnel-admin')
 const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
@@ -184,17 +183,16 @@ export default {
 		},
 		async loadCurrentUser() {
 			try {
-				const res = await usersTable
-					.where('_id == $cloudEnv_uid')
-					.field('_id,nickname,avatar_file,wx_openid,wx_unionid')
-					.get()
-				const user = (res.result && res.result.data && res.result.data[0]) || null
-				this.currentUser = user
-				if (!user) {
-					return
+				const currentUserInfo = uniCloud.getCurrentUserInfo()
+				const cachedUser = uni.getStorageSync('uni-id-pages-userInfo') || {}
+				const user = {
+					...cachedUser,
+					_id: currentUserInfo.uid || cachedUser._id || ''
 				}
+				this.currentUser = user
 				this.profileForm.nickname = user.nickname || ''
-				this.profileForm.avatar = (user.avatar_file && user.avatar_file.url) || user.avatar_file || ''
+				this.profileForm.avatar =
+					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
 				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
 			} catch (error) {
 				console.error(error)
