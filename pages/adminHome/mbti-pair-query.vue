@@ -458,7 +458,7 @@
 					.toUpperCase()
 			},
 			getDisplayName(item) {
-				return item.nickname || item.name || '#' + (item.person_id || '未知')
+				return item.name || item.nickname || '#' + (item.person_id || '')
 			},
 			parsePairKeyword(keyword) {
 				var rawKeyword = String(keyword || '').trim()
@@ -787,6 +787,45 @@
 
 				return bucketMap
 			},
+			normalizeGender(value) {
+				var gender = String(value || '')
+					.trim()
+					.toLowerCase()
+
+				if (!gender) {
+					return ''
+				}
+
+				if (
+					gender === '\u7537' ||
+					gender === 'm' ||
+					gender === 'male' ||
+					gender === 'man' ||
+					gender.indexOf('\u7537') !== -1
+				) {
+					return 'male'
+				}
+
+				if (
+					gender === '\u5973' ||
+					gender === 'f' ||
+					gender === 'female' ||
+					gender === 'woman' ||
+					gender.indexOf('\u5973') !== -1
+				) {
+					return 'female'
+				}
+
+				return ''
+			},
+			isOppositeGenderPair(leftMember, rightMember) {
+				var leftGender = this.normalizeGender(leftMember && leftMember.gender)
+				var rightGender = this.normalizeGender(rightMember && rightMember.gender)
+				if (!leftGender || !rightGender) {
+					return false
+				}
+				return leftGender !== rightGender
+			},
 			createPairRecord(comboKey, left, right, compatibilityScore) {
 				return {
 					key: comboKey + '__' + left._id + '_' + right._id,
@@ -808,6 +847,9 @@
 				if (config.leftMbti === config.rightMbti) {
 					for (var i = 0; i < leftMembers.length; i++) {
 						for (var j = i + 1; j < leftMembers.length; j++) {
+							if (!this.isOppositeGenderPair(leftMembers[i], leftMembers[j])) {
+								continue
+							}
 							pairs.push(
 								this.createPairRecord(
 									config.comboKey,
@@ -821,6 +863,14 @@
 				} else {
 					for (var leftIndex = 0; leftIndex < leftMembers.length; leftIndex++) {
 						for (var rightIndex = 0; rightIndex < rightMembers.length; rightIndex++) {
+							if (
+								!this.isOppositeGenderPair(
+									leftMembers[leftIndex],
+									rightMembers[rightIndex]
+								)
+							) {
+								continue
+							}
 							pairs.push(
 								this.createPairRecord(
 									config.comboKey,
