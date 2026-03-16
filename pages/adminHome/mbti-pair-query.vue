@@ -229,10 +229,12 @@
 <script>
 	import relationshipSource from '../../static/json/mbti_16x16_relationships_full.json'
 
-	var db = null
-	if (typeof uniCloud !== 'undefined' && uniCloud.database) {
-		db = uniCloud.database()
-	}
+var db = null
+if (typeof uniCloud !== 'undefined' && uniCloud.database) {
+	db = uniCloud.database()
+}
+var PAIR_GROUP_CACHE_KEY = 'MBTI_PAIR_GROUP_CACHE_V1'
+var PAIR_GROUP_CACHE_VERSION = 1
 
 	var RELATIONSHIP_LIST = (relationshipSource && relationshipSource.mbti_relationships_full) || []
 
@@ -446,9 +448,48 @@
 			}
 		},
 		onLoad() {
-			this.loadPairGroups()
+			this.restorePairGroupsFromCache()
 		},
 		methods: {
+			restorePairGroupsFromCache() {
+				try {
+					var cachedPayload = uni.getStorageSync(PAIR_GROUP_CACHE_KEY)
+					if (
+						!cachedPayload ||
+						typeof cachedPayload !== 'object' ||
+						Number(cachedPayload.version || 0) !== PAIR_GROUP_CACHE_VERSION
+					) {
+						return
+					}
+					this.applyPairGroupsResult(cachedPayload)
+				} catch (error) {
+					console.error('restorePairGroupsFromCache failed', error)
+				}
+			},
+			applyPairGroupsResult(payload) {
+				var safePayload = payload || {}
+				this.selectedMemberDetail = null
+				this.selectedDetailTarget = null
+				this.totalMembers = Number(safePayload.totalMembers || 0)
+				this.validMembers = Number(safePayload.validMembers || 0)
+				this.totalPairs = Number(safePayload.totalPairs || 0)
+				this.groupList = Array.isArray(safePayload.groupList) ? safePayload.groupList : []
+				this.syncPagination(this.groupList.length)
+			},
+			savePairGroupsToCache(payload) {
+				try {
+					uni.setStorageSync(PAIR_GROUP_CACHE_KEY, {
+						version: PAIR_GROUP_CACHE_VERSION,
+						updatedAt: Date.now(),
+						totalMembers: Number(payload.totalMembers || 0),
+						validMembers: Number(payload.validMembers || 0),
+						totalPairs: Number(payload.totalPairs || 0),
+						groupList: Array.isArray(payload.groupList) ? payload.groupList : []
+					})
+				} catch (error) {
+					console.error('savePairGroupsToCache failed', error)
+				}
+			},
 			goBack() {
 				var pageStack = getCurrentPages()
 				if (pageStack.length > 1) {
@@ -1064,13 +1105,14 @@
 						})
 
 					var result = this.buildPairGroups(members)
-					this.selectedMemberDetail = null
-					this.selectedDetailTarget = null
-					this.totalMembers = activeList.length
-					this.validMembers = members.length
-					this.totalPairs = result.totalPairs
-					this.groupList = result.groupList
-					this.syncPagination(result.groupList.length)
+					var resultPayload = {
+						totalMembers: activeList.length,
+						validMembers: members.length,
+						totalPairs: result.totalPairs,
+						groupList: result.groupList
+					}
+					this.applyPairGroupsResult(resultPayload)
+					this.savePairGroupsToCache(resultPayload)
 				} catch (error) {
 					uni.showModal({
 						content: error.message || '查询失败，请稍后重试',

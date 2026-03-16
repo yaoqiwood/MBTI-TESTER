@@ -9,6 +9,8 @@ const COUNTER_DOC_ID = 'mbti-personnel'
 const REVIEW_STATUS = ['pending', 'approved', 'rejected']
 const DEFAULT_PAGE_SIZE = 5
 const MAX_PAGE_SIZE = 50
+const PERSONNEL_CACHE_TTL_MS = 15 * 1000
+const HEART_MESSAGE_CACHE_TTL_MS = 10 * 1000
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
 const ADMIN_ROLE = {
 	NORMAL: 0,
@@ -17,6 +19,16 @@ const ADMIN_ROLE = {
 	SUPER_ADMIN: 3
 }
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
+const runtimeCache = {
+	personnel: {
+		data: null,
+		expireAt: 0
+	},
+	heartMessages: {
+		data: null,
+		expireAt: 0
+	}
+}
 const HEADER_FIELD_MAP = {
 	唯一编号: 'person_id',
 	编号: 'person_id',
@@ -465,6 +477,49 @@ async function fetchAllHeartMessages() {
 	return list
 }
 
+function invalidateRuntimeCache({ personnel = false, heartMessages = false } = {}) {
+	if (personnel) {
+		runtimeCache.personnel.data = null
+		runtimeCache.personnel.expireAt = 0
+	}
+	if (heartMessages) {
+		runtimeCache.heartMessages.data = null
+		runtimeCache.heartMessages.expireAt = 0
+	}
+}
+
+async function getCachedPersonnelRecords({ forceRefresh = false } = {}) {
+	const now = Date.now()
+	if (
+		!forceRefresh &&
+		Array.isArray(runtimeCache.personnel.data) &&
+		now < runtimeCache.personnel.expireAt
+	) {
+		return runtimeCache.personnel.data
+	}
+
+	const list = await fetchAllPersonnelRecords()
+	runtimeCache.personnel.data = list
+	runtimeCache.personnel.expireAt = now + PERSONNEL_CACHE_TTL_MS
+	return list
+}
+
+async function getCachedHeartMessages({ forceRefresh = false } = {}) {
+	const now = Date.now()
+	if (
+		!forceRefresh &&
+		Array.isArray(runtimeCache.heartMessages.data) &&
+		now < runtimeCache.heartMessages.expireAt
+	) {
+		return runtimeCache.heartMessages.data
+	}
+
+	const list = await fetchAllHeartMessages()
+	runtimeCache.heartMessages.data = list
+	runtimeCache.heartMessages.expireAt = now + HEART_MESSAGE_CACHE_TTL_MS
+	return list
+}
+
 function buildPersonnelLabel(record = {}) {
 	const personId = Number(record.person_id || 0)
 	const nickname = trimString(record.nickname)
@@ -624,6 +679,9 @@ async function updatePersonnelRecord({ id, data } = {}) {
 		personId: current.person_id,
 		fileID: payload.personal_photo
 	})
+	invalidateRuntimeCache({
+		personnel: true
+	})
 
 	return {
 		id,
@@ -640,7 +698,7 @@ module.exports = {
 			normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE),
 			MAX_PAGE_SIZE
 		)
-		const data = await fetchAllPersonnelRecords()
+		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		let list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -670,7 +728,7 @@ module.exports = {
 	async searchNames({ keyword = '', limit = 5 } = {}) {
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const maxLimit = Math.min(Math.max(Number(limit) || 5, 1), 5)
-		const records = await fetchAllPersonnelRecords()
+		const records = await getCachedPersonnelRecords()
 		const names = []
 
 		for (let i = 0; i < records.length; i++) {
@@ -741,7 +799,7 @@ module.exports = {
 	},
 
 	async listAdmins({ keyword = '' } = {}) {
-		const data = await fetchAllPersonnelRecords()
+		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -773,7 +831,7 @@ module.exports = {
 	},
 
 	async listAdminCandidates({ keyword = '' } = {}) {
-		const data = await fetchAllPersonnelRecords()
+		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -800,7 +858,7 @@ module.exports = {
 			normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE),
 			MAX_PAGE_SIZE
 		)
-		const data = await fetchAllPersonnelRecords()
+		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -844,7 +902,7 @@ module.exports = {
 			MAX_PAGE_SIZE
 		)
 		const normalizedKeyword = trimString(keyword).toLowerCase()
-		let list = (await fetchAllHeartMessages())
+		let list = (await getCachedHeartMessages())
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedHeartMessage)
 
@@ -876,8 +934,8 @@ module.exports = {
 		}
 
 		const normalizedKeyword = trimString(keyword).toLowerCase()
-		const personnelList = await fetchAllPersonnelRecords()
-		const allMessages = (await fetchAllHeartMessages())
+		const personnelList = await getCachedPersonnelRecords()
+		const allMessages = (await getCachedHeartMessages())
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedHeartMessage)
 		const messageMap = {}
@@ -958,7 +1016,7 @@ module.exports = {
 			throw new Error('联系人不存在或已被删除')
 		}
 
-		const list = (await fetchAllHeartMessages())
+		const list = (await getCachedHeartMessages())
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.filter((item) => {
 				const senderId = trimString(item.sender_record_id)
@@ -1023,6 +1081,9 @@ module.exports = {
 			private_message_quota: nextQuota,
 			updated_at: new Date()
 		})
+		invalidateRuntimeCache({
+			personnel: true
+		})
 
 		return {
 			id,
@@ -1062,6 +1123,10 @@ module.exports = {
 			})
 
 			await transaction.commit()
+			invalidateRuntimeCache({
+				personnel: true,
+				heartMessages: true
+			})
 
 			return {
 				id: createRes.id,
@@ -1115,6 +1180,10 @@ module.exports = {
 			})
 
 			await transaction.commit()
+			invalidateRuntimeCache({
+				personnel: true,
+				heartMessages: true
+			})
 
 			return {
 				id: createRes.id,
@@ -1193,6 +1262,10 @@ module.exports = {
 
 			await transactionHeartMessage.doc(id).update(payload)
 			await transaction.commit()
+			invalidateRuntimeCache({
+				personnel: true,
+				heartMessages: true
+			})
 		} catch (error) {
 			await transaction.rollback()
 			throw error
@@ -1216,6 +1289,9 @@ module.exports = {
 		await heartMessageCollection.doc(id).update({
 			is_deleted: true,
 			updated_at: new Date()
+		})
+		invalidateRuntimeCache({
+			heartMessages: true
 		})
 
 		return {
@@ -1251,6 +1327,9 @@ module.exports = {
 		await personnelCollection.doc(id).update({
 			admin_role: nextAdminRole,
 			updated_at: new Date()
+		})
+		invalidateRuntimeCache({
+			personnel: true
 		})
 
 		return {
@@ -1298,6 +1377,9 @@ module.exports = {
 				personId: nextId,
 				fileID: record.personal_photo
 			})
+			invalidateRuntimeCache({
+				personnel: true
+			})
 
 			return {
 				id: createRes.id,
@@ -1334,6 +1416,9 @@ module.exports = {
 			personnelRecordId: id,
 			personId: current.person_id,
 			fileID: payload.personal_photo
+		})
+		invalidateRuntimeCache({
+			personnel: true
 		})
 
 		return {
@@ -1376,6 +1461,9 @@ module.exports = {
 		await personnelCollection.doc(id).update({
 			is_deleted: true,
 			updated_at: new Date()
+		})
+		invalidateRuntimeCache({
+			personnel: true
 		})
 
 		return {
@@ -1468,6 +1556,9 @@ module.exports = {
 
 			await transaction.commit()
 			importedCount = docsToAdd.length
+			invalidateRuntimeCache({
+				personnel: true
+			})
 		} catch (error) {
 			await transaction.rollback()
 			throw error
@@ -1585,6 +1676,9 @@ module.exports = {
 		await personnelCollection.doc(id).update({
 			mbti: normalizedMbti,
 			updated_at: new Date()
+		})
+		invalidateRuntimeCache({
+			personnel: true
 		})
 
 		return {
