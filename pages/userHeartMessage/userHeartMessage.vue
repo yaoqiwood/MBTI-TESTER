@@ -85,7 +85,10 @@
 				</view>
 			</view>
 
-			<view v-if="activeContact" class="panel chat-panel">
+		</view>
+
+		<view v-if="showChatPopup && activeContact" class="chat-popup-mask" @click="closeChatPopup">
+			<view class="chat-popup" @click.stop>
 				<view class="chat-head">
 					<view class="chat-user">
 						<view class="avatar-shell small">
@@ -103,14 +106,17 @@
 							<text class="chat-mood">和 Ta 的聊天，也许会有一点点心动</text>
 						</view>
 					</view>
-					<view class="quota-badge">
-						<text>{{ selfProfile.heart_message_quota || 0 }} 点</text>
+					<view class="chat-head-actions">
+						<view class="quota-badge">
+							<text>{{ selfProfile.heart_message_quota || 0 }} 点</text>
+						</view>
+						<text class="chat-close" @click="closeChatPopup">×</text>
 					</view>
 				</view>
 
 				<scroll-view
 					scroll-y
-					class="message-scroll"
+					class="message-scroll popup-message-scroll"
 					:scroll-into-view="scrollIntoView"
 					scroll-with-animation
 				>
@@ -182,11 +188,6 @@
 					</view>
 				</view>
 			</view>
-
-			<view v-else class="panel empty-chat-panel">
-				<text class="empty-chat-title">请选择一位联系人</text>
-				<text class="empty-chat-tip">点开联系人后，就可以开始一场甜甜的聊天了</text>
-			</view>
 		</view>
 
 		<view class="bottom-nav">
@@ -231,6 +232,7 @@ export default {
 			},
 			contacts: [],
 			activeContact: null,
+			showChatPopup: false,
 			messages: [],
 			draftMessage: '',
 			messageType: 0,
@@ -279,14 +281,21 @@ export default {
 				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
 				this.contacts = Array.isArray(res && res.contacts) ? res.contacts : []
 				if (!this.contacts.length) {
+					this.showChatPopup = false
 					this.activeContact = null
 					this.messages = []
 					return
 				}
-				const nextActive =
-					this.contacts.find((item) => item._id === (this.activeContact && this.activeContact._id)) ||
-					this.contacts[0]
-				await this.selectContact(nextActive)
+				if (this.activeContact && this.activeContact._id) {
+					const nextActive = this.contacts.find((item) => item._id === this.activeContact._id)
+					if (nextActive) {
+						this.activeContact = Object.assign({}, this.activeContact, nextActive)
+					} else {
+						this.showChatPopup = false
+						this.activeContact = null
+						this.messages = []
+					}
+				}
 			} catch (error) {
 				uni.showToast({
 					title: (error && error.message) || '加载失败',
@@ -300,6 +309,7 @@ export default {
 			if (!item || !item._id || !personnelAdmin) {
 				return
 			}
+			this.showChatPopup = true
 			this.activeContact = item
 			this.chatLoading = true
 			try {
@@ -322,6 +332,9 @@ export default {
 			} finally {
 				this.chatLoading = false
 			}
+		},
+		closeChatPopup() {
+			this.showChatPopup = false
 		},
 		resetKeyword() {
 			this.keyword = ''
@@ -362,9 +375,14 @@ export default {
 					content: this.draftMessage,
 					type: this.messageType
 				})
+				const currentContactId = this.activeContact._id
 				this.draftMessage = ''
 				this.messageType = 0
 				await this.loadHome()
+				const nextActive = this.contacts.find((item) => item._id === currentContactId)
+				if (nextActive) {
+					await this.selectContact(nextActive)
+				}
 				uni.showToast({
 					title: '发送成功',
 					icon: 'success'
@@ -793,12 +811,55 @@ export default {
 		linear-gradient(180deg, rgba(249, 248, 242, 0.96) 0%, rgba(244, 241, 233, 0.96) 100%);
 }
 
+.chat-popup-mask {
+	position: fixed;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 40;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	padding: 40rpx 24rpx calc(120rpx + env(safe-area-inset-bottom));
+	background: rgba(38, 42, 34, 0.38);
+	box-sizing: border-box;
+}
+
+.chat-popup {
+	width: 100%;
+	max-height: 100%;
+	border-radius: 28rpx;
+	overflow: hidden;
+	background:
+		linear-gradient(180deg, rgba(249, 248, 242, 0.98) 0%, rgba(244, 241, 233, 0.98) 100%);
+	box-shadow: 0 24rpx 56rpx rgba(56, 63, 51, 0.2);
+}
+
 .chat-head {
 	align-items: center;
 	justify-content: space-between;
 	padding: 22rpx 24rpx;
 	background: linear-gradient(135deg, #f8faf3 0%, #f7f1e2 100%);
 	border-bottom: 1rpx solid #e8e3d5;
+}
+
+.chat-head-actions {
+	display: flex;
+	align-items: center;
+	gap: 16rpx;
+	margin-left: 16rpx;
+}
+
+.chat-close {
+	width: 52rpx;
+	height: 52rpx;
+	line-height: 48rpx;
+	border-radius: 50%;
+	text-align: center;
+	font-size: 36rpx;
+	color: #6a7262;
+	background: rgba(255, 255, 255, 0.72);
 }
 
 .chat-user {
@@ -829,6 +890,12 @@ export default {
 	height: 720rpx;
 	padding: 24rpx 24rpx 8rpx;
 	box-sizing: border-box;
+}
+
+.popup-message-scroll {
+	height: 68vh;
+	min-height: 520rpx;
+	max-height: 820rpx;
 }
 
 .message-list {
@@ -1080,6 +1147,11 @@ export default {
 	.bottom-nav {
 		left: 20rpx;
 		right: 20rpx;
+	}
+
+	.chat-popup-mask {
+		padding-left: 20rpx;
+		padding-right: 20rpx;
 	}
 }
 </style>

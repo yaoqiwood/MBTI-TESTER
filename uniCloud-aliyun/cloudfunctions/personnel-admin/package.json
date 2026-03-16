@@ -5,5 +5,8 @@
 	"main": "index.obj.js",
 	"dependencies": {
 		"xlsx": "^0.18.5"
+	},
+	"cloudfunction-config": {
+		"memorySize": 128
 	}
 }
