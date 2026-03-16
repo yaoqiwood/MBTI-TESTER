@@ -908,6 +908,7 @@ module.exports = {
 					person_id: item.person_id,
 					nickname: item.nickname || '',
 					name: item.name || '',
+					gender: item.gender || '',
 					mbti: item.mbti || '',
 					personal_photo: item.personal_photo || '',
 					label: buildPersonnelLabel(item),
@@ -983,6 +984,7 @@ module.exports = {
 				person_id: contact.person_id,
 				name: contact.name || '',
 				nickname: contact.nickname || '',
+				gender: contact.gender || '',
 				mbti: contact.mbti || '',
 				personal_photo: contact.personal_photo || ''
 			},

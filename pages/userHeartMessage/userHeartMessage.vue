@@ -1,159 +1,202 @@
 <template>
 	<view class="page">
-		<view class="hero-card">
-			<view class="hero-copy">
-				<text class="hero-kicker">LOVE MBTI CHAT</text>
-				<text class="hero-title">Contacts</text>
-				<text class="hero-desc">A WeChat-like contact-first chat screen. Normal messages are free, heart messages cost one heart.</text>
+		<view class="page-glow page-glow-left"></view>
+		<view class="page-glow page-glow-right"></view>
+		<view class="top-bar">
+			<view class="top-copy">
+				<text class="top-title">消息</text>
+				<view class="top-subtitle-row">
+					<text class="top-subtitle">今天也适合说句悄悄话</text>
+					<text class="top-heart">♡</text>
+				</view>
 			</view>
-			<view class="hero-stats">
-				<view class="hero-pill">
-					<text class="hero-pill-label">My Hearts</text>
-					<text class="hero-pill-value">{{ selfProfile.heart_message_quota || 0 }}</text>
-				</view>
-				<view class="hero-pill">
-					<text class="hero-pill-label">Contacts</text>
-					<text class="hero-pill-value">{{ contacts.length }}</text>
-				</view>
+			<view class="top-badge">
+				<text>剩余心动值 {{ selfProfile.heart_message_quota || 0 }}</text>
 			</view>
 		</view>
 
-		<view class="search-card">
-			<input
-				v-model.trim="keyword"
-				class="search-input"
-				placeholder="Search nickname / name / MBTI"
-				confirm-type="search"
-				@confirm="loadHome"
-			/>
-			<view class="search-actions">
-				<button class="light-btn" @click="resetKeyword">Reset</button>
-				<button class="solid-btn" @click="loadHome">Search</button>
-			</view>
-		</view>
-
-		<view class="contacts-card">
-			<view class="section-head">
-				<text class="section-title">Contact List</text>
-				<text class="section-tip">Tap a contact to open the conversation below.</text>
+		<view class="wechat-shell">
+			<view class="search-bar">
+				<view class="search-box">
+					<text class="search-icon">搜</text>
+					<input
+						v-model.trim="keyword"
+						class="search-input"
+						placeholder="搜索昵称或姓名"
+						confirm-type="search"
+						@confirm="loadHome"
+					/>
+				</view>
+				<text v-if="keyword" class="search-reset" @click="resetKeyword">清空</text>
 			</view>
 
-			<view v-if="loading" class="empty-box">
-				<text>Loading contacts...</text>
-			</view>
-			<view v-else-if="!contacts.length" class="empty-box">
-				<text>No contacts available yet</text>
-			</view>
-			<view v-else class="contact-list">
-				<view
-					v-for="item in contacts"
-					:key="item._id"
-					class="contact-item"
-					:class="activeContact && activeContact._id === item._id ? 'contact-item active' : ''"
-					@click="selectContact(item)"
-				>
-					<view class="avatar-shell">
-						<image
-							v-if="item.personal_photo"
-							class="avatar"
-							:src="item.personal_photo"
-							mode="aspectFill"
-						></image>
-						<view v-else class="avatar avatar-fallback">{{ getAvatarText(item.nickname || item.name) }}</view>
-					</view>
-					<view class="contact-main">
-						<view class="contact-top">
-							<text class="contact-name">{{ item.nickname || item.name || 'Unknown' }}</text>
-							<text class="contact-time">{{ formatTime(item.latest_message_at) }}</text>
-						</view>
-						<text class="contact-meta">{{ item.name || 'No name' }} / {{ item.mbti || 'MBTI pending' }}</text>
-						<view class="contact-preview-row">
-							<text v-if="item.latest_message_type === 1" class="preview-tag heart-tag">Heart</text>
-							<text v-else-if="item.latest_message_type === 0" class="preview-tag normal-tag">Normal</text>
-							<text class="contact-preview">{{ item.latest_message || 'No messages yet, say hello first.' }}</text>
-						</view>
-					</view>
+			<view class="panel contacts-panel">
+				<view class="panel-head">
+					<text class="panel-title">联系人</text>
+					<text class="panel-tip">遇见 {{ contacts.length }} 位心动对象</text>
 				</view>
-			</view>
-		</view>
 
-		<view v-if="activeContact" class="chat-card">
-			<view class="chat-head">
-				<view class="chat-head-main">
-					<text class="section-title">{{ activeContact.nickname || activeContact.name }}</text>
-					<text class="section-tip">{{ activeContact.name || '-' }} / {{ activeContact.mbti || '-' }}</text>
+				<view v-if="loading" class="empty-box">
+					<text>正在加载联系人...</text>
 				</view>
-				<view class="quota-badge">
-					<text>Hearts left {{ selfProfile.heart_message_quota || 0 }}</text>
+				<view v-else-if="!contacts.length" class="empty-box">
+					<text>暂时还没有可聊天的人</text>
 				</view>
-			</view>
-
-			<scroll-view
-				scroll-y
-				class="message-scroll"
-				:scroll-into-view="scrollIntoView"
-				scroll-with-animation
-			>
-				<view v-if="chatLoading" class="empty-box small-empty">
-					<text>Loading conversation...</text>
-				</view>
-				<view v-else-if="!messages.length" class="empty-box small-empty">
-					<text>No messages yet. Start the conversation.</text>
-				</view>
-				<view v-else class="message-list">
+				<view v-else class="contact-list">
 					<view
-						v-for="item in messages"
-						:id="'msg-' + item._id"
+						v-for="item in contacts"
 						:key="item._id"
-						class="message-row"
-						:class="item.sender_record_id === selfProfile._id ? 'mine' : 'other'"
+						class="contact-item"
+						:class="activeContact && activeContact._id === item._id ? 'contact-item active' : ''"
+						@click="selectContact(item)"
 					>
-						<view class="bubble-meta">
-							<text class="bubble-author">{{
-								item.sender_record_id === selfProfile._id ? 'Me' : activeContact.nickname || activeContact.name
-							}}</text>
-							<text class="bubble-time">{{ formatDateTime(item.created_at_text || item.created_at) }}</text>
+						<view class="avatar-shell">
+							<image
+								v-if="item.personal_photo"
+								class="avatar"
+								:src="item.personal_photo"
+								mode="aspectFill"
+							></image>
+							<view v-else class="avatar avatar-fallback">{{ getAvatarText(item.nickname || item.name) }}</view>
 						</view>
-						<view class="bubble-wrap">
-							<text v-if="item.type === 1" class="bubble-type heart-tag">Heart Message</text>
-							<text v-else class="bubble-type normal-tag">Normal Message</text>
-							<view class="bubble">
-								<text class="bubble-text">{{ item.content }}</text>
+						<view class="contact-main">
+							<view class="contact-top">
+								<view class="contact-name-row">
+									<text class="contact-name">{{ item.nickname || item.name || '未命名联系人' }}</text>
+									<text
+										v-if="getGenderBadge(item.gender)"
+										class="gender-badge"
+										:class="getGenderBadge(item.gender).className"
+									>
+										{{ getGenderBadge(item.gender).symbol }}
+									</text>
+								</view>
+								<text class="contact-time">{{ formatTime(item.latest_message_at) }}</text>
+							</view>
+							<text class="contact-meta">{{ item.name || '暂未填写姓名' }}</text>
+							<view class="contact-preview-row">
+								<text v-if="item.latest_message_type === 1" class="preview-tag heart-tag">心动消息</text>
+								<text v-else-if="item.latest_message_type === 0" class="preview-tag normal-tag">普通消息</text>
+								<text class="contact-preview">{{ item.latest_message || '还没有消息，快去打个招呼吧' }}</text>
+							</view>
+						</view>
+						<view v-if="activeContact && activeContact._id === item._id" class="contact-active-dot"></view>
+					</view>
+				</view>
+			</view>
+
+			<view v-if="activeContact" class="panel chat-panel">
+				<view class="chat-head">
+					<view class="chat-user">
+						<view class="avatar-shell small">
+							<image
+								v-if="activeContact.personal_photo"
+								class="avatar"
+								:src="activeContact.personal_photo"
+								mode="aspectFill"
+							></image>
+							<view v-else class="avatar avatar-fallback">{{ getAvatarText(activeContact.nickname || activeContact.name) }}</view>
+						</view>
+						<view class="chat-user-text">
+							<text class="chat-name">{{ activeContact.nickname || activeContact.name }}</text>
+							<text class="chat-meta">{{ activeContact.name || '未填写姓名' }}</text>
+							<text class="chat-mood">和 Ta 的聊天，也许会有一点点心动</text>
+						</view>
+					</view>
+					<view class="quota-badge">
+						<text>{{ selfProfile.heart_message_quota || 0 }} 点</text>
+					</view>
+				</view>
+
+				<scroll-view
+					scroll-y
+					class="message-scroll"
+					:scroll-into-view="scrollIntoView"
+					scroll-with-animation
+				>
+					<view v-if="chatLoading" class="empty-box small-empty">
+						<text>正在加载聊天记录...</text>
+					</view>
+					<view v-else-if="!messages.length" class="empty-box small-empty">
+						<text>还没有聊天记录，主动说句话吧</text>
+					</view>
+					<view v-else class="message-list">
+						<view
+							v-for="item in messages"
+							:id="'msg-' + item._id"
+							:key="item._id"
+							class="message-row"
+							:class="item.sender_record_id === selfProfile._id ? 'mine' : 'other'"
+						>
+							<text class="bubble-time">{{ formatDateTime(item.created_at_text || item.created_at) }}</text>
+							<view class="bubble-wrap">
+								<view class="avatar-shell mini" v-if="item.sender_record_id !== selfProfile._id">
+									<image
+										v-if="activeContact.personal_photo"
+										class="avatar"
+										:src="activeContact.personal_photo"
+										mode="aspectFill"
+									></image>
+									<view v-else class="avatar avatar-fallback">{{ getAvatarText(activeContact.nickname || activeContact.name) }}</view>
+								</view>
+								<view class="bubble-box">
+									<text v-if="item.type === 1" class="bubble-type heart-tag">心动消息</text>
+									<text v-else class="bubble-type normal-tag">普通消息</text>
+									<view class="bubble">
+										<text class="bubble-text">{{ item.content }}</text>
+									</view>
+								</view>
 							</view>
 						</view>
 					</view>
-				</view>
-			</scroll-view>
+				</scroll-view>
 
-			<view class="composer">
-				<view class="type-row">
-					<view
-						class="type-chip"
-						:class="messageType === 0 ? 'type-chip active' : ''"
-						@click="messageType = 0"
-					>
-						Normal
+				<view class="composer">
+					<view class="type-row">
+						<view
+							class="type-chip"
+							:class="messageType === 0 ? 'type-chip active' : ''"
+							@click="messageType = 0"
+						>
+							普通消息
+						</view>
+						<view
+							class="type-chip heart-chip"
+							:class="messageType === 1 ? 'type-chip active heart-chip' : 'type-chip heart-chip'"
+							@click="messageType = 1"
+						>
+							心动消息
+						</view>
 					</view>
-					<view
-						class="type-chip heart-chip"
-						:class="messageType === 1 ? 'type-chip active heart-chip' : 'type-chip heart-chip'"
-						@click="messageType = 1"
-					>
-						Heart
+					<textarea
+						v-model.trim="draftMessage"
+						class="composer-input"
+						maxlength="300"
+						placeholder="输入你想说的话"
+					></textarea>
+					<view class="composer-foot">
+						<text class="composer-tip">
+							{{ messageType === 1 ? '发送心动消息会消耗 1 点心动值' : '发送普通消息不会消耗心动值' }}
+						</text>
+						<button class="send-btn" :disabled="sending" @click="sendMessage">发送</button>
 					</view>
 				</view>
-				<textarea
-					v-model.trim="draftMessage"
-					class="composer-input"
-					maxlength="300"
-					placeholder="Type a message..."
-				></textarea>
-				<view class="composer-foot">
-					<text class="composer-tip">
-						{{ messageType === 1 ? 'A heart message costs 1 heart.' : 'A normal message costs 0 hearts.' }}
-					</text>
-					<button class="solid-btn" :disabled="sending" @click="sendMessage">Send</button>
-				</view>
+			</view>
+
+			<view v-else class="panel empty-chat-panel">
+				<text class="empty-chat-title">请选择一位联系人</text>
+				<text class="empty-chat-tip">点开联系人后，就可以开始一场甜甜的聊天了</text>
+			</view>
+		</view>
+
+		<view class="bottom-nav">
+			<view class="bottom-tab bottom-tab-active">
+				<text class="bottom-tab-icon">人</text>
+				<text class="bottom-tab-text">联系人</text>
+			</view>
+			<view class="bottom-tab" @click="openInbox">
+				<text class="bottom-tab-icon">信</text>
+				<text class="bottom-tab-text">收信箱</text>
 			</view>
 		</view>
 	</view>
@@ -246,7 +289,7 @@ export default {
 				await this.selectContact(nextActive)
 			} catch (error) {
 				uni.showToast({
-					title: (error && error.message) || 'Load failed',
+					title: (error && error.message) || '加载失败',
 					icon: 'none'
 				})
 			} finally {
@@ -273,7 +316,7 @@ export default {
 				})
 			} catch (error) {
 				uni.showToast({
-					title: (error && error.message) || 'Chat load failed',
+					title: (error && error.message) || '聊天记录加载失败',
 					icon: 'none'
 				})
 			} finally {
@@ -284,20 +327,26 @@ export default {
 			this.keyword = ''
 			this.loadHome()
 		},
+		openInbox() {
+			uni.showToast({
+				title: '收信箱功能准备中',
+				icon: 'none'
+			})
+		},
 		async sendMessage() {
 			if (!this.activeContact || !this.activeContact._id) {
 				return
 			}
 			if (!this.draftMessage) {
 				uni.showToast({
-					title: 'Enter message',
+					title: '请输入消息内容',
 					icon: 'none'
 				})
 				return
 			}
 			if (this.messageType === 1 && Number(this.selfProfile.heart_message_quota || 0) < 1) {
 				uni.showToast({
-					title: 'No hearts left',
+					title: '心动值不足',
 					icon: 'none'
 				})
 				return
@@ -317,12 +366,12 @@ export default {
 				this.messageType = 0
 				await this.loadHome()
 				uni.showToast({
-					title: 'Sent',
+					title: '发送成功',
 					icon: 'success'
 				})
 			} catch (error) {
 				uni.showToast({
-					title: (error && error.message) || 'Send failed',
+					title: (error && error.message) || '发送失败',
 					icon: 'none'
 				})
 			} finally {
@@ -331,7 +380,23 @@ export default {
 		},
 		getAvatarText(value) {
 			const text = String(value || '').trim()
-			return text ? text.slice(0, 1) : 'C'
+			return text ? text.slice(0, 1) : '聊'
+		},
+		getGenderBadge(value) {
+			const gender = String(value || '').trim().toLowerCase()
+			if (gender === '男' || gender === '1' || gender === 'm' || gender === 'male' || gender === 'man') {
+				return {
+					symbol: '♂',
+					className: 'gender-male'
+				}
+			}
+			if (gender === '女' || gender === '2' || gender === 'f' || gender === 'female' || gender === 'woman') {
+				return {
+					symbol: '♀',
+					className: 'gender-female'
+				}
+			}
+			return null
 		},
 		formatTime(value) {
 			if (!value) {
@@ -349,7 +414,16 @@ export default {
 			if (isSameDay) {
 				return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
 			}
-			return `${date.getMonth() + 1}/${date.getDate()}`
+			const yesterday = new Date(now)
+			yesterday.setDate(now.getDate() - 1)
+			const isYesterday =
+				yesterday.getFullYear() === date.getFullYear() &&
+				yesterday.getMonth() === date.getMonth() &&
+				yesterday.getDate() === date.getDate()
+			if (isYesterday) {
+				return '昨天'
+			}
+			return `${date.getMonth() + 1}月${date.getDate()}日`
 		},
 		formatDateTime(value) {
 			if (!value) {
@@ -372,73 +446,147 @@ export default {
 
 <style>
 .page {
+	position: relative;
 	min-height: 100vh;
-	padding: 24rpx;
-	background: #f5efe5;
+	background:
+		radial-gradient(circle at top left, rgba(222, 236, 224, 0.86), transparent 28%),
+		radial-gradient(circle at top right, rgba(244, 230, 199, 0.76), transparent 24%),
+		linear-gradient(180deg, #faf9f5 0%, #f2f0e9 38%, #eae8e0 100%);
 	box-sizing: border-box;
+	overflow: hidden;
 }
 
-.hero-card,
-.search-card,
-.contacts-card,
-.chat-card {
-	background: #fffcf7;
-	border: 1rpx solid #eadfce;
-	border-radius: 28rpx;
-	box-shadow: 0 18rpx 40rpx rgba(91, 70, 40, 0.08);
+.page-glow {
+	position: absolute;
+	border-radius: 50%;
+	filter: blur(10rpx);
+	opacity: 0.8;
+	pointer-events: none;
 }
 
-.hero-card,
-.search-card,
-.contacts-card,
-.chat-card {
-	padding: 28rpx;
+.page-glow-left {
+	left: -80rpx;
+	top: 140rpx;
+	width: 220rpx;
+	height: 220rpx;
+	background: rgba(184, 214, 188, 0.62);
 }
 
-.search-card,
-.contacts-card,
-.chat-card {
-	margin-top: 24rpx;
+.page-glow-right {
+	right: -60rpx;
+	top: 420rpx;
+	width: 180rpx;
+	height: 180rpx;
+	background: rgba(220, 205, 168, 0.58);
 }
 
-.hero-kicker {
-	font-size: 22rpx;
-	letter-spacing: 4rpx;
-	color: #8f6840;
+.top-bar {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 28rpx 24rpx 18rpx;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(246, 244, 236, 0.34) 100%);
 }
 
-.hero-title {
+.top-copy {
+	max-width: 70%;
+}
+
+.top-title {
 	display: block;
-	margin-top: 14rpx;
-	font-size: 44rpx;
+	font-size: 40rpx;
 	font-weight: 700;
-	color: #2c241c;
+	color: #2f342d;
 }
 
-.hero-desc,
-.section-tip,
-.contact-meta,
-.contact-preview,
-.composer-tip,
-.bubble-time,
-.bubble-author {
-	font-size: 24rpx;
-	line-height: 1.6;
-	color: #716250;
+.top-subtitle-row {
+	display: flex;
+	align-items: center;
+	gap: 10rpx;
 }
 
-.hero-desc {
+.top-subtitle {
 	display: block;
-	margin-top: 14rpx;
+	margin-top: 8rpx;
+	font-size: 24rpx;
+	color: #72786c;
 }
 
-.hero-stats,
-.search-actions,
+.top-heart {
+	margin-top: 8rpx;
+	font-size: 24rpx;
+	color: #7da57f;
+}
+
+.top-badge {
+	padding: 12rpx 20rpx;
+	border-radius: 999rpx;
+	background: linear-gradient(135deg, #edf4e9 0%, #f9f1dc 100%);
+	font-size: 24rpx;
+	color: #5f775d;
+	box-shadow: 0 10rpx 24rpx rgba(127, 149, 118, 0.12);
+}
+
+.wechat-shell {
+	position: relative;
+	z-index: 1;
+	padding: 0 0 164rpx;
+}
+
+.search-bar {
+	display: flex;
+	align-items: center;
+	gap: 18rpx;
+	padding: 0 24rpx 20rpx;
+}
+
+.search-box {
+	flex: 1;
+	height: 72rpx;
+	padding: 0 24rpx;
+	border-radius: 18rpx;
+	background: rgba(255, 255, 255, 0.92);
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	box-shadow: 0 12rpx 24rpx rgba(140, 146, 122, 0.1);
+}
+
+.search-icon {
+	margin-right: 16rpx;
+	font-size: 24rpx;
+	color: #999999;
+}
+
+.search-input {
+	flex: 1;
+	height: 72rpx;
+	font-size: 26rpx;
+	color: #222222;
+}
+
+.search-reset {
+	font-size: 26rpx;
+	color: #6b7d63;
+}
+
+.panel {
+	margin: 0 24rpx 24rpx;
+	border-radius: 24rpx;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.9);
+	box-shadow: 0 18rpx 34rpx rgba(126, 128, 111, 0.1);
+	backdrop-filter: blur(8rpx);
+}
+
+.panel-head,
 .contact-item,
 .contact-top,
 .contact-preview-row,
 .chat-head,
-.chat-head-main,
+.chat-user,
 .composer-foot,
 .type-row,
 .message-row,
@@ -446,137 +594,99 @@ export default {
 	display: flex;
 }
 
-.hero-stats,
-.type-row {
-	gap: 16rpx;
+.panel-head {
+	align-items: center;
+	justify-content: space-between;
+	padding: 24rpx;
+	border-bottom: 1rpx solid #ece8dc;
 }
 
-.hero-stats {
-	margin-top: 24rpx;
+.panel-title,
+.chat-name {
+	font-size: 30rpx;
+	font-weight: 600;
+	color: #2f342d;
 }
 
-.hero-pill,
-.quota-badge {
-	padding: 16rpx 20rpx;
-	border-radius: 22rpx;
-	background: #f7f1e6;
-}
-
-.hero-pill {
-	flex: 1;
-}
-
-.hero-pill-label {
-	display: block;
-	font-size: 22rpx;
-	color: #7c6b57;
-}
-
-.hero-pill-value {
-	display: block;
-	margin-top: 8rpx;
-	font-size: 38rpx;
-	font-weight: 700;
-	color: #2e241b;
-}
-
-.search-input,
-.composer-input {
-	width: 100%;
-	background: #fbf8f2;
-	border: 1rpx solid #dfd3c1;
-	border-radius: 20rpx;
-	box-sizing: border-box;
-	color: #342b22;
-	font-size: 26rpx;
-}
-
-.search-input {
-	height: 84rpx;
-	padding: 0 24rpx;
-	line-height: 84rpx;
-}
-
-.search-actions {
-	margin-top: 20rpx;
-	justify-content: flex-end;
-}
-
-.solid-btn,
-.light-btn {
-	height: 76rpx;
-	line-height: 76rpx;
-	padding: 0 28rpx;
-	border-radius: 999rpx;
-	font-size: 26rpx;
-	margin: 0 0 0 20rpx;
-}
-
-.solid-btn {
-	background: #1f6b52;
-	color: #ffffff;
-}
-
-.light-btn {
-	background: #f7f1e6;
-	color: #5b4a35;
-}
-
-.section-head,
-.chat-head-main {
-	flex-direction: column;
-}
-
-.section-title {
-	font-size: 32rpx;
-	font-weight: 700;
-	color: #2d241c;
-}
-
-.section-tip {
-	margin-top: 8rpx;
+.panel-tip,
+.contact-meta,
+.contact-preview,
+.chat-meta,
+.composer-tip,
+.bubble-time,
+.empty-box,
+.empty-chat-tip {
+	font-size: 24rpx;
+	color: #7c7f73;
 }
 
 .contact-list {
-	margin-top: 24rpx;
+	background: transparent;
 }
 
 .contact-item {
 	align-items: center;
+	padding: 22rpx 24rpx;
 	gap: 20rpx;
-	padding: 22rpx 0;
-	border-bottom: 1rpx solid #eadfce;
+	position: relative;
+	transition: all 0.2s ease;
+}
+
+.contact-item::after {
+	content: '';
+	position: absolute;
+	left: 140rpx;
+	right: 24rpx;
+	bottom: 0;
+	height: 1rpx;
+	background: #ece8dc;
+}
+
+.contact-item:last-child::after,
+.contact-item.active::after {
+	display: none;
 }
 
 .contact-item.active {
-	margin: 0 -16rpx;
-	padding: 22rpx 16rpx;
-	border-radius: 22rpx;
-	background: #fff6ea;
-	border-bottom-color: transparent;
-}
-
-.contact-item:last-child {
-	border-bottom: none;
+	background: linear-gradient(135deg, #f4f6ef 0%, #faf7ec 100%);
 }
 
 .avatar-shell {
 	flex-shrink: 0;
+	width: 96rpx;
+	height: 96rpx;
+	border-radius: 20rpx;
+	overflow: hidden;
+	background: linear-gradient(180deg, #dcebd8 0%, #efe2bb 100%);
+	box-shadow: 0 10rpx 20rpx rgba(150, 162, 129, 0.16);
+}
+
+.avatar-shell.small {
+	width: 76rpx;
+	height: 76rpx;
+	border-radius: 18rpx;
+}
+
+.avatar-shell.mini {
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 16rpx;
 }
 
 .avatar {
-	width: 96rpx;
-	height: 96rpx;
-	border-radius: 28rpx;
-	background: #efe5d5;
+	width: 100%;
+	height: 100%;
 }
 
 .avatar-fallback {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #7b6044;
-	font-size: 34rpx;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(180deg, #88b97a 0%, #d8bc73 100%);
+	color: #ffffff;
+	font-size: 32rpx;
 	font-weight: 700;
 }
 
@@ -585,48 +695,81 @@ export default {
 	min-width: 0;
 }
 
-.contact-top,
-.contact-preview-row,
-.chat-head,
-.composer-foot {
+.contact-top {
 	align-items: center;
 	justify-content: space-between;
 	gap: 16rpx;
 }
 
+.contact-name-row {
+	display: flex;
+	align-items: center;
+	gap: 10rpx;
+	min-width: 0;
+}
+
 .contact-name {
 	font-size: 30rpx;
+	color: #33392f;
+}
+
+.gender-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 40rpx;
+	height: 40rpx;
+	padding: 0 10rpx;
+	border-radius: 999rpx;
+	font-size: 22rpx;
 	font-weight: 700;
-	color: #2d241c;
+	color: #ffffff;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.gender-male {
+	background: linear-gradient(135deg, #63a8ff 0%, #3f7df2 100%);
+	box-shadow: 0 8rpx 16rpx rgba(80, 139, 255, 0.2);
+}
+
+.gender-female {
+	background: linear-gradient(135deg, #ff92b2 0%, #ff6f9a 100%);
+	box-shadow: 0 8rpx 16rpx rgba(255, 127, 164, 0.2);
+}
+
+.contact-time {
+	font-size: 22rpx;
+	color: #999999;
+}
+
+.contact-meta {
+	display: block;
+	margin-top: 6rpx;
 }
 
 .contact-preview-row {
+	align-items: center;
+	gap: 12rpx;
 	margin-top: 10rpx;
-	justify-content: flex-start;
-}
-
-.preview-tag,
-.bubble-type,
-.type-chip,
-.quota-badge {
-	font-size: 22rpx;
 }
 
 .preview-tag,
 .bubble-type {
-	padding: 6rpx 14rpx;
-	border-radius: 999rpx;
 	flex-shrink: 0;
+	padding: 4rpx 14rpx;
+	border-radius: 999rpx;
+	font-size: 20rpx;
 }
 
 .normal-tag {
-	background: #efe5d3;
-	color: #6d4e2c;
+	background: #eef1ea;
+	color: #6c7568;
 }
 
 .heart-tag {
-	background: #fde8e6;
-	color: #b5483f;
+	background: linear-gradient(135deg, #e8f2e3 0%, #f6ebcf 100%);
+	color: #8a6a3f;
 }
 
 .contact-preview {
@@ -637,132 +780,306 @@ export default {
 	white-space: nowrap;
 }
 
+.contact-active-dot {
+	width: 16rpx;
+	height: 16rpx;
+	border-radius: 50%;
+	background: #7cab79;
+	box-shadow: 0 0 0 8rpx rgba(124, 171, 121, 0.12);
+}
+
+.chat-panel {
+	background:
+		linear-gradient(180deg, rgba(249, 248, 242, 0.96) 0%, rgba(244, 241, 233, 0.96) 100%);
+}
+
 .chat-head {
-	padding-bottom: 20rpx;
-	border-bottom: 1rpx solid #eadfce;
+	align-items: center;
+	justify-content: space-between;
+	padding: 22rpx 24rpx;
+	background: linear-gradient(135deg, #f8faf3 0%, #f7f1e2 100%);
+	border-bottom: 1rpx solid #e8e3d5;
+}
+
+.chat-user {
+	align-items: center;
+	gap: 18rpx;
+	flex: 1;
+	min-width: 0;
+}
+
+.chat-user-text {
+	flex: 1;
+	min-width: 0;
+}
+
+.chat-name,
+.chat-meta {
+	display: block;
+}
+
+.chat-mood {
+	display: block;
+	margin-top: 6rpx;
+	font-size: 22rpx;
+	color: #87907d;
 }
 
 .message-scroll {
 	height: 720rpx;
-	margin-top: 24rpx;
-	padding: 8rpx 0;
+	padding: 24rpx 24rpx 8rpx;
+	box-sizing: border-box;
 }
 
 .message-list {
 	display: flex;
 	flex-direction: column;
-	gap: 18rpx;
+	gap: 22rpx;
 }
 
 .message-row {
 	flex-direction: column;
 }
 
-.message-row.mine {
-	align-items: flex-end;
-}
-
-.message-row.other {
-	align-items: flex-start;
-}
-
-.bubble-meta {
-	display: flex;
-	gap: 12rpx;
-	margin-bottom: 8rpx;
-}
-
 .bubble-wrap {
-	flex-direction: column;
 	align-items: flex-start;
-	gap: 8rpx;
-	max-width: 86%;
+	gap: 14rpx;
+	margin-top: 8rpx;
 }
 
 .message-row.mine .bubble-wrap {
+	justify-content: flex-end;
+}
+
+.message-row.mine .bubble-wrap {
+	flex-direction: row-reverse;
+}
+
+.bubble-box {
+	max-width: 78%;
+}
+
+.message-row.mine .bubble-box {
+	display: flex;
+	flex-direction: column;
 	align-items: flex-end;
 }
 
-.bubble {
-	padding: 20rpx 22rpx;
-	border-radius: 24rpx;
-	background: #f3eadb;
+.message-row.mine .bubble {
+	background: linear-gradient(135deg, #d8e9cf 0%, #efe0ad 100%);
 }
 
-.message-row.mine .bubble {
-	background: #dff4e8;
+.bubble {
+	position: relative;
+	padding: 20rpx 22rpx;
+	border-radius: 14rpx;
+	background: #ffffff;
+	box-shadow: 0 8rpx 18rpx rgba(139, 141, 121, 0.1);
+}
+
+.message-row.other .bubble::before {
+	content: '';
+	position: absolute;
+	left: -10rpx;
+	top: 22rpx;
+	width: 20rpx;
+	height: 20rpx;
+	background: #ffffff;
+	transform: rotate(45deg);
+	border-radius: 4rpx;
+}
+
+.message-row.mine .bubble::before {
+	content: '';
+	position: absolute;
+	right: -10rpx;
+	top: 22rpx;
+	width: 20rpx;
+	height: 20rpx;
+	background: #e8d59d;
+	transform: rotate(45deg);
+	border-radius: 4rpx;
 }
 
 .bubble-text {
 	font-size: 28rpx;
-	line-height: 1.7;
-	color: #2f251d;
+	line-height: 1.6;
+	color: #353a30;
 	word-break: break-word;
 }
 
 .composer {
-	margin-top: 24rpx;
-	padding-top: 24rpx;
-	border-top: 1rpx solid #eadfce;
+	padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+	background: linear-gradient(180deg, #faf9f4 0%, #f5f1e7 100%);
+	border-top: 1rpx solid #e8e2d4;
+}
+
+.type-row {
+	gap: 14rpx;
 }
 
 .type-chip {
-	padding: 14rpx 24rpx;
+	padding: 12rpx 24rpx;
 	border-radius: 999rpx;
-	background: #f3ede1;
-	color: #7d6546;
+	background: rgba(255, 255, 255, 0.95);
+	font-size: 24rpx;
+	color: #6d7569;
+	box-shadow: 0 8rpx 16rpx rgba(152, 153, 129, 0.08);
 }
 
 .type-chip.active {
-	background: #2d654f;
+	background: linear-gradient(135deg, #8ab47e 0%, #d8ba73 100%);
 	color: #ffffff;
 }
 
 .type-chip.active.heart-chip {
-	background: #b5483f;
+	background: linear-gradient(135deg, #7da66f 0%, #c9a75d 100%);
 }
 
 .composer-input {
-	min-height: 180rpx;
-	margin-top: 20rpx;
-	padding: 20rpx 24rpx;
-	line-height: 1.7;
+	width: 100%;
+	min-height: 148rpx;
+	margin-top: 18rpx;
+	padding: 20rpx 22rpx;
+	border-radius: 18rpx;
+	background: rgba(255, 255, 255, 0.94);
+	box-sizing: border-box;
+	font-size: 28rpx;
+	color: #222222;
+	box-shadow: inset 0 0 0 1rpx #e6e1d5;
 }
 
 .composer-foot {
-	margin-top: 18rpx;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18rpx;
+	margin-top: 16rpx;
 }
 
 .composer-tip {
 	flex: 1;
+	line-height: 1.5;
 }
 
-.empty-box {
-	padding: 48rpx 24rpx;
+.send-btn {
+	width: 152rpx;
+	height: 72rpx;
+	line-height: 72rpx;
+	margin: 0;
+	border-radius: 14rpx;
+	background: linear-gradient(135deg, #7ea870 0%, #cdaa61 100%);
+	color: #ffffff;
+	font-size: 28rpx;
+	box-shadow: 0 12rpx 22rpx rgba(126, 150, 103, 0.2);
+}
+
+.send-btn[disabled] {
+	opacity: 0.6;
+}
+
+.quota-badge {
+	padding: 10rpx 18rpx;
+	border-radius: 999rpx;
+	background: linear-gradient(135deg, #edf4e9 0%, #f7edd7 100%);
+	font-size: 22rpx;
+	color: #61795d;
+}
+
+.empty-box,
+.empty-chat-panel {
+	padding: 56rpx 24rpx;
 	text-align: center;
-	font-size: 26rpx;
-	color: #857362;
 }
 
 .small-empty {
-	padding-top: 120rpx;
+	padding-top: 140rpx;
+}
+
+.empty-chat-title {
+	display: block;
+	font-size: 30rpx;
+	font-weight: 600;
+	color: #41463c;
+}
+
+.empty-chat-tip {
+	display: block;
+	margin-top: 12rpx;
+}
+
+.bottom-nav {
+	position: fixed;
+	left: 24rpx;
+	right: 24rpx;
+	bottom: calc(20rpx + env(safe-area-inset-bottom));
+	z-index: 20;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20rpx;
+	padding: 16rpx;
+	border-radius: 28rpx;
+	background: rgba(255, 255, 255, 0.92);
+	box-shadow: 0 16rpx 30rpx rgba(126, 128, 111, 0.14);
+	backdrop-filter: blur(12rpx);
+}
+
+.bottom-tab {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10rpx;
+	height: 84rpx;
+	border-radius: 22rpx;
+	color: #6b7265;
+	background: #f5f4ee;
+}
+
+.bottom-tab-active {
+	background: linear-gradient(135deg, #e7f0e0 0%, #f2ead0 100%);
+	color: #4f654a;
+}
+
+.bottom-tab-icon {
+	width: 36rpx;
+	height: 36rpx;
+	line-height: 36rpx;
+	border-radius: 50%;
+	text-align: center;
+	font-size: 22rpx;
+	background: rgba(255, 255, 255, 0.72);
+}
+
+.bottom-tab-text {
+	font-size: 26rpx;
+	font-weight: 600;
 }
 
 @media screen and (max-width: 420px) {
-	.hero-stats,
-	.type-row,
+	.top-bar,
+	.search-bar {
+		padding-left: 20rpx;
+		padding-right: 20rpx;
+	}
+
+	.panel {
+		margin-left: 20rpx;
+		margin-right: 20rpx;
+	}
+
 	.composer-foot {
+		align-items: flex-start;
 		flex-direction: column;
-		align-items: stretch;
 	}
 
-	.search-actions {
-		justify-content: stretch;
+	.send-btn {
+		width: 100%;
 	}
 
-	.solid-btn,
-	.light-btn {
-		margin: 12rpx 0 0;
+	.bottom-nav {
+		left: 20rpx;
+		right: 20rpx;
 	}
 }
 </style>
