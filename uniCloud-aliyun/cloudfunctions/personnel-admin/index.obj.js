@@ -779,7 +779,16 @@ module.exports = {
 		}
 	},
 
-	async listPrivateMessageCandidates({ keyword = '' } = {}) {
+	async listPrivateMessageCandidates({
+		keyword = '',
+		page = 1,
+		pageSize = DEFAULT_PAGE_SIZE
+	} = {}) {
+		const currentPage = normalizePositiveInt(page, 1)
+		const currentPageSize = Math.min(
+			normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE),
+			MAX_PAGE_SIZE
+		)
 		const data = await fetchAllPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
@@ -799,9 +808,15 @@ module.exports = {
 				private_message_quota: normalizeNonNegativeInt(item.private_message_quota, 0),
 				label: buildPersonnelLabel(item)
 			}))
+		const total = list.length
+		const start = (currentPage - 1) * currentPageSize
+		const pageList = list.slice(start, start + currentPageSize)
 
 		return {
-			list
+			list: pageList,
+			total,
+			page: currentPage,
+			pageSize: currentPageSize
 		}
 	},
 

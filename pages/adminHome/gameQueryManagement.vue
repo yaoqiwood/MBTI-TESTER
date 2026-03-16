@@ -8,7 +8,7 @@
 
 			<view class="feature-grid">
 				<view
-					v-for="(item, index) in featureList"
+					v-for="(item, index) in visibleFeatureList"
 					:key="item.key"
 					class="feature-card"
 					@click="handleFeatureTap(item)"
@@ -27,15 +27,27 @@
 </template>
 
 <script>
+const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
+
 	export default {
 		data() {
 			return {
+				currentAdminRole: 0,
 				featureList: [
+					{
+						key: 'personnel-management',
+						title: '人员管理',
+						desc: '进入人员管理页面，维护参与者资料、审核状态与相关信息。',
+						available: true,
+						minAdminRole: 1,
+						url: '/pages/adminHome/personnelManagement'
+					},
 					{
 						key: 'mbti-pair-query',
 						title: 'MBTI 组合配对查询',
 						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
 						available: true,
+						minAdminRole: 1,
 						url: '/pages/adminHome/mbti-pair-query'
 					},
 					{
@@ -43,6 +55,7 @@
 						title: '管理员管理',
 						desc: '进入管理员管理页面，维护管理员、超级管理员与候选人员。',
 						available: true,
+						minAdminRole: 3,
 						url: '/pages/adminHome/adminDashboard'
 					},
 					{
@@ -50,17 +63,46 @@
 						title: '心动私信管理',
 						desc: '用于管理心动私信内容、发送关系与审核策略。',
 						available: true,
+						minAdminRole: 1,
 						url: '/pages/adminHome/heartMessageManagement'
 					}
 				]
 			}
 		},
+		computed: {
+			visibleFeatureList() {
+				return this.featureList.filter((item) => this.hasFeatureAccess(item))
+			}
+		},
+		onLoad() {
+			this.currentAdminRole = this.getCurrentAdminRole()
+		},
 		methods: {
+			getCurrentAdminRole() {
+				try {
+					const profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
+					return Number(profile && profile.admin_role) || 0
+				} catch (error) {
+					console.error('getCurrentAdminRole failed', error)
+					return 0
+				}
+			},
+			hasFeatureAccess(item) {
+				if (!item) {
+					return false
+				}
+				const requiredRole = Number(item.minAdminRole || 0)
+				return Number(this.currentAdminRole) >= requiredRole
+			},
 			formatModuleTag(index) {
 				const moduleNo = index + 1
 				return `MODULE ${moduleNo < 10 ? `0${moduleNo}` : moduleNo}`
 			},
 			handleFeatureTap(item) {
+				if (!this.hasFeatureAccess(item)) {
+					uni.showToast({ title: '当前权限不可访问', icon: 'none' })
+					return
+				}
 				if (item && item.available && item.url) {
 					uni.navigateTo({ url: item.url })
 					return

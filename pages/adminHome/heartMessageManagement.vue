@@ -37,40 +37,71 @@
 				<text class="card-title">私信次数分配</text>
 				<text class="card-tip">先搜索参与者，再为其直接设置、增加或扣减可发送次数。</text>
 			</view>
-			<input
-				v-model.trim="candidateKeyword"
-				class="search-input"
-				placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
-				confirm-type="search"
-				@confirm="loadCandidates"
-			/>
-			<view class="action-row">
-				<button class="light-btn" @click="loadCandidates">查询参与者</button>
+			<view class="action-row quota-entry-row">
+				<button class="solid-btn" @click="toggleQuotaPanel">
+					{{ showQuotaPanel ? '收起次数分配' : '打开次数分配' }}
+				</button>
 			</view>
-			<view v-if="candidateLoading" class="empty-box">
-				<text>正在加载参与者...</text>
-			</view>
-			<view v-else-if="!candidateList.length" class="empty-box">
-				<text>暂无可分配私信次数的参与者</text>
-			</view>
-			<view v-else class="candidate-list">
-				<view v-for="item in candidateList" :key="item._id" class="candidate-item">
-					<view class="candidate-main">
-						<text class="candidate-name">{{ item.label }}</text>
-						<text class="candidate-meta">
-							手机号 {{ item.mobile || '-' }} | 当前可发次数 {{ item.private_message_quota || 0 }}
-						</text>
+			<view v-if="showQuotaPanel" class="quota-panel">
+				<input
+					v-model.trim="candidateKeyword"
+					class="search-input"
+					placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
+					confirm-type="search"
+					@confirm="loadCandidates"
+				/>
+				<view v-if="candidateLoading" class="empty-box">
+					<text>正在加载参与者...</text>
+				</view>
+				<view v-else-if="!candidateList.length" class="empty-box">
+					<text>暂无可分配私信次数的参与者</text>
+				</view>
+					<view v-else class="candidate-list">
+					<view v-for="item in candidateList" :key="item._id" class="candidate-item">
+						<view class="candidate-top">
+							<view class="candidate-main">
+								<text class="candidate-name">{{ item.label }}</text>
+								<text class="candidate-meta">
+									手机号 {{ item.mobile || '-' }} | 当前可发次数 {{ item.private_message_quota || 0 }}
+								</text>
+							</view>
+						</view>
+						<view class="candidate-bottom">
+							<view class="candidate-bottom-spacer"></view>
+							<view class="candidate-actions">
+								<input
+									v-model="quotaInputs[item._id]"
+									class="mini-input"
+									type="number"
+									placeholder="次数"
+								/>
+								<button class="mini-btn" @click="changeQuota(item, 'set')">设置</button>
+								<button class="mini-btn" @click="changeQuota(item, 'increase')">增加</button>
+								<button class="mini-btn danger-btn" @click="changeQuota(item, 'decrease')">扣减</button>
+							</view>
+						</view>
 					</view>
-					<view class="candidate-actions">
-						<input
-							v-model="quotaInputs[item._id]"
-							class="mini-input"
-							type="number"
-							placeholder="次数"
-						/>
-						<button class="mini-btn" @click="changeQuota(item, 'set')">设置</button>
-						<button class="mini-btn" @click="changeQuota(item, 'increase')">增加</button>
-						<button class="mini-btn danger-btn" @click="changeQuota(item, 'decrease')">扣减</button>
+					<view
+						v-if="candidatePagination.total > candidatePagination.pageSize"
+						class="candidate-pager"
+					>
+						<button
+							class="pager-btn"
+							:class="isCandidateFirstPage ? 'pager-btn is-disabled' : ''"
+							@click="goCandidatePrevPage"
+						>
+							上一页
+						</button>
+						<text class="pager-text">
+							第 {{ candidatePagination.page }} / {{ candidateTotalPages }} 页
+						</text>
+						<button
+							class="pager-btn"
+							:class="isCandidateLastPage ? 'pager-btn is-disabled' : ''"
+							@click="goCandidateNextPage"
+						>
+							下一页
+						</button>
 					</view>
 				</view>
 			</view>
@@ -272,6 +303,13 @@ export default {
 				{ label: '已投递', value: 'delivered' },
 				{ label: '已撤销', value: 'revoked' }
 			],
+			candidatePagination: {
+				page: 1,
+				pageSize: 5,
+				total: 0
+			},
+			candidateSearchTimer: null,
+			showQuotaPanel: false,
 			pagination: {
 				page: 1,
 				pageSize: 6,
@@ -306,14 +344,33 @@ export default {
 		statusIndex() {
 			const index = this.statusFilters.slice(1).findIndex((item) => item.value === this.form.status)
 			return index > -1 ? index : 0
+		},
+		candidateTotalPages() {
+			const pageSize = Number(this.candidatePagination.pageSize) || 5
+			const total = Number(this.candidatePagination.total) || 0
+			return Math.max(1, Math.ceil(total / pageSize))
+		},
+		isCandidateFirstPage() {
+			return Number(this.candidatePagination.page || 1) <= 1
+		},
+		isCandidateLastPage() {
+			return Number(this.candidatePagination.page || 1) >= this.candidateTotalPages
+		}
+	},
+	watch: {
+		candidateKeyword() {
+			this.scheduleCandidateSearch()
 		}
 	},
 	onLoad() {
 		this.loadAll()
 	},
+	onUnload() {
+		this.clearCandidateSearchTimer()
+	},
 	methods: {
 		async loadAll() {
-			await Promise.all([this.loadCandidates(), this.loadMessages(1)])
+			await Promise.all([this.loadCandidates(1), this.loadMessages(1)])
 		},
 		goBack() {
 			const pageStack = getCurrentPages()
@@ -333,20 +390,49 @@ export default {
 			const index = this.candidateList.findIndex((item) => item._id === id)
 			return index > -1 ? index : 0
 		},
-		async loadCandidates() {
+		toggleQuotaPanel() {
+			this.showQuotaPanel = !this.showQuotaPanel
+			if (this.showQuotaPanel && !this.candidateList.length && !this.candidateLoading) {
+				this.loadCandidates(1)
+			}
+		},
+		clearCandidateSearchTimer() {
+			if (this.candidateSearchTimer) {
+				clearTimeout(this.candidateSearchTimer)
+				this.candidateSearchTimer = null
+			}
+		},
+		scheduleCandidateSearch() {
+			this.clearCandidateSearchTimer()
+			this.candidateSearchTimer = setTimeout(() => {
+				this.loadCandidates(1)
+			}, 250)
+		},
+		async loadCandidates(page) {
 			if (!personnelAdmin) {
 				this.showUnavailable()
 				return
 			}
 			this.candidateLoading = true
 			try {
+				const nextPage = Number(page) > 0 ? Number(page) : Number(this.candidatePagination.page || 1)
 				const res = await personnelAdmin.listPrivateMessageCandidates({
-					keyword: this.candidateKeyword
+					keyword: this.candidateKeyword,
+					page: nextPage,
+					pageSize: this.candidatePagination.pageSize
 				})
 				this.candidateList = Array.isArray(res && res.list) ? res.list : []
-				const nextInputs = {}
+				this.candidatePagination = {
+					page: Number((res && res.page) || nextPage || 1),
+					pageSize: Number((res && res.pageSize) || this.candidatePagination.pageSize),
+					total: Number((res && res.total) || 0)
+				}
+				const nextInputs = Object.assign({}, this.quotaInputs)
 				this.candidateList.forEach((item) => {
-					nextInputs[item._id] = String(item.private_message_quota || 0)
+					nextInputs[item._id] =
+						typeof nextInputs[item._id] === 'string'
+							? nextInputs[item._id]
+							: String(item.private_message_quota || 0)
 				})
 				this.quotaInputs = nextInputs
 			} catch (error) {
@@ -405,6 +491,24 @@ export default {
 				this.loadMessages(current)
 			}
 		},
+		onCandidatePageChange(event) {
+			const current = Number(event && event.current)
+			if (current > 0) {
+				this.loadCandidates(current)
+			}
+		},
+		goCandidatePrevPage() {
+			if (this.isCandidateFirstPage) {
+				return
+			}
+			this.loadCandidates(Number(this.candidatePagination.page || 1) - 1)
+		},
+		goCandidateNextPage() {
+			if (this.isCandidateLastPage) {
+				return
+			}
+			this.loadCandidates(Number(this.candidatePagination.page || 1) + 1)
+		},
 		async changeQuota(item, mode) {
 			if (!personnelAdmin || !item || !item._id) {
 				return
@@ -421,7 +525,7 @@ export default {
 					mode
 				})
 				uni.showToast({ title: '次数更新成功', icon: 'success' })
-				await this.loadCandidates()
+				await this.loadCandidates(this.candidatePagination.page)
 			} catch (error) {
 				uni.showToast({
 					title: error.message || '次数更新失败',
@@ -630,6 +734,7 @@ export default {
 
 .space-between {
 	justify-content: space-between;
+	margin-top: 10rpx;
 }
 
 .hero-card,
@@ -667,13 +772,18 @@ export default {
 }
 
 .stats-wrap {
+	display: flex;
+	flex-wrap: nowrap;
 	justify-content: space-between;
+	gap: 16rpx;
 	margin-top: 24rpx;
 }
 
 .stat-card {
-	width: 48%;
-	margin-bottom: 18rpx;
+	flex: 1;
+	width: auto;
+	min-width: 0;
+	margin-bottom: 0;
 	padding: 22rpx;
 	box-sizing: border-box;
 }
@@ -785,17 +895,78 @@ export default {
 	margin-top: 16rpx;
 }
 
+.quota-entry-row {
+	margin-top: 20rpx;
+}
+
+.quota-panel {
+	margin-top: 20rpx;
+	padding: 24rpx;
+	border-radius: 24rpx;
+	background: #fffaf3;
+	border: 1rpx solid #eadfce;
+}
+
+.candidate-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20rpx;
+	margin-top: 16rpx;
+	padding-top: 20rpx;
+	border-top: 1rpx solid #eadfce;
+}
+
+.pager-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 160rpx;
+	height: 64rpx;
+	line-height: 64rpx;
+	padding: 0 24rpx;
+	border-radius: 999rpx;
+	font-size: 24rpx;
+	color: #6d4e2c;
+	background: #efe5d3;
+	margin: 0;
+}
+
+.pager-btn.is-disabled {
+	opacity: 0.45;
+}
+
+.pager-text {
+	font-size: 24rpx;
+	color: #7a6652;
+}
+
 .candidate-item {
-	padding: 20rpx 0;
+	padding: 22rpx 0;
 	border-bottom: 1rpx solid #eadfce;
-	gap: 18rpx;
+	display: flex;
+	flex-direction: column;
+	gap: 16rpx;
 }
 
 .candidate-item:last-child {
 	border-bottom: none;
 }
 
+.candidate-top,
+.candidate-bottom {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18rpx;
+}
+
 .candidate-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.candidate-bottom-spacer {
 	flex: 1;
 	min-width: 0;
 }
@@ -809,6 +980,8 @@ export default {
 
 .candidate-actions {
 	align-items: center;
+	justify-content: flex-end;
+	width: 100%;
 	gap: 12rpx;
 }
 

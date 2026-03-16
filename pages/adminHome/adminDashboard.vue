@@ -4,7 +4,7 @@
 			<button class="back-btn" @click="goBack">返回上一页</button>
 		</view>
 
-		<view class="panel-card admin-card">
+		<view v-if="accessChecked" class="panel-card admin-card">
 			<view class="card-head">
 				<text class="card-title">管理员管理</text>
 				<text class="card-tip">默认只显示管理员与超级管理员；超级管理员不可变更，普通管理员可降级为普通测试者。</text>
@@ -145,6 +145,7 @@
 
 <script>
 let personnelAdmin = null
+const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
 try {
 	personnelAdmin = uniCloud.importObject('personnel-admin')
@@ -155,6 +156,8 @@ try {
 export default {
 	data() {
 		return {
+			currentAdminRole: 0,
+			accessChecked: false,
 			loading: false,
 			actionLoading: false,
 			candidateLoading: false,
@@ -193,9 +196,37 @@ export default {
 		}
 	},
 	onLoad() {
+		this.currentAdminRole = this.getCurrentAdminRole()
+		if (!this.ensurePageAccess()) {
+			return
+		}
+		this.accessChecked = true
 		this.loadAdminList()
 	},
 	methods: {
+		getCurrentAdminRole() {
+			try {
+				const profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
+				return Number(profile && profile.admin_role) || 0
+			} catch (error) {
+				console.error('getCurrentAdminRole failed', error)
+				return 0
+			}
+		},
+		ensurePageAccess() {
+			if (Number(this.currentAdminRole) === 3) {
+				return true
+			}
+			uni.showModal({
+				title: '权限不足',
+				content: '只有 admin_role 为 3 的超级管理员可以查看管理员管理页面。',
+				showCancel: false,
+				success: () => {
+					this.goBack()
+				}
+			})
+			return false
+		},
 		goBack() {
 			const pageStack = getCurrentPages()
 			if (pageStack.length > 1) {
@@ -205,6 +236,9 @@ export default {
 			uni.reLaunch({ url: '/pages/adminHome/gameQueryManagement' })
 		},
 		async loadAdminList() {
+			if (!this.accessChecked) {
+				return
+			}
 			if (!personnelAdmin) {
 				this.showUnavailable()
 				return
@@ -234,6 +268,9 @@ export default {
 			this.adminPagination.page = current > 0 ? current : 1
 		},
 		async loadCandidateList() {
+			if (!this.accessChecked) {
+				return
+			}
 			if (!personnelAdmin) {
 				this.showUnavailable()
 				return
@@ -266,6 +303,9 @@ export default {
 			this.candidatePagination.page = current > 0 ? current : 1
 		},
 		async promoteToAdmin(item) {
+			if (!this.accessChecked) {
+				return
+			}
 			if (!item || !item._id || this.actionLoading || !personnelAdmin) {
 				return
 			}
@@ -285,6 +325,9 @@ export default {
 			}
 		},
 		demoteAdmin(item) {
+			if (!this.accessChecked) {
+				return
+			}
 			if (!item || !item._id || Number(item.admin_role) !== 1 || this.actionLoading || !personnelAdmin) {
 				return
 			}

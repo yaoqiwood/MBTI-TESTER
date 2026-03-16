@@ -58,7 +58,7 @@
 			<view class="hero-actions">
 				<!-- <button class="light-btn" :disabled="resettingPasscodes" @click="resetAllPasscodes">生成全部口令</button> -->
 				<button class="solid-btn" @click="importSignupSheet">报名表格导入</button>
-				<button class="ghost-btn" @click="goLegacyHome">原 MBTI 首页</button>
+				<!-- <button class="ghost-btn" @click="goLegacyHome">原 MBTI 首页</button> -->
 			</view>
 		</view>
 
@@ -336,6 +336,7 @@
 </template>
 
 <script>
+	const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 	var personnelAdmin = null
 	if (typeof uniCloud !== 'undefined' && uniCloud.importObject) {
 		personnelAdmin = uniCloud.importObject('personnel-admin')
@@ -466,9 +467,42 @@
 			}
 		},
 		onLoad: function () {
+			if (!this.ensurePageAccess()) {
+				return
+			}
 			this.loadList()
 		},
 		methods: {
+			getCurrentAdminRole: function () {
+				try {
+					var profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
+					return Number(profile && profile.admin_role) || 0
+				} catch (error) {
+					console.error('getCurrentAdminRole failed', error)
+					return 0
+				}
+			},
+			ensurePageAccess: function () {
+				if (this.getCurrentAdminRole() >= 1) {
+					return true
+				}
+				uni.showModal({
+					title: '权限不足',
+					content: '只有 admin_role 为 1、2、3 的管理员可以进入人员管理页面。',
+					showCancel: false,
+					success: function () {
+						var pageStack = getCurrentPages()
+						if (pageStack.length > 1) {
+							uni.navigateBack({ delta: 1 })
+							return
+						}
+						uni.reLaunch({
+							url: '/pages/mbti-home/home'
+						})
+					}
+				})
+				return false
+			},
 			chooseImportFile: function () {
 				return new Promise(function (resolve, reject) {
 					var chooseFile = null
