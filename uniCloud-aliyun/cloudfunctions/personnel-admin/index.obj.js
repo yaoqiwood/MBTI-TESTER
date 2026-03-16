@@ -12,8 +12,9 @@ const MAX_PAGE_SIZE = 50
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
 const ADMIN_ROLE = {
 	NORMAL: 0,
-	ADMIN: 1,
-	SUPER_ADMIN: 2
+	COLLABORATOR: 1,
+	ADMIN: 2,
+	SUPER_ADMIN: 3
 }
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
 const HEADER_FIELD_MAP = {
@@ -777,9 +778,10 @@ module.exports = {
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedDates)
-			.filter(
-				(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.NORMAL
-			)
+			.filter((item) => {
+				const role = normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL)
+				return role !== ADMIN_ROLE.ADMIN && role !== ADMIN_ROLE.SUPER_ADMIN
+			})
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
 			.sort((left, right) => Number(left.person_id || 0) - Number(right.person_id || 0))
 

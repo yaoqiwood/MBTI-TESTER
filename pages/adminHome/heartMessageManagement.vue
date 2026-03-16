@@ -933,11 +933,23 @@ export default {
 }
 
 .quota-panel {
-	margin-top: 20rpx;
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: calc(100vw - 56rpx);
+	max-width: 980rpx;
+	max-height: 80vh;
+	overflow-y: auto;
+	margin-top: 0;
 	padding: 24rpx;
 	border-radius: 24rpx;
 	background: #fffaf3;
 	border: 1rpx solid #eadfce;
+	box-shadow:
+		0 0 0 100vmax rgba(44, 36, 28, 0.42),
+		0 24rpx 56rpx rgba(91, 70, 40, 0.16);
+	z-index: 40;
 }
 
 .candidate-pager {

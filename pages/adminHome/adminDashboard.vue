@@ -1,5 +1,49 @@
 <template>
 	<view class="page">
+		<view v-if="showCandidatePopup" class="candidate-popup-mask" @click="closeCandidatePopup">
+			<view class="candidate-popup" @click.stop>
+				<view class="candidate-head">
+					<text class="section-title">选择人员加入管理员</text>
+					<button class="ghost-btn mini-ghost-btn" @click="closeCandidatePopup">关闭</button>
+				</view>
+				<input
+					v-model.trim="candidateKeyword"
+					class="search-input"
+					placeholder="搜索候选人并提升为管理员"
+					confirm-type="search"
+					@confirm="loadCandidateList"
+				/>
+				<view class="candidate-toolbar">
+					<button class="light-btn" @click="loadCandidateList">查询候选人</button>
+					<button class="ghost-btn" @click="goPersonnelManagement">去人员管理</button>
+				</view>
+				<view v-if="candidateLoading" class="empty-box">
+					<text>正在加载候选人...</text>
+				</view>
+				<view v-else-if="!candidateList.length" class="empty-box">
+					<text>暂无可提升的候选人</text>
+				</view>
+				<view v-else class="candidate-list">
+					<view v-for="item in pagedCandidateList" :key="item._id" class="candidate-item">
+						<view class="candidate-main">
+							<text class="candidate-name">#{{ item.person_id }} · {{ item.nickname || '-' }} / {{ item.name || '-' }}</text>
+							<text class="candidate-meta">手机：{{ item.mobile || '-' }}　MBTI：{{ item.mbti || '-' }}</text>
+						</view>
+						<button class="mini-btn" :disabled="actionLoading" @click="promoteToAdmin(item)">设为管理员</button>
+					</view>
+					<view v-if="candidateList.length > candidatePagination.pageSize" class="candidate-pagination">
+						<uni-pagination
+							show-icon
+							:current="candidatePagination.page"
+							:page-size="candidatePagination.pageSize"
+							:total="candidateList.length"
+							@change="handleCandidatePageChange"
+						/>
+					</view>
+				</view>
+			</view>
+		</view>
+
 		<view class="toolbar">
 			<button class="back-btn" @click="goBack">返回上一页</button>
 		</view>
@@ -39,7 +83,7 @@
 				/>
 				<view class="toolbar-actions">
 					<button class="light-btn" @click="loadAdminList">刷新</button>
-					<button class="solid-btn" @click="toggleAddPanel">新增管理员</button>
+					<button class="solid-btn" @click="openCandidatePopup">新增管理员</button>
 				</view>
 			</view>
 
@@ -118,7 +162,7 @@
 						<text class="col col-time">{{ formatDate(item.updated_at || item.updated_at_text) }}</text>
 						<view class="col col-action action-cell">
 							<button
-								v-if="Number(item.admin_role) === 1"
+								v-if="Number(item.admin_role) === 2"
 								class="mini-btn danger-btn"
 								:disabled="actionLoading"
 								@click="demoteAdmin(item)"
@@ -161,6 +205,7 @@ export default {
 			loading: false,
 			actionLoading: false,
 			candidateLoading: false,
+			showCandidatePopup: false,
 			showAddPanel: false,
 			adminKeyword: '',
 			candidateKeyword: '',
@@ -302,6 +347,14 @@ export default {
 			const current = Number(event && event.current)
 			this.candidatePagination.page = current > 0 ? current : 1
 		},
+		openCandidatePopup() {
+			this.showCandidatePopup = true
+			this.candidatePagination.page = 1
+			this.loadCandidateList()
+		},
+		closeCandidatePopup() {
+			this.showCandidatePopup = false
+		},
 		async promoteToAdmin(item) {
 			if (!this.accessChecked) {
 				return
@@ -311,7 +364,7 @@ export default {
 			}
 			this.actionLoading = true
 			try {
-				await personnelAdmin.updateAdminRole({ id: item._id, adminRole: 1 })
+				await personnelAdmin.updateAdminRole({ id: item._id, adminRole: 2 })
 				uni.showToast({ title: '已设为管理员', icon: 'success' })
 				await Promise.all([this.loadAdminList(), this.loadCandidateList()])
 			} catch (error) {
@@ -328,7 +381,7 @@ export default {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!item || !item._id || Number(item.admin_role) !== 1 || this.actionLoading || !personnelAdmin) {
+			if (!item || !item._id || Number(item.admin_role) !== 2 || this.actionLoading || !personnelAdmin) {
 				return
 			}
 			uni.showModal({
@@ -357,20 +410,20 @@ export default {
 		},
 		adminRoleText(role) {
 			const value = Number(role)
-			if (value === 2) {
+			if (value === 3) {
 				return '超级管理员'
 			}
-			if (value === 1) {
+			if (value === 2) {
 				return '管理员'
 			}
 			return '普通测试者'
 		},
 		roleClass(role) {
 			const value = Number(role)
-			if (value === 2) {
+			if (value === 3) {
 				return 'role-super'
 			}
-			if (value === 1) {
+			if (value === 2) {
 				return 'role-admin'
 			}
 			return 'role-normal'
@@ -415,6 +468,30 @@ export default {
 	padding: 24rpx;
 	background: #f5efe5;
 	box-sizing: border-box;
+}
+
+.candidate-popup-mask {
+	position: fixed;
+	inset: 0;
+	z-index: 40;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28rpx;
+	background: rgba(44, 36, 28, 0.45);
+	box-sizing: border-box;
+}
+
+.candidate-popup {
+	width: 100%;
+	max-height: 86vh;
+	padding: 24rpx;
+	border-radius: 24rpx;
+	background: #fffaf3;
+	border: 1rpx solid #eadfce;
+	box-shadow: 0 24rpx 56rpx rgba(91, 70, 40, 0.16);
+	box-sizing: border-box;
+	overflow-y: auto;
 }
 
 .toolbar {
@@ -593,6 +670,7 @@ export default {
 
 .table-row {
 	display: flex;
+	flex-wrap: nowrap;
 	align-items: stretch;
 	border-bottom: 1rpx solid #eadfce;
 }
@@ -611,13 +689,17 @@ export default {
 	font-size: 24rpx;
 	color: #46382b;
 	box-sizing: border-box;
+	white-space: nowrap;
 }
 
 .col-id { width: 120rpx; }
 .col-name { width: 240rpx; }
 .col-mobile { width: 220rpx; }
 .col-mbti { width: 120rpx; }
-.col-role { width: 190rpx; }
+.col-role {
+	width: 190rpx;
+	white-space: nowrap;
+}
 .col-status { width: 150rpx; }
 .col-time { width: 220rpx; }
 .col-action { width: 220rpx; }
@@ -625,13 +707,21 @@ export default {
 .name-cell,
 .action-cell {
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
+}
+
+.name-cell .primary-text,
+.action-cell .fixed-tip {
+	margin-top: 0;
 }
 
 .role-pill {
+	display: inline-flex;
+	align-items: center;
 	padding: 10rpx 18rpx;
 	border-radius: 999rpx;
 	font-size: 22rpx;
+	white-space: nowrap;
 }
 
 .role-admin {

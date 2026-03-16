@@ -47,6 +47,41 @@
 				<button class="solid-btn detail-confirm-btn" @click="closeDetail">关闭</button>
 			</view>
 		</view>
+		<view v-if="showActionMenu && actionMenuRecord" class="action-menu-mask" @click="closeActionMenu">
+			<view class="action-menu-dialog" @click.stop>
+				<view class="action-menu-head">
+					<text class="action-menu-title">操作</text>
+					<text class="action-menu-close" @click="closeActionMenu">×</text>
+				</view>
+				<view class="action-menu-actions">
+					<button class="mini-btn" @click="handleActionMenu('detail')">详情</button>
+					<button
+						class="mini-btn"
+						:class="actionMenuRecord.review_status === 'approved' ? 'warn-btn' : 'success-btn'"
+						:disabled="reviewingId === actionMenuRecord._id"
+						@click="handleActionMenu('approve')"
+					>
+						{{ actionMenuRecord.review_status === 'approved' ? '取消通过' : '审核确认' }}
+					</button>
+					<button class="mini-btn" @click="handleActionMenu('edit')">编辑</button>
+					<button
+						class="mini-btn"
+						:class="Number(actionMenuRecord.admin_role) === 1 ? 'success-btn' : ''"
+						:disabled="Number(actionMenuRecord.admin_role) === 1 || roleUpdatingId === actionMenuRecord._id"
+						@click="handleActionMenu('coworker')"
+					>
+						{{ Number(actionMenuRecord.admin_role) === 1 ? '已是同工' : '设定为同工' }}
+					</button>
+					<button
+						class="mini-btn danger-btn"
+						:disabled="deletingId === actionMenuRecord._id"
+						@click="handleActionMenu('delete')"
+					>
+						删除
+					</button>
+				</view>
+			</view>
+		</view>
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
 				<text class="hero-kicker">MBTI PERSONNEL ADMIN</text>
@@ -154,35 +189,25 @@
 						<text class="col col-reviewer">{{ item.reviewer || '-' }}</text>
 						<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
 						<view class="col col-action action-cell">
-							<button class="mini-btn" @click="openDetail(item)">详情</button>
-							<button
-								class="mini-btn"
-								:class="item.review_status === 'approved' ? 'warn-btn' : 'success-btn'"
-								:disabled="reviewingId === item._id"
-								@click="toggleApprove(item)"
-							>
-								{{ item.review_status === 'approved' ? '取消通过' : '审核确认' }}
-							</button>
-							<button class="mini-btn" @click="openEdit(item)">编辑</button>
-							<button
-								class="mini-btn danger-btn"
-								:disabled="deletingId === item._id"
-								@click="removeRecord(item)"
-							>
-								删除
-							</button>
+							<button class="mini-btn" @click="openActionMenu(item)">操作</button>
 						</view>
 					</view>
 				</view>
 			</scroll-view>
-			<view v-if="pagination.total" class="pagination-wrap">
-				<uni-pagination
-					show-icon
-					:current="pagination.page"
-					:page-size="pagination.pageSize"
-					:total="pagination.total"
-					@change="onPageChange"
-				/>
+			<view v-if="pagination.total > pagination.pageSize" class="pagination-wrap">
+				<view
+					class="pager-btn"
+					:class="isFirstPage ? 'pager-btn is-disabled' : ''"
+					@click="goPrevPage"
+					>上一页</view
+				>
+				<text class="pager-text">第 {{ pagination.page }} / {{ totalPages }} 页</text>
+				<view
+					class="pager-btn"
+					:class="isLastPage ? 'pager-btn is-disabled' : ''"
+					@click="goNextPage"
+					>下一页</view
+				>
 			</view>
 		</view>
 
@@ -393,8 +418,11 @@
 				// resettingPasscodes: false,
 				deletingId: '',
 				reviewingId: '',
+				roleUpdatingId: '',
 				showDetailPopup: false,
 				detailRecord: null,
+				showActionMenu: false,
+				actionMenuRecord: null,
 				records: [],
 				stats: createDefaultStats(),
 				keyword: '',
@@ -473,6 +501,17 @@
 					}
 				}
 				return value
+			},
+			totalPages: function () {
+				var pageSize = Number(this.pagination.pageSize || 5)
+				var total = Number(this.pagination.total || 0)
+				return Math.max(1, Math.ceil(total / pageSize))
+			},
+			isFirstPage: function () {
+				return Number(this.pagination.page || 1) <= 1
+			},
+			isLastPage: function () {
+				return Number(this.pagination.page || 1) >= this.totalPages
 			}
 		},
 		onLoad: function () {
@@ -610,12 +649,20 @@
 					page: 1
 				})
 			},
-			onPageChange: function (event) {
-				if (!event || !event.current || event.current === this.pagination.page) {
+			goPrevPage: function () {
+				if (this.isFirstPage) {
 					return
 				}
 				this.loadList({
-					page: event.current
+					page: Number(this.pagination.page || 1) - 1
+				})
+			},
+			goNextPage: function () {
+				if (this.isLastPage) {
+					return
+				}
+				this.loadList({
+					page: Number(this.pagination.page || 1) + 1
 				})
 			},
 			loadList: async function (options) {
@@ -666,6 +713,43 @@
 			closeDetail: function () {
 				this.showDetailPopup = false
 				this.detailRecord = null
+			},
+			openActionMenu: function (item) {
+				if (!item) {
+					return
+				}
+				this.actionMenuRecord = item
+				this.showActionMenu = true
+			},
+			closeActionMenu: function () {
+				this.showActionMenu = false
+				this.actionMenuRecord = null
+			},
+			handleActionMenu: function (action) {
+				var item = this.actionMenuRecord
+				this.closeActionMenu()
+				if (!item) {
+					return
+				}
+				if (action === 'detail') {
+					this.openDetail(item)
+					return
+				}
+				if (action === 'approve') {
+					this.toggleApprove(item)
+					return
+				}
+				if (action === 'edit') {
+					this.openEdit(item)
+					return
+				}
+				if (action === 'coworker') {
+					this.setAsCoworker(item)
+					return
+				}
+				if (action === 'delete') {
+					this.removeRecord(item)
+				}
 			},
 			openEdit: function (item) {
 				this.showFormOnly = true
@@ -864,6 +948,60 @@
 					})
 				} finally {
 					this.reviewingId = ''
+					uni.hideLoading()
+				}
+			},
+			setAsCoworker: async function (item) {
+				if (!personnelAdmin) {
+					this.showUnavailable()
+					return
+				}
+				if (!item || !item._id || this.roleUpdatingId || Number(item.admin_role) === 1) {
+					return
+				}
+
+				var modalRes = await new Promise(function (resolve) {
+					uni.showModal({
+						title: '确认设定为同工',
+						content: '确认将该人员角色设置为同工吗？',
+						success: function (res) {
+							resolve(res)
+						},
+						fail: function () {
+							resolve({ confirm: false })
+						}
+					})
+				})
+				if (!modalRes.confirm) {
+					return
+				}
+
+				this.roleUpdatingId = item._id
+				uni.showLoading({
+					title: '更新角色中',
+					mask: true
+				})
+				try {
+					await personnelAdmin.update({
+						id: item._id,
+						data: {
+							admin_role: 1
+						}
+					})
+					uni.showToast({
+						title: '已设为同工',
+						icon: 'success'
+					})
+					await this.loadList({
+						page: this.pagination.page
+					})
+				} catch (error) {
+					uni.showModal({
+						content: error.message || '设定同工失败',
+						showCancel: false
+					})
+				} finally {
+					this.roleUpdatingId = ''
 					uni.hideLoading()
 				}
 			},
@@ -1106,6 +1244,57 @@
 		background: #fffcf7;
 		box-shadow: 0 24rpx 56rpx rgba(91, 70, 40, 0.16);
 		box-sizing: border-box;
+	}
+
+	.action-menu-mask {
+		position: fixed;
+		inset: 0;
+		z-index: 31;
+		padding: 32rpx;
+		background: rgba(44, 36, 28, 0.45);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+	}
+
+	.action-menu-dialog {
+		width: 100%;
+		max-width: 520rpx;
+		padding: 28rpx;
+		border-radius: 24rpx;
+		background: #fffcf7;
+		box-shadow: 0 24rpx 56rpx rgba(91, 70, 40, 0.16);
+		box-sizing: border-box;
+	}
+
+	.action-menu-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.action-menu-title {
+		font-size: 32rpx;
+		font-weight: 700;
+		color: #2d241c;
+	}
+
+	.action-menu-close {
+		font-size: 40rpx;
+		line-height: 1;
+		color: #7b664d;
+	}
+
+	.action-menu-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 12rpx;
+		margin-top: 20rpx;
+	}
+
+	.action-menu-actions .mini-btn {
+		margin: 0;
 	}
 
 	.detail-head,
@@ -1512,10 +1701,34 @@
 
 	.pagination-wrap {
 		display: flex;
-		justify-content: flex-end;
-		margin-top: 24rpx;
-		padding-top: 24rpx;
-		border-top: 1rpx solid #eadfce;
+		align-items: center;
+		justify-content: center;
+		gap: 20rpx;
+		padding: 12rpx 0 4rpx;
+	}
+
+	.pager-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 160rpx;
+		height: 64rpx;
+		line-height: 64rpx;
+		padding: 0 24rpx;
+		border-radius: 999rpx;
+		font-size: 24rpx;
+		color: #6d4e2c;
+		background: #efe5d3;
+		margin: 0;
+	}
+
+	.pager-btn.is-disabled {
+		opacity: 0.45;
+	}
+
+	.pager-text {
+		font-size: 24rpx;
+		color: #7a6652;
 	}
 
 	.section-block {
