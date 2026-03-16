@@ -165,6 +165,7 @@
 				saving: false,
 				lastErrorMessage: '',
 				lastErrorAt: 0,
+				autoRoutedByOpenid: false,
 				currentUser: null,
 				restoredByOpenid: false,
 				profileForm: {
@@ -250,6 +251,35 @@
 				const name = String(record.name || '').trim()
 				const passcode = String(record.passcode || '').trim()
 				return !!(name && /^\d{4}$/.test(passcode))
+			},
+			shouldAutoRouteToTest(record = {}) {
+				return (
+					this.hasNicknameAndAvatar(record) &&
+					this.hasNameAndPasscode(record) &&
+					!this.hasMbtiResult(record)
+				)
+			},
+			routeToTestByRecord(record = {}) {
+				if (!record || !record._id || this.autoRoutedByOpenid) {
+					return false
+				}
+				this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(record))
+				this.autoRoutedByOpenid = true
+				const fastOpenid = this.loginOpenIds[0] || this.getLoginOpenId(this.currentUser || {})
+				uni.showToast({
+					title: '检测到已绑定资料，正在进入测试',
+					icon: 'none',
+					duration: 1200
+				})
+				setTimeout(() => {
+					uni.reLaunch({
+						url:
+							`/pages/test/test?name=${encodeURIComponent(record.name || '')}` +
+							`&personnelId=${encodeURIComponent(record._id || '')}` +
+							`&wxOpenid=${encodeURIComponent(fastOpenid || '')}`
+					})
+				}, 260)
+				return true
 			},
 			async loadCurrentUser() {
 				try {
@@ -341,6 +371,10 @@
 							admin_role: Number(record.admin_role) || 0
 						}
 					}
+					if (this.shouldAutoRouteToTest(record || {})) {
+						this.routeToTestByRecord(record)
+						return
+					}
 					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
 				} catch (error) {
 					console.error('initOpenidProfileState failed', error)
@@ -381,6 +415,11 @@
 					if (!record || !record._id) {
 						console.log('[access-form] no personnel record matched openid')
 						return false
+					}
+					if (this.shouldAutoRouteToTest(record)) {
+						console.log('[access-form] personnel matched and bound without mbti, relaunch to test', record)
+						this.routeToTestByRecord(record)
+						return true
 					}
 					if (!this.hasMbtiResult(record)) {
 						console.log('[access-form] personnel matched but no mbti result, stay on page', record)
