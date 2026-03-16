@@ -46,6 +46,13 @@
 			}
 		},
 		{
+			"path": "pages/adminHome/heartMessageManagement",
+			"style": {
+				"navigationBarTitleText": "心动私信管理",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/cloudFunction/cloudFunction",
 			"style": {
 				"navigationBarTitleText": "云函数",

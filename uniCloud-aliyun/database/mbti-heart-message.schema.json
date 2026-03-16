@@ -1,0 +1,141 @@
+{
+	"bsonType": "object",
+	"required": [
+		"sender_record_id",
+		"sender_person_id",
+		"receiver_record_id",
+		"receiver_person_id",
+		"content",
+		"status",
+		"quota_cost",
+		"created_at",
+		"updated_at"
+	],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "文档 ID，系统自动生成"
+		},
+		"sender_record_id": {
+			"bsonType": "string",
+			"title": "发送方记录ID",
+			"foreignKey": "mbti-personnel._id",
+			"trim": "both"
+		},
+		"sender_person_id": {
+			"bsonType": "int",
+			"title": "发送方编号"
+		},
+		"sender_name": {
+			"bsonType": "string",
+			"title": "发送方姓名快照",
+			"trim": "both"
+		},
+		"sender_nickname": {
+			"bsonType": "string",
+			"title": "发送方昵称快照",
+			"trim": "both"
+		},
+		"sender_mbti": {
+			"bsonType": "string",
+			"title": "发送方MBTI快照",
+			"trim": "both"
+		},
+		"receiver_record_id": {
+			"bsonType": "string",
+			"title": "接收方记录ID",
+			"foreignKey": "mbti-personnel._id",
+			"trim": "both"
+		},
+		"receiver_person_id": {
+			"bsonType": "int",
+			"title": "接收方编号"
+		},
+		"receiver_name": {
+			"bsonType": "string",
+			"title": "接收方姓名快照",
+			"trim": "both"
+		},
+		"receiver_nickname": {
+			"bsonType": "string",
+			"title": "接收方昵称快照",
+			"trim": "both"
+		},
+		"receiver_mbti": {
+			"bsonType": "string",
+			"title": "接收方MBTI快照",
+			"trim": "both"
+		},
+		"content": {
+			"bsonType": "string",
+			"title": "私信内容",
+			"trim": "both"
+		},
+		"is_anonymous": {
+			"bsonType": "bool",
+			"title": "是否匿名",
+			"defaultValue": true
+		},
+		"quota_cost": {
+			"bsonType": "int",
+			"title": "消耗次数",
+			"defaultValue": 1
+		},
+		"status": {
+			"bsonType": "string",
+			"title": "状态",
+			"defaultValue": "draft",
+			"enum": [
+				{
+					"text": "草稿",
+					"value": "draft"
+				},
+				{
+					"text": "待投递",
+					"value": "queued"
+				},
+				{
+					"text": "已投递",
+					"value": "delivered"
+				},
+				{
+					"text": "已撤销",
+					"value": "revoked"
+				}
+			]
+		},
+		"admin_remark": {
+			"bsonType": "string",
+			"title": "管理员备注",
+			"trim": "both"
+		},
+		"delivered_at": {
+			"bsonType": "timestamp",
+			"title": "投递时间"
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"created_at": {
+			"bsonType": "timestamp",
+			"title": "创建时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "更新时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

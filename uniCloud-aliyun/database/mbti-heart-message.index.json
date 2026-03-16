@@ -1,0 +1,24 @@
+[
+	{
+		"MgoKeySchema": {
+			"sender_record_id": 1
+		},
+		"MgoName": "sender_record_id_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"receiver_record_id": 1
+		},
+		"MgoName": "receiver_record_id_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"status": 1,
+			"created_at": -1
+		},
+		"MgoName": "status_created_at_index",
+		"MgoUnique": false
+	}
+]

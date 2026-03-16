@@ -49,7 +49,8 @@
 						key: 'heart-message-manage',
 						title: '心动私信管理',
 						desc: '用于管理心动私信内容、发送关系与审核策略。',
-						available: false
+						available: true,
+						url: '/pages/adminHome/heartMessageManagement'
 					}
 				]
 			}
