@@ -261,6 +261,7 @@
 
 	const userName = ref('')
 	const personnelId = ref('')
+	const wxOpenid = ref('')
 	const currentIndex = ref(0)
 	const answers = ref([])
 	const questionFlow = ref(buildQuestionFlow())
@@ -290,7 +291,57 @@
 		if (options && options.personnelId) {
 			personnelId.value = decodeURIComponent(options.personnelId)
 		}
+		if (options && options.wxOpenid) {
+			wxOpenid.value = decodeURIComponent(options.wxOpenid)
+		}
+		if (!wxOpenid.value) {
+			resolveWxOpenidFromLogin()
+		}
 	})
+
+	function getCandidateOpenIds(user = {}) {
+		const loginOpenid = user && user.wx_openid
+		if (!loginOpenid) {
+			return []
+		}
+		if (typeof loginOpenid === 'string') {
+			const value = loginOpenid.trim()
+			return value ? [value] : []
+		}
+		if (typeof loginOpenid !== 'object') {
+			return []
+		}
+		const preferredKeys = ['mp-weixin', 'mp_weixin', 'mp', 'weixin']
+		const values = preferredKeys
+			.map((key) => loginOpenid[key])
+			.concat(Object.values(loginOpenid || {}))
+			.map((item) => (typeof item === 'string' ? item.trim() : ''))
+			.filter(Boolean)
+		return Array.from(new Set(values))
+	}
+
+	async function resolveWxOpenidFromLogin() {
+		try {
+			const currentUserInfo = uniCloud.getCurrentUserInfo() || {}
+			const currentUser = currentUserInfo.userInfo || {}
+			const localOpenid = getCandidateOpenIds({
+				wx_openid: currentUser.wx_openid || currentUserInfo.wx_openid || ''
+			})[0]
+			if (localOpenid) {
+				wxOpenid.value = localOpenid
+				return
+			}
+			if (!currentUserInfo.uid) {
+				return
+			}
+			const result = await personnelAdmin.getCurrentLoginWxOpenid({
+				uid: currentUserInfo.uid
+			})
+			wxOpenid.value = (result && result.openIds && result.openIds[0]) || ''
+		} catch (error) {
+			console.error('resolveWxOpenidFromLogin failed', error)
+		}
+	}
 
 	const answeredCount = computed(() => answers.value.length)
 	const progressPercent = computed(() => Math.round((answeredCount.value / totalQuestions) * 100))
@@ -522,7 +573,7 @@
 	}
 
 	async function persistMbtiResult() {
-		if (!personnelId.value || isSavingResult.value) {
+		if ((!personnelId.value && !wxOpenid.value) || isSavingResult.value) {
 			return
 		}
 		isSavingResult.value = true
@@ -531,8 +582,18 @@
 			mask: true
 		})
 		try {
+			let targetId = personnelId.value
+			if (!targetId && wxOpenid.value) {
+				const profileRes = await personnelAdmin.getByWxOpenid({
+					wxOpenid: wxOpenid.value
+				})
+				targetId = (profileRes && profileRes.record && profileRes.record._id) || ''
+			}
+			if (!targetId) {
+				throw new Error('未找到当前用户档案')
+			}
 			await personnelAdmin.saveMbtiResult({
-				id: personnelId.value,
+				id: targetId,
 				mbti: resultType.value
 			})
 		} catch (error) {

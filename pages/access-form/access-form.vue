@@ -157,6 +157,8 @@
 				nameInput: '',
 				selectedName: '',
 				selectedRecord: null,
+				matchedOpenidRecord: null,
+				loginOpenIds: [],
 				password: '',
 				showNameOptions: false,
 				showProfilePopup: false,
@@ -173,7 +175,7 @@
 		},
 		async onLoad() {
 			await this.loadCurrentUser()
-			this.syncProfilePopupState()
+			await this.initOpenidProfileState()
 		},
 		computed: {
 			filteredNames() {
@@ -239,6 +241,16 @@
 					.trim()
 					.toUpperCase()
 			},
+			hasNicknameAndAvatar(record = {}) {
+				const nickname = String(record.nickname || '').trim()
+				const avatar = String(record.personal_photo || '').trim()
+				return !!(nickname && avatar)
+			},
+			hasNameAndPasscode(record = {}) {
+				const name = String(record.name || '').trim()
+				const passcode = String(record.passcode || '').trim()
+				return !!(name && /^\d{4}$/.test(passcode))
+			},
 			async loadCurrentUser() {
 				try {
 					const currentUserInfo = uniCloud.getCurrentUserInfo()
@@ -284,6 +296,56 @@
 				} catch (error) {
 					console.error('[access-form] getCurrentLoginWxOpenid failed', error)
 					return []
+				}
+			},
+			applyProfileFormBySources(record = null) {
+				const user = this.currentUser || {}
+				const recordNickname = String((record && record.nickname) || '').trim()
+				const recordAvatar = String((record && (record.personal_photo || record.wx_avatar)) || '').trim()
+				const userAvatar =
+					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
+
+				this.profileForm.nickname = recordNickname || user.nickname || ''
+				this.profileForm.avatar = recordAvatar || userAvatar || ''
+			},
+			async findPersonnelRecordByOpenIds(openIds = []) {
+				if (!openIds.length) {
+					return null
+				}
+				for (let i = 0; i < openIds.length; i++) {
+					const result = await personnelAdmin.getByWxOpenid({
+						wxOpenid: openIds[i]
+					})
+					if (result && result.record && result.record._id) {
+						return result.record
+					}
+				}
+				return null
+			},
+			async initOpenidProfileState() {
+				try {
+					let openIds = this.getCandidateOpenIds(this.currentUser)
+					if (!openIds.length) {
+						openIds = await this.fetchLoginOpenIdsFromServer()
+					}
+					this.loginOpenIds = openIds
+					const record = await this.findPersonnelRecordByOpenIds(openIds)
+					this.matchedOpenidRecord = record
+					this.applyProfileFormBySources(record)
+					if (record && record._id && record.name) {
+						this.nameInput = record.name
+						this.selectedName = record.name
+						this.selectedRecord = {
+							_id: record._id,
+							name: record.name,
+							admin_role: Number(record.admin_role) || 0
+						}
+					}
+					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
+				} catch (error) {
+					console.error('initOpenidProfileState failed', error)
+					this.applyProfileFormBySources(null)
+					this.syncProfilePopupState()
 				}
 			},
 			syncProfilePopupState() {
@@ -363,7 +425,7 @@
 					}
 				})
 			},
-			confirmProfile() {
+			async confirmProfile() {
 				if (!this.profileForm.nickname.trim()) {
 					uni.showToast({
 						title: '请输入昵称',
@@ -378,7 +440,39 @@
 					})
 					return
 				}
-				this.syncProfilePopupState()
+				let matchedRecord = this.matchedOpenidRecord
+				try {
+					if ((!matchedRecord || !matchedRecord._id) && this.loginOpenIds.length) {
+						matchedRecord = await this.findPersonnelRecordByOpenIds(this.loginOpenIds)
+						this.matchedOpenidRecord = matchedRecord
+					}
+				} catch (error) {
+					console.error('confirmProfile query by openid failed', error)
+				}
+				if (matchedRecord && matchedRecord._id && this.hasNameAndPasscode(matchedRecord)) {
+					this.savePersonnelProfileToStorage(
+						this.buildPersonnelProfilePayload({
+							...matchedRecord,
+							nickname: this.profileForm.nickname.trim(),
+							personal_photo: this.profileForm.avatar
+						})
+					)
+					uni.showToast({
+						title: '宸茶瘑鍒凡缁戝畾璐﹀彿锛屾鍦ㄨ繘鍏ユ祴璇?',
+						icon: 'none'
+					})
+					setTimeout(() => {
+						const fastOpenid = this.loginOpenIds[0] || this.getLoginOpenId(this.currentUser || {})
+						uni.navigateTo({
+							url:
+								`/pages/test/test?name=${encodeURIComponent(matchedRecord.name || '')}` +
+								`&personnelId=${encodeURIComponent(matchedRecord._id || '')}` +
+								`&wxOpenid=${encodeURIComponent(fastOpenid || '')}`
+						})
+					}, 350)
+					return
+				}
+				this.showProfilePopup = false
 			},
 			closeProfilePopup() {
 				this.showProfilePopup = false
@@ -525,7 +619,7 @@
 
 					const avatarFileId = await this.uploadAvatarIfNeeded()
 					const user = this.currentUser || {}
-					const loginOpenId = this.getLoginOpenId(user)
+					const loginOpenId = this.loginOpenIds[0] || this.getLoginOpenId(user)
 					const result = await personnelAdmin.upsertByUser({
 						userId: uid,
 						personnelId: personnelId,
@@ -570,7 +664,7 @@
 					})
 					setTimeout(() => {
 						uni.navigateTo({
-							url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}`
+							url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
 						})
 					}, 450)
 				} catch (error) {

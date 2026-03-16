@@ -145,6 +145,11 @@ export default {
 			const role = Number(adminRole)
 			return role === 1 || role === 2 || role === 3
 		},
+		hasMbtiResult(record = {}) {
+			return !!String(record.mbti || '')
+				.trim()
+				.toUpperCase()
+		},
 		async getProfileFromDatabase() {
 			let openIds = []
 			const currentUser = this.getMergedCurrentUser()
@@ -172,7 +177,9 @@ export default {
 			const targetUrl =
 				profile && this.isAdminRole(profile.admin_role)
 					? '/pages/adminHome/gameQueryManagement'
-					: profile && Number(profile.admin_role) === 0
+					: profile &&
+						  Number(profile.admin_role) === 0 &&
+						  this.hasMbtiResult(profile)
 						? '/pages/userHeartMessage/userHeartMessage'
 						: '/pages/mbti-home/home'
 			return targetUrl
