@@ -5,8 +5,8 @@
 			<view class="hero-backdrop hero-backdrop-right"></view>
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
-				<text class="headline">正在为你进入首页</text>
-				<text class="subhead">我们会先读取本地资料。</text>
+				<text class="headline">Opening your home</text>
+				<text class="subhead">We are reading your local profile first.</text>
 			</view>
 
 			<view class="loading-card">
@@ -23,7 +23,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 export default {
 	data() {
 		return {
-			loadingText: '读取本地身份信息中...'
+			loadingText: 'Loading local profile...'
 		}
 	},
 	onLoad() {
@@ -48,10 +48,17 @@ export default {
 			const targetUrl =
 				profile && this.isAdminRole(profile.admin_role)
 					? '/pages/adminHome/gameQueryManagement'
-					: '/pages/mbti-home/home'
+					: profile && Number(profile.admin_role) === 0
+						? '/pages/userHeartMessage/userHeartMessage'
+						: '/pages/mbti-home/home'
 
-			this.loadingText =
-				targetUrl === '/pages/adminHome/gameQueryManagement' ? '已识别为管理员，正在进入后台...' : '正在进入测试首页...'
+			if (targetUrl === '/pages/adminHome/gameQueryManagement') {
+				this.loadingText = 'Admin detected, opening dashboard...'
+			} else if (targetUrl === '/pages/userHeartMessage/userHeartMessage') {
+				this.loadingText = 'User detected, opening contacts...'
+			} else {
+				this.loadingText = 'Opening MBTI home...'
+			}
 
 			setTimeout(() => {
 				uni.reLaunch({

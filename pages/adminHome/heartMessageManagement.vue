@@ -133,7 +133,7 @@
 				@confirm="searchMessages"
 			/>
 			<view class="action-row space-between">
-				<button class="solid-btn" @click="openCreate">新增私信</button>
+				<!-- <button class="solid-btn" @click="openCreate">新增私信</button> -->
 				<view class="inline-actions">
 					<button class="light-btn" @click="resetFilters">重置</button>
 					<button class="solid-btn" @click="searchMessages">查询</button>
@@ -239,14 +239,24 @@
 					</view>
 				</view>
 			</scroll-view>
-			<view v-if="pagination.total" class="pagination-wrap">
-				<uni-pagination
-					show-icon
-					:current="pagination.page"
-					:page-size="pagination.pageSize"
-					:total="pagination.total"
-					@change="onPageChange"
-				/>
+			<view v-if="pagination.total > pagination.pageSize" class="message-pager">
+				<button
+					class="pager-btn"
+					:class="isMessageFirstPage ? 'pager-btn is-disabled' : ''"
+					@click="goMessagePrevPage"
+				>
+					上一页
+				</button>
+				<text class="pager-text">
+					第 {{ pagination.page }} / {{ messageTotalPages }} 页
+				</text>
+				<button
+					class="pager-btn"
+					:class="isMessageLastPage ? 'pager-btn is-disabled' : ''"
+					@click="goMessageNextPage"
+				>
+					下一页
+				</button>
 			</view>
 		</view>
 	</view>
@@ -355,6 +365,17 @@ export default {
 		},
 		isCandidateLastPage() {
 			return Number(this.candidatePagination.page || 1) >= this.candidateTotalPages
+		},
+		messageTotalPages() {
+			const pageSize = Number(this.pagination.pageSize) || 6
+			const total = Number(this.pagination.total) || 0
+			return Math.max(1, Math.ceil(total / pageSize))
+		},
+		isMessageFirstPage() {
+			return Number(this.pagination.page || 1) <= 1
+		},
+		isMessageLastPage() {
+			return Number(this.pagination.page || 1) >= this.messageTotalPages
 		}
 	},
 	watch: {
@@ -490,6 +511,18 @@ export default {
 			if (current > 0) {
 				this.loadMessages(current)
 			}
+		},
+		goMessagePrevPage() {
+			if (this.isMessageFirstPage) {
+				return
+			}
+			this.loadMessages(Number(this.pagination.page || 1) - 1)
+		},
+		goMessageNextPage() {
+			if (this.isMessageLastPage) {
+				return
+			}
+			this.loadMessages(Number(this.pagination.page || 1) + 1)
 		},
 		onCandidatePageChange(event) {
 			const current = Number(event && event.current)
@@ -917,6 +950,16 @@ export default {
 	border-top: 1rpx solid #eadfce;
 }
 
+.message-pager {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20rpx;
+	margin-top: 24rpx;
+	padding-top: 20rpx;
+	border-top: 1rpx solid #eadfce;
+}
+
 .pager-btn {
 	display: flex;
 	align-items: center;
@@ -1137,11 +1180,4 @@ export default {
 	text-align: center;
 }
 
-.pagination-wrap {
-	display: flex;
-	justify-content: flex-end;
-	margin-top: 24rpx;
-	padding-top: 24rpx;
-	border-top: 1rpx solid #eadfce;
-}
 </style>

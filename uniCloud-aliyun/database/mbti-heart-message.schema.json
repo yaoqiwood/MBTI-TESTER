@@ -6,6 +6,7 @@
 		"receiver_record_id",
 		"receiver_person_id",
 		"content",
+		"type",
 		"status",
 		"quota_cost",
 		"created_at",
@@ -75,6 +76,22 @@
 			"bsonType": "string",
 			"title": "私信内容",
 			"trim": "both"
+		},
+		"type": {
+			"bsonType": "int",
+			"title": "message type",
+			"defaultValue": 1,
+			"enum": [
+				{
+					"text": "normal",
+					"value": 0
+				},
+				{
+					"text": "heart",
+					"value": 1
+				}
+			],
+			"description": "0 normal, 1 heart"
 		},
 		"is_anonymous": {
 			"bsonType": "bool",

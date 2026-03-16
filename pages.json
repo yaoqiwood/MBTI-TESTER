@@ -53,6 +53,13 @@
 			}
 		},
 		{
+			"path": "pages/userHeartMessage/userHeartMessage",
+			"style": {
+				"navigationBarTitleText": "联系人",
+				"enablePullDownRefresh": false
+			}
+		},
+		{
 			"path": "pages/cloudFunction/cloudFunction",
 			"style": {
 				"navigationBarTitleText": "云函数",

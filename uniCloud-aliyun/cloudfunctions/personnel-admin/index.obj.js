@@ -186,6 +186,7 @@ function normalizePayload(payload = {}, options = {}) {
 		remark: trimString(payload.remark),
 		admin_role: adminRole,
 		private_message_quota: normalizeNonNegativeInt(payload.private_message_quota, 0),
+		heart_message_quota: normalizeNonNegativeInt(payload.heart_message_quota, 0),
 		submitted_at: normalizeTimestamp(payload.submitted_at, now),
 		updated_at: now
 	}
@@ -223,6 +224,7 @@ function withFormattedDates(record = {}) {
 function withFormattedHeartMessage(record = {}) {
 	return {
 		...record,
+		type: normalizeHeartMessageType(record.type, 1),
 		created_at_text: record.created_at ? new Date(record.created_at).toISOString() : '',
 		updated_at_text: record.updated_at ? new Date(record.updated_at).toISOString() : '',
 		delivered_at_text: record.delivered_at ? new Date(record.delivered_at).toISOString() : ''
@@ -478,6 +480,11 @@ function normalizeHeartMessageStatus(value, fallback = 'draft') {
 	return HEART_MESSAGE_STATUS.includes(normalized) ? normalized : fallback
 }
 
+function normalizeHeartMessageType(value, fallback = 1) {
+	const numericValue = Number(value)
+	return numericValue === 0 || numericValue === 1 ? numericValue : fallback
+}
+
 function buildHeartMessageStats(list = []) {
 	return {
 		total: list.length,
@@ -552,11 +559,12 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 	}
 
 	const status = normalizeHeartMessageStatus(payload.status, currentRecord ? currentRecord.status : 'draft')
+	const type = normalizeHeartMessageType(payload.type, currentRecord ? currentRecord.type : 1)
 	const quotaCost = normalizeNonNegativeInt(
 		payload.quota_cost,
 		currentRecord ? currentRecord.quota_cost : 1
 	)
-	if (quotaCost < 1) {
+	if (type === 1 && quotaCost < 1) {
 		throw new Error('扣减次数至少为 1')
 	}
 
@@ -580,6 +588,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		receiver_nickname: trimString(receiver.nickname),
 		receiver_mbti: trimString(receiver.mbti).toUpperCase(),
 		content,
+		type,
 		is_anonymous: payload.is_anonymous === false ? false : true,
 		quota_cost: quotaCost,
 		status,
@@ -806,6 +815,7 @@ module.exports = {
 				mobile: item.mobile || '',
 				review_status: item.review_status || 'pending',
 				private_message_quota: normalizeNonNegativeInt(item.private_message_quota, 0),
+				heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
 				label: buildPersonnelLabel(item)
 			}))
 		const total = list.length
@@ -854,6 +864,129 @@ module.exports = {
 			page: currentPage,
 			pageSize: currentPageSize,
 			stats: buildHeartMessageStats(list)
+		}
+	},
+
+	async getUserHeartMessageHome({ personnelId = '', keyword = '' } = {}) {
+		const self = await getPersonnelById(personnelId)
+		if (!self) {
+			throw new Error('当前用户资料不存在或已被删除')
+		}
+
+		const normalizedKeyword = trimString(keyword).toLowerCase()
+		const personnelList = await fetchAllPersonnelRecords()
+		const allMessages = (await fetchAllHeartMessages())
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedHeartMessage)
+		const messageMap = {}
+
+		allMessages.forEach((item) => {
+			const senderId = trimString(item.sender_record_id)
+			const receiverId = trimString(item.receiver_record_id)
+			let contactId = ''
+			if (senderId === self._id) {
+				contactId = receiverId
+			} else if (receiverId === self._id) {
+				contactId = senderId
+			}
+			if (!contactId) {
+				return
+			}
+			if (!messageMap[contactId] || new Date(item.created_at).getTime() > new Date(messageMap[contactId].created_at).getTime()) {
+				messageMap[contactId] = item
+			}
+		})
+
+		const contacts = personnelList
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.filter((item) => item._id !== self._id)
+			.filter((item) => item.review_status === 'approved')
+			.map((item) => {
+				const latestMessage = messageMap[item._id] || null
+				return {
+					_id: item._id,
+					person_id: item.person_id,
+					nickname: item.nickname || '',
+					name: item.name || '',
+					mbti: item.mbti || '',
+					personal_photo: item.personal_photo || '',
+					label: buildPersonnelLabel(item),
+					latest_message: latestMessage ? latestMessage.content || '' : '',
+					latest_message_type: latestMessage ? normalizeHeartMessageType(latestMessage.type, 1) : -1,
+					latest_message_at:
+						latestMessage && (latestMessage.created_at_text || latestMessage.created_at)
+							? latestMessage.created_at_text || latestMessage.created_at
+							: '',
+					latest_message_status: latestMessage ? latestMessage.status || 'delivered' : '',
+					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0)
+				}
+			})
+			.filter((item) => matchesKeyword(item, normalizedKeyword))
+			.sort((left, right) => {
+				const rightTime = right.latest_message_at ? new Date(right.latest_message_at).getTime() : 0
+				const leftTime = left.latest_message_at ? new Date(left.latest_message_at).getTime() : 0
+				if (rightTime !== leftTime) {
+					return rightTime - leftTime
+				}
+				return Number(left.person_id || 0) - Number(right.person_id || 0)
+			})
+
+		return {
+			self: {
+				_id: self._id,
+				person_id: self.person_id,
+				name: self.name || '',
+				nickname: self.nickname || '',
+				mbti: self.mbti || '',
+				personal_photo: self.personal_photo || '',
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
+			},
+			contacts
+		}
+	},
+
+	async listUserHeartMessages({ personnelId = '', contactId = '' } = {}) {
+		const self = await getPersonnelById(personnelId)
+		if (!self) {
+			throw new Error('当前用户资料不存在或已被删除')
+		}
+		const contact = await getPersonnelById(contactId)
+		if (!contact) {
+			throw new Error('联系人不存在或已被删除')
+		}
+
+		const list = (await fetchAllHeartMessages())
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.filter((item) => {
+				const senderId = trimString(item.sender_record_id)
+				const receiverId = trimString(item.receiver_record_id)
+				return (
+					(senderId === self._id && receiverId === contact._id) ||
+					(senderId === contact._id && receiverId === self._id)
+				)
+			})
+			.map(withFormattedHeartMessage)
+			.sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+
+		return {
+			self: {
+				_id: self._id,
+				person_id: self.person_id,
+				name: self.name || '',
+				nickname: self.nickname || '',
+				mbti: self.mbti || '',
+				personal_photo: self.personal_photo || '',
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
+			},
+			contact: {
+				_id: contact._id,
+				person_id: contact.person_id,
+				name: contact.name || '',
+				nickname: contact.nickname || '',
+				mbti: contact.mbti || '',
+				personal_photo: contact.personal_photo || ''
+			},
+			list
 		}
 	},
 
@@ -931,6 +1064,58 @@ module.exports = {
 				sender_person_id: sender.person_id,
 				receiver_person_id: receiver.person_id,
 				remaining_quota: senderQuota - payload.quota_cost
+			}
+		} catch (error) {
+			await transaction.rollback()
+			throw error
+		}
+	},
+
+	async sendUserHeartMessage({ personnelId = '', contactId = '', content = '', type = 0 } = {}) {
+		const { sender, receiver } = await ensureHeartMessagePersonnel(personnelId, contactId)
+		const messageType = normalizeHeartMessageType(type, 0)
+		const payload = buildHeartMessagePayload({
+			sender,
+			receiver,
+			payload: {
+				content,
+				type: messageType,
+				status: 'delivered',
+				quota_cost: messageType === 1 ? 1 : 0,
+				is_anonymous: false,
+				admin_remark: ''
+			}
+		})
+
+		const senderHeartQuota = normalizeNonNegativeInt(sender.heart_message_quota, 0)
+		if (messageType === 1 && senderHeartQuota < 1) {
+			throw new Error('你的心动次数已用完')
+		}
+
+		const transaction = await db.startTransaction()
+		try {
+			const transactionPersonnel = transaction.collection('mbti-personnel')
+			const transactionHeartMessage = transaction.collection('mbti-heart-message')
+
+			if (messageType === 1) {
+				await transactionPersonnel.doc(sender._id).update({
+					heart_message_quota: senderHeartQuota - 1,
+					updated_at: new Date()
+				})
+			}
+
+			const createRes = await transactionHeartMessage.add({
+				...payload,
+				created_at: new Date(),
+				is_deleted: false
+			})
+
+			await transaction.commit()
+
+			return {
+				id: createRes.id,
+				type: messageType,
+				remaining_heart_message_quota: messageType === 1 ? senderHeartQuota - 1 : senderHeartQuota
 			}
 		} catch (error) {
 			await transaction.rollback()

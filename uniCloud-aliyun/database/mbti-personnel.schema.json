@@ -241,6 +241,12 @@
 			"defaultValue": 0,
 			"description": "用户当前可发起私信的次数"
 		},
+		"heart_message_quota": {
+			"bsonType": "int",
+			"title": "heart message quota",
+			"defaultValue": 0,
+			"description": "remaining heart-message send count"
+		},
 		"is_deleted": {
 			"bsonType": "bool",
 			"title": "是否删除",

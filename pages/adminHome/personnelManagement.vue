@@ -155,6 +155,14 @@
 						<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
 						<view class="col col-action action-cell">
 							<button class="mini-btn" @click="openDetail(item)">详情</button>
+							<button
+								class="mini-btn"
+								:class="item.review_status === 'approved' ? 'warn-btn' : 'success-btn'"
+								:disabled="reviewingId === item._id"
+								@click="toggleApprove(item)"
+							>
+								{{ item.review_status === 'approved' ? '取消通过' : '审核确认' }}
+							</button>
 							<button class="mini-btn" @click="openEdit(item)">编辑</button>
 							<button
 								class="mini-btn danger-btn"
@@ -384,6 +392,7 @@
 				importing: false,
 				// resettingPasscodes: false,
 				deletingId: '',
+				reviewingId: '',
 				showDetailPopup: false,
 				detailRecord: null,
 				records: [],
@@ -790,6 +799,71 @@
 					})
 				} finally {
 					this.deletingId = ''
+					uni.hideLoading()
+				}
+			},
+			toggleApprove: async function (item) {
+				if (!personnelAdmin) {
+					this.showUnavailable()
+					return
+				}
+				if (!item || !item._id || this.reviewingId) {
+					return
+				}
+
+				var nextStatus = item.review_status === 'approved' ? 'pending' : 'approved'
+				var modalRes = await new Promise(function (resolve) {
+					uni.showModal({
+						title: nextStatus === 'approved' ? '确认审核通过' : '确认取消通过',
+						content:
+							nextStatus === 'approved'
+								? '确认将该人员设置为审核通过吗？'
+								: '确认取消该人员的审核通过状态吗？',
+						success: function (res) {
+							resolve(res)
+						},
+						fail: function () {
+							resolve({ confirm: false })
+						}
+					})
+				})
+				if (!modalRes.confirm) {
+					return
+				}
+
+				var reviewerName = ''
+				try {
+					var profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
+					reviewerName = (profile && (profile.nickname || profile.name || profile.wx_nickname)) || ''
+				} catch (error) {}
+
+				this.reviewingId = item._id
+				uni.showLoading({
+					title: nextStatus === 'approved' ? '审核中' : '取消中',
+					mask: true
+				})
+				try {
+					await personnelAdmin.update({
+						id: item._id,
+						data: {
+							review_status: nextStatus,
+							reviewer: nextStatus === 'approved' ? reviewerName : ''
+						}
+					})
+					uni.showToast({
+						title: nextStatus === 'approved' ? '已审核通过' : '已取消通过',
+						icon: 'success'
+					})
+					await this.loadList({
+						page: this.pagination.page
+					})
+				} catch (error) {
+					uni.showModal({
+						content: error.message || '审核操作失败',
+						showCancel: false
+					})
+				} finally {
+					this.reviewingId = ''
 					uni.hideLoading()
 				}
 			},
@@ -1200,29 +1274,38 @@
 
 	.stats-wrap {
 		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
+		flex-wrap: nowrap;
+		gap: 16rpx;
 		margin-top: 24rpx;
+		align-items: stretch;
 	}
 
 	.stat-card {
-		width: 48%;
-		margin-bottom: 20rpx;
-		padding: 24rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		flex: 1 1 0;
+		width: 0;
+		min-width: 0;
+		min-height: 140rpx;
+		margin-bottom: 0;
+		padding: 28rpx 24rpx;
 		box-sizing: border-box;
+		overflow: hidden;
 	}
 
 	.stat-label {
 		font-size: 24rpx;
 		color: #7c6b57;
+		line-height: 1.4;
 	}
 
 	.stat-value {
 		margin-top: 12rpx;
-		margin-left: 12rpx;
 		font-size: 40rpx;
 		font-weight: 700;
 		color: #2e241b;
+		line-height: 1.2;
 	}
 
 	.filter-card,
@@ -1349,7 +1432,7 @@
 		width: 220rpx;
 	}
 	.col-action {
-		width: 200rpx;
+		width: 360rpx;
 	}
 
 	.name-cell {
@@ -1360,12 +1443,15 @@
 
 	.action-cell {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
+		flex-wrap: wrap;
 		justify-content: center;
+		align-items: center;
+		gap: 12rpx;
 	}
 
 	.action-cell .mini-btn {
-		margin: 0 0 12rpx 0;
+		margin: 0;
 	}
 
 	.action-cell .mini-btn:last-child {
@@ -1405,6 +1491,16 @@
 	.status-rejected {
 		background: #fde2df;
 		color: #a44239;
+	}
+
+	.success-btn {
+		background: #dff4e8;
+		color: #1e6b45;
+	}
+
+	.warn-btn {
+		background: #fff1cc;
+		color: #8e6400;
 	}
 
 	.empty-box {
