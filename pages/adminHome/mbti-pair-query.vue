@@ -93,7 +93,12 @@
 											"
 											@click.stop="toggleMemberDetail(pair, 'left')"
 										>
-											<text class="member-link">{{ pair.leftName }}（{{ pair.leftMbti }}）</text>
+											<text
+												class="member-link"
+												:class="getMemberGenderClass(pair.leftMember)"
+											>
+												{{ pair.leftName }}（{{ pair.leftMbti }}） {{ getMemberGenderSymbol(pair.leftMember) }}
+											</text>
 										</view>
 										<view
 											class="col col-member member-cell"
@@ -106,7 +111,12 @@
 											"
 											@click.stop="toggleMemberDetail(pair, 'right')"
 										>
-											<text class="member-link">{{ pair.rightName }}（{{ pair.rightMbti }}）</text>
+											<text
+												class="member-link"
+												:class="getMemberGenderClass(pair.rightMember)"
+											>
+												{{ pair.rightName }}（{{ pair.rightMbti }}{{ getMemberGenderSymbol(pair.rightMember) }}）
+											</text>
 										</view>
 									</view>
 									<view v-if="isPairMemberSelected(pair)" class="detail-row" @click.stop>
@@ -826,6 +836,26 @@
 				}
 				return leftGender !== rightGender
 			},
+			getMemberGenderSymbol(member) {
+				var gender = this.normalizeGender(member && member.gender)
+				if (gender === 'male') {
+					return '♂'
+				}
+				if (gender === 'female') {
+					return '♀'
+				}
+				return ''
+			},
+			getMemberGenderClass(member) {
+				var gender = this.normalizeGender(member && member.gender)
+				if (gender === 'male') {
+					return 'member-link-male'
+				}
+				if (gender === 'female') {
+					return 'member-link-female'
+				}
+				return ''
+			},
 			createPairRecord(comboKey, left, right, compatibilityScore) {
 				return {
 					key: comboKey + '__' + left._id + '_' + right._id,
@@ -1376,6 +1406,14 @@
 	.member-link {
 		color: #1f6b52;
 		font-weight: 600;
+	}
+
+	.member-link-male {
+		color: #2a6ee8;
+	}
+
+	.member-link-female {
+		color: #e85f9c;
 	}
 
 	.member-detail-card {
