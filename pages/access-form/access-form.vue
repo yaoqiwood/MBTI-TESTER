@@ -173,10 +173,7 @@
 		},
 		async onLoad() {
 			await this.loadCurrentUser()
-			await this.tryRestoreProfileByOpenid()
-			if (!this.restoredByOpenid) {
-				this.syncProfilePopupState()
-			}
+			this.syncProfilePopupState()
 		},
 		computed: {
 			filteredNames() {

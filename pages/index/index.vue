@@ -6,7 +6,7 @@
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">Opening your home</text>
-				<text class="subhead">We are reading your local profile first.</text>
+				<text class="subhead">We are checking your login profile in the cloud.</text>
 			</view>
 
 			<view class="loading-card">
@@ -18,16 +18,22 @@
 </template>
 
 <script>
+import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js'
+
 const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
+const uniIdCo = uniCloud.importObject('uni-id-co', {
+	customUI: true
+})
+const personnelAdmin = uniCloud.importObject('personnel-admin')
 
 export default {
 	data() {
 		return {
-			loadingText: 'Loading local profile...'
+			loadingText: 'Checking login status...'
 		}
 	},
-	onLoad() {
-		this.routeByCachedProfile()
+	async onLoad() {
+		await this.routeByLoginProfile()
 	},
 	methods: {
 		getPersonnelProfileFromStorage() {
@@ -39,19 +45,139 @@ export default {
 				return null
 			}
 		},
+		savePersonnelProfileToStorage(payload) {
+			try {
+				uni.setStorageSync(PERSONNEL_PROFILE_STORAGE_KEY, {
+					...payload,
+					cached_at: Date.now()
+				})
+			} catch (error) {
+				console.error('savePersonnelProfileToStorage failed', error)
+			}
+		},
+		clearPersonnelProfileStorage() {
+			try {
+				uni.removeStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
+			} catch (error) {
+				console.error('clearPersonnelProfileStorage failed', error)
+			}
+		},
+		buildPersonnelProfilePayload(record = {}) {
+			return {
+				...record,
+				id: record._id || '',
+				personnel_id: record._id || '',
+				person_id: typeof record.person_id !== 'undefined' ? record.person_id : '',
+				admin_role: Number(record.admin_role) || 0,
+				name: record.name || '',
+				nickname: record.nickname || '',
+				passcode: record.passcode || '',
+				personal_photo: record.personal_photo || '',
+				user_id: record.user_id || '',
+				wx_openid: record.wx_openid || '',
+				wx_unionid: record.wx_unionid || '',
+				wx_nickname: record.wx_nickname || '',
+				wx_avatar: record.wx_avatar || ''
+			}
+		},
+		getCandidateOpenIds(user = {}) {
+			const wxOpenid = user && user.wx_openid
+			if (!wxOpenid) {
+				return []
+			}
+			if (typeof wxOpenid === 'string') {
+				const value = wxOpenid.trim()
+				return value ? [value] : []
+			}
+			if (typeof wxOpenid !== 'object') {
+				return []
+			}
+
+			const preferredKeys = ['mp-weixin', 'mp_weixin', 'mp', 'weixin']
+			const values = preferredKeys
+				.map((key) => wxOpenid[key])
+				.concat(Object.values(wxOpenid || {}))
+				.map((item) => (typeof item === 'string' ? item.trim() : ''))
+				.filter(Boolean)
+
+			return Array.from(new Set(values))
+		},
+		getMergedCurrentUser() {
+			try {
+				const currentUserInfo = uniCloud.getCurrentUserInfo() || {}
+				const currentUserInfoUser = currentUserInfo.userInfo || {}
+				const cachedUser = uni.getStorageSync('uni-id-pages-userInfo') || {}
+				return {
+					...currentUserInfoUser,
+					...cachedUser,
+					_id: currentUserInfo.uid || cachedUser._id || '',
+					wx_openid:
+						cachedUser.wx_openid ||
+						currentUserInfoUser.wx_openid ||
+						currentUserInfo.wx_openid ||
+						'',
+					wx_unionid:
+						cachedUser.wx_unionid ||
+						currentUserInfoUser.wx_unionid ||
+						currentUserInfo.wx_unionid ||
+						''
+				}
+			} catch (error) {
+				console.error('getMergedCurrentUser failed', error)
+				return {}
+			}
+		},
+		async fetchLoginOpenIdsFromServer(uid = '') {
+			if (!uid) {
+				return []
+			}
+			try {
+				const result = await personnelAdmin.getCurrentLoginWxOpenid({
+					uid
+				})
+				return (result && result.openIds) || []
+			} catch (error) {
+				console.error('fetchLoginOpenIdsFromServer failed', error)
+				return []
+			}
+		},
 		isAdminRole(adminRole) {
 			const role = Number(adminRole)
 			return role === 1 || role === 2 || role === 3
 		},
-		routeByCachedProfile() {
-			const profile = this.getPersonnelProfileFromStorage()
+		async getProfileFromDatabase() {
+			let openIds = []
+			const currentUser = this.getMergedCurrentUser()
+			const currentUserInfo = uniCloud.getCurrentUserInfo() || {}
+			openIds = this.getCandidateOpenIds(currentUser)
+			if (!openIds.length) {
+				this.loadingText = 'Loading login profile...'
+				openIds = await this.fetchLoginOpenIdsFromServer(currentUser._id || currentUserInfo.uid || '')
+			}
+			if (!openIds.length) {
+				return null
+			}
+
+			for (let i = 0; i < openIds.length; i += 1) {
+				const result = await personnelAdmin.getByWxOpenid({
+					wxOpenid: openIds[i]
+				})
+				if (result && result.record && result.record._id) {
+					return result.record
+				}
+			}
+			return null
+		},
+		resolveTargetUrl(profile) {
 			const targetUrl =
 				profile && this.isAdminRole(profile.admin_role)
 					? '/pages/adminHome/gameQueryManagement'
 					: profile && Number(profile.admin_role) === 0
 						? '/pages/userHeartMessage/userHeartMessage'
 						: '/pages/mbti-home/home'
-
+			return targetUrl
+		},
+		updateLoadingText(targetUrl) {
 			if (targetUrl === '/pages/adminHome/gameQueryManagement') {
 				this.loadingText = 'Admin detected, opening dashboard...'
 			} else if (targetUrl === '/pages/userHeartMessage/userHeartMessage') {
@@ -59,13 +185,102 @@ export default {
 			} else {
 				this.loadingText = 'Opening MBTI home...'
 			}
+		},
+		async routeByLoginProfile() {
+			let profile = null
+
+			// #ifdef MP-WEIXIN
+			const loggedIn = await this.ensureWeixinLogin()
+			if (!loggedIn) {
+				this.clearPersonnelProfileStorage()
+				this.updateLoadingText('/pages/mbti-home/home')
+				setTimeout(() => {
+					uni.reLaunch({
+						url: '/pages/mbti-home/home'
+					})
+				}, 120)
+				return
+			}
+			// #endif
+
+			try {
+				this.loadingText = 'Matching your profile in the database...'
+				profile = await this.getProfileFromDatabase()
+				if (profile && profile._id) {
+					this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(profile))
+				} else {
+					this.clearPersonnelProfileStorage()
+				}
+			} catch (error) {
+				console.error('routeByLoginProfile failed', error)
+				this.clearPersonnelProfileStorage()
+				profile = null
+			}
+
+			const targetUrl = this.resolveTargetUrl(profile)
+			this.updateLoadingText(targetUrl)
 
 			setTimeout(() => {
 				uni.reLaunch({
 					url: targetUrl
 				})
 			}, 120)
+		},
+		// #ifdef MP-WEIXIN
+		async ensureWeixinLogin() {
+			const currentUserInfo = uniCloud.getCurrentUserInfo() || {}
+			if (store.hasLogin && currentUserInfo.tokenExpired > Date.now()) {
+				return true
+			}
+
+			uni.showLoading({
+				title: '登录中',
+				mask: true
+			})
+
+			try {
+				const loginRes = await this.getWeixinCode()
+				const result = await uniIdCo.loginByWeixin({
+					code: loginRes.code
+				})
+				mutations.loginSuccess({
+					...result,
+					showToast: false,
+					autoBack: false,
+					loginType: 'weixin'
+				})
+				return true
+			} catch (error) {
+				console.error('ensureWeixinLogin failed', error)
+				uni.showToast({
+					title: (error && (error.errMsg || error.message)) || '微信登录失败',
+					icon: 'none',
+					duration: 3000
+				})
+				return false
+			} finally {
+				uni.hideLoading()
+			}
+		},
+		getWeixinCode() {
+			return new Promise((resolve, reject) => {
+				uni.login({
+					provider: 'weixin',
+					onlyAuthorize: true,
+					success: (res) => {
+						if (res.code) {
+							resolve(res)
+							return
+						}
+						reject(new Error('未获取到微信登录凭证'))
+					},
+					fail: (error) => {
+						reject(error)
+					}
+				})
+			})
 		}
+		// #endif
 	}
 }
 </script>

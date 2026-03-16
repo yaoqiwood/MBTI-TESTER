@@ -84,12 +84,6 @@
 </template>
 
 <script>
-import { store, mutations } from '@/uni_modules/uni-id-pages/common/store.js'
-
-const uniIdCo = uniCloud.importObject('uni-id-co', {
-	customUI: true
-})
-
 const personas = [
 	{
 		code: 'INFP',
@@ -222,20 +216,10 @@ export default {
 	computed: {
 		orbitTypes() {
 			return this.personas.slice(0, 12)
-		},
-		hasLogin() {
-			return store.hasLogin
 		}
 	},
 	methods: {
-		async goTest() {
-			// #ifdef MP-WEIXIN
-			const loggedIn = await this.ensureWeixinLogin()
-			if (!loggedIn) {
-				return
-			}
-			// #endif
-
+		goTest() {
 			this.navigateToTest()
 		},
 		navigateToTest() {
