@@ -159,12 +159,18 @@ function normalizeNonNegativeInt(value, fallback = 0) {
 	return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
 }
 
+function getRemainingHeartValue(record = {}, fallback = 3) {
+	const legacyFallback = normalizeNonNegativeInt(record.heart_message_quota, fallback)
+	return normalizeNonNegativeInt(record.remaining_heart_value, legacyFallback)
+}
+
 function normalizePayload(payload = {}, options = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
 	const adminRole = normalizeAdminRole(payload.admin_role, ADMIN_ROLE.NORMAL)
 	const passcode = normalizePasscode(payload.passcode, options)
+	const remainingHeartValue = getRemainingHeartValue(payload, 3)
 	const record = {
 		user_id: trimString(payload.user_id),
 		wx_openid: trimString(payload.wx_openid),
@@ -199,7 +205,8 @@ function normalizePayload(payload = {}, options = {}) {
 		remark: trimString(payload.remark),
 		admin_role: adminRole,
 		private_message_quota: normalizeNonNegativeInt(payload.private_message_quota, 0),
-		heart_message_quota: normalizeNonNegativeInt(payload.heart_message_quota, 0),
+		heart_message_quota: normalizeNonNegativeInt(payload.heart_message_quota, remainingHeartValue),
+		remaining_heart_value: remainingHeartValue,
 		submitted_at: normalizeTimestamp(payload.submitted_at, now),
 		updated_at: now
 	}
@@ -930,6 +937,7 @@ module.exports = {
 				review_status: item.review_status || 'pending',
 				private_message_quota: normalizeNonNegativeInt(item.private_message_quota, 0),
 				heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
+				remaining_heart_value: getRemainingHeartValue(item, 3),
 				label: buildPersonnelLabel(item)
 			}))
 		const total = list.length
@@ -1037,7 +1045,8 @@ module.exports = {
 					latest_message_status: latestMessage ? latestMessage.status || 'delivered' : '',
 					can_send: canSend,
 					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条',
-					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0)
+					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
+					remaining_heart_value: getRemainingHeartValue(item, 3)
 				}
 			})
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
@@ -1058,7 +1067,8 @@ module.exports = {
 				nickname: self.nickname || '',
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
-				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
+				remaining_heart_value: getRemainingHeartValue(self, 3)
 			},
 			contacts
 		}
@@ -1102,7 +1112,8 @@ module.exports = {
 				nickname: self.nickname || '',
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
-				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
+				remaining_heart_value: getRemainingHeartValue(self, 3)
 			},
 			contact: {
 				_id: contact._id,
@@ -1196,7 +1207,8 @@ module.exports = {
 				nickname: self.nickname || '',
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
-				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
+				remaining_heart_value: getRemainingHeartValue(self, 3)
 			},
 			list
 		}
@@ -1317,7 +1329,7 @@ module.exports = {
 			}
 		})
 
-		const senderHeartQuota = normalizeNonNegativeInt(sender.heart_message_quota, 0)
+		const senderHeartQuota = getRemainingHeartValue(sender, 3)
 		if (messageType === 1 && senderHeartQuota < 1) {
 			throw new Error('你的心动次数已用完')
 		}
@@ -1329,6 +1341,7 @@ module.exports = {
 
 			if (messageType === 1) {
 				await transactionPersonnel.doc(sender._id).update({
+					remaining_heart_value: senderHeartQuota - 1,
 					heart_message_quota: senderHeartQuota - 1,
 					updated_at: new Date()
 				})
@@ -1349,6 +1362,7 @@ module.exports = {
 			return {
 				id: createRes.id,
 				type: messageType,
+				remaining_heart_value: messageType === 1 ? senderHeartQuota - 1 : senderHeartQuota,
 				remaining_heart_message_quota: messageType === 1 ? senderHeartQuota - 1 : senderHeartQuota
 			}
 		} catch (error) {

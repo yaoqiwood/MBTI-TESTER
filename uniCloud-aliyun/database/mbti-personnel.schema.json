@@ -247,6 +247,12 @@
 			"defaultValue": 0,
 			"description": "remaining heart-message send count"
 		},
+		"remaining_heart_value": {
+			"bsonType": "int",
+			"title": "remaining heart value",
+			"defaultValue": 3,
+			"description": "remaining heart value count"
+		},
 		"is_deleted": {
 			"bsonType": "bool",
 			"title": "是否删除",

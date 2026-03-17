@@ -11,7 +11,7 @@
 				</view>
 			</view>
 			<view class="top-badge">
-				<text>剩余心动值 {{ selfProfile.heart_message_quota || 0 }}</text>
+				<text>剩余心动值 {{ selfProfile.remaining_heart_value ?? selfProfile.heart_message_quota ?? 0 }}</text>
 			</view>
 		</view>
 
@@ -283,6 +283,7 @@ export default {
 				name: '',
 				mbti: '',
 				personal_photo: '',
+				remaining_heart_value: 3,
 				heart_message_quota: 0
 			},
 			contacts: [],
