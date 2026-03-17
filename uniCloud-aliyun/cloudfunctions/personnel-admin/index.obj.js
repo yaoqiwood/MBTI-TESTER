@@ -574,6 +574,60 @@ function matchesHeartMessageKeyword(record = {}, normalizedKeyword = '') {
 	)
 }
 
+function normalizeGenderValue(value = '') {
+	const normalized = trimString(String(value || '')).toLowerCase()
+	if (!normalized) {
+		return ''
+	}
+	if (['男', 'male', 'man', 'm', '1'].includes(normalized)) {
+		return 'male'
+	}
+	if (['女', 'female', 'woman', 'f', '2'].includes(normalized)) {
+		return 'female'
+	}
+	return ''
+}
+
+function isOppositeGender(selfGender, targetGender) {
+	const normalizedSelf = normalizeGenderValue(selfGender)
+	const normalizedTarget = normalizeGenderValue(targetGender)
+	if (!normalizedSelf || !normalizedTarget) {
+		return true
+	}
+	return normalizedSelf !== normalizedTarget
+}
+
+function getMessageTimestamp(record = {}) {
+	const date = new Date(record.created_at || record.created_at_text || 0)
+	const time = date.getTime()
+	return Number.isNaN(time) ? 0 : time
+}
+
+function getLatestMessageBetween(list = [], leftId = '', rightId = '') {
+	const normalizedLeftId = trimString(leftId)
+	const normalizedRightId = trimString(rightId)
+	if (!normalizedLeftId || !normalizedRightId) {
+		return null
+	}
+
+	let latest = null
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i]
+		const senderId = trimString(item && item.sender_record_id)
+		const receiverId = trimString(item && item.receiver_record_id)
+		const isPair =
+			(senderId === normalizedLeftId && receiverId === normalizedRightId) ||
+			(senderId === normalizedRightId && receiverId === normalizedLeftId)
+		if (!isPair) {
+			continue
+		}
+		if (!latest || getMessageTimestamp(item) > getMessageTimestamp(latest)) {
+			latest = item
+		}
+	}
+	return latest
+}
+
 async function getPersonnelById(id) {
 	if (!trimString(id)) {
 		return null
@@ -961,8 +1015,10 @@ module.exports = {
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.filter((item) => item._id !== self._id)
 			.filter((item) => item.review_status === 'approved')
+			.filter((item) => isOppositeGender(self.gender, item.gender))
 			.map((item) => {
 				const latestMessage = messageMap[item._id] || null
+				const canSend = !latestMessage || trimString(latestMessage.sender_record_id) !== self._id
 				return {
 					_id: item._id,
 					person_id: item.person_id,
@@ -979,6 +1035,8 @@ module.exports = {
 							? latestMessage.created_at_text || latestMessage.created_at
 							: '',
 					latest_message_status: latestMessage ? latestMessage.status || 'delivered' : '',
+					can_send: canSend,
+					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条',
 					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0)
 				}
 			})
@@ -1006,7 +1064,7 @@ module.exports = {
 		}
 	},
 
-	async listUserHeartMessages({ personnelId = '', contactId = '' } = {}) {
+	async listUserHeartMessages({ personnelId = '', contactId = '', since = '' } = {}) {
 		const self = await getPersonnelById(personnelId)
 		if (!self) {
 			throw new Error('当前用户资料不存在或已被删除')
@@ -1016,7 +1074,7 @@ module.exports = {
 			throw new Error('联系人不存在或已被删除')
 		}
 
-		const list = (await getCachedHeartMessages())
+		const allList = (await getCachedHeartMessages())
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.filter((item) => {
 				const senderId = trimString(item.sender_record_id)
@@ -1028,6 +1086,13 @@ module.exports = {
 			})
 			.map(withFormattedHeartMessage)
 			.sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+		const latestMessage = allList[allList.length - 1] || null
+		const canSend = !latestMessage || trimString(latestMessage.sender_record_id) !== self._id
+		let list = allList
+		const sinceTime = getMessageTimestamp({ created_at: since })
+		if (sinceTime > 0) {
+			list = allList.filter((item) => getMessageTimestamp(item) > sinceTime)
+		}
 
 		return {
 			self: {
@@ -1047,6 +1112,91 @@ module.exports = {
 				gender: contact.gender || '',
 				mbti: contact.mbti || '',
 				personal_photo: contact.personal_photo || ''
+			},
+			list,
+			latest_created_at:
+				latestMessage && (latestMessage.created_at_text || latestMessage.created_at)
+					? latestMessage.created_at_text || latestMessage.created_at
+					: '',
+			can_send: canSend,
+			can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条'
+		}
+	},
+
+	async listUserInboxLetters({ personnelId = '', keyword = '' } = {}) {
+		const self = await getPersonnelById(personnelId)
+		if (!self) {
+			throw new Error('褰撳墠鐢ㄦ埛璧勬枡涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+		}
+
+		const normalizedKeyword = trimString(keyword).toLowerCase()
+		const personnelList = await getCachedPersonnelRecords()
+		const personnelMap = {}
+		personnelList.forEach((item) => {
+			if (!item || isDeletedRecord(item.is_deleted)) {
+				return
+			}
+			personnelMap[item._id] = item
+		})
+
+		const allMessages = (await getCachedHeartMessages({ forceRefresh: true }))
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedHeartMessage)
+
+		const receivedLatestMap = {}
+		allMessages.forEach((item) => {
+			const senderId = trimString(item.sender_record_id)
+			const receiverId = trimString(item.receiver_record_id)
+			if (receiverId !== self._id || !senderId) {
+				return
+			}
+			if (
+				!receivedLatestMap[senderId] ||
+				getMessageTimestamp(item) > getMessageTimestamp(receivedLatestMap[senderId])
+			) {
+				receivedLatestMap[senderId] = item
+			}
+		})
+
+		const list = Object.keys(receivedLatestMap)
+			.map((senderId) => {
+				const latestReceived = receivedLatestMap[senderId]
+				const sender = personnelMap[senderId] || {}
+				const latestPairMessage = getLatestMessageBetween(allMessages, self._id, senderId)
+				const canReply =
+					!!latestPairMessage && trimString(latestPairMessage.sender_record_id) !== self._id
+				return {
+					message_id: latestReceived._id,
+					contact_id: senderId,
+					sender_mbti: trimString(sender.mbti).toUpperCase() || latestReceived.sender_mbti || '',
+					content: latestReceived.content || '',
+					type: normalizeHeartMessageType(latestReceived.type, 0),
+					created_at: latestReceived.created_at_text || latestReceived.created_at || '',
+					can_reply: canReply,
+					can_reply_reason: canReply ? '' : '你已回复过该来信，需等待对方再次来信'
+				}
+			})
+			.filter((item) => {
+				if (!normalizedKeyword) {
+					return true
+				}
+				return [item.sender_mbti, item.content].some((field) =>
+					String(field || '')
+						.toLowerCase()
+						.includes(normalizedKeyword)
+				)
+			})
+			.sort((left, right) => getMessageTimestamp(right) - getMessageTimestamp(left))
+
+		return {
+			self: {
+				_id: self._id,
+				person_id: self.person_id,
+				name: self.name || '',
+				nickname: self.nickname || '',
+				mbti: self.mbti || '',
+				personal_photo: self.personal_photo || '',
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0)
 			},
 			list
 		}
@@ -1142,6 +1292,17 @@ module.exports = {
 
 	async sendUserHeartMessage({ personnelId = '', contactId = '', content = '', type = 0 } = {}) {
 		const { sender, receiver } = await ensureHeartMessagePersonnel(personnelId, contactId)
+		const latestPairMessage = getLatestMessageBetween(
+			(await getCachedHeartMessages({ forceRefresh: true })).filter(
+				(item) => !isDeletedRecord(item && item.is_deleted)
+			),
+			sender._id,
+			receiver._id
+		)
+		if (latestPairMessage && trimString(latestPairMessage.sender_record_id) === sender._id) {
+			throw new Error('请等待对方回复后再发送下一条')
+		}
+
 		const messageType = normalizeHeartMessageType(type, 0)
 		const payload = buildHeartMessagePayload({
 			sender,

@@ -16,7 +16,7 @@
 		</view>
 
 		<view class="wechat-shell">
-			<view class="search-bar">
+			<view v-if="activeTab === 'contacts'" class="search-bar">
 				<view class="search-box">
 					<text class="search-icon">搜</text>
 					<input
@@ -24,13 +24,13 @@
 						class="search-input"
 						placeholder="搜索昵称或姓名"
 						confirm-type="search"
-						@confirm="loadHome"
+						@confirm="handleSearch"
 					/>
 				</view>
 				<text v-if="keyword" class="search-reset" @click="resetKeyword">清空</text>
 			</view>
 
-			<view class="panel contacts-panel">
+			<view v-if="activeTab === 'contacts'" class="panel contacts-panel">
 				<view class="panel-head">
 					<text class="panel-title">联系人</text>
 					<text class="panel-tip">遇见 {{ contacts.length }} 位心动对象</text>
@@ -42,7 +42,8 @@
 				<view v-else-if="!contacts.length" class="empty-box">
 					<text>暂时还没有可聊天的人</text>
 				</view>
-				<view v-else class="contact-list">
+				<scroll-view v-else scroll-y class="contact-scroll">
+					<view class="contact-list">
 					<view
 						v-for="item in contacts"
 						:key="item._id"
@@ -75,14 +76,49 @@
 							</view>
 							<text class="contact-meta">{{ item.name || '暂未填写姓名' }}</text>
 							<view class="contact-preview-row">
-								<text v-if="item.latest_message_type === 1" class="preview-tag heart-tag">心动消息</text>
-								<text v-else-if="item.latest_message_type === 0" class="preview-tag normal-tag">普通消息</text>
 								<text class="contact-preview">{{ item.latest_message || '还没有消息，快去打个招呼吧' }}</text>
 							</view>
+							<text v-if="item.can_send === false" class="turn-tip">等待对方回复后才能继续发送</text>
 						</view>
 						<view v-if="activeContact && activeContact._id === item._id" class="contact-active-dot"></view>
 					</view>
+					</view>
+				</scroll-view>
+			</view>
+
+			<view v-if="activeTab === 'inbox'" class="panel contacts-panel">
+				<view class="panel-head">
+					<text class="panel-title">收信箱</text>
+					<text class="panel-tip">陌生人来信 {{ inboxList.length }} 封</text>
 				</view>
+				<view v-if="inboxLoading" class="empty-box">
+					<text>正在加载收信箱...</text>
+				</view>
+				<view v-else-if="!inboxList.length" class="empty-box">
+					<text>暂时没有陌生人来信</text>
+				</view>
+				<scroll-view v-else scroll-y class="contact-scroll">
+					<view class="contact-list">
+					<view v-for="item in inboxList" :key="item.message_id" class="contact-item">
+						<view class="avatar-shell">
+							<view class="avatar avatar-fallback">匿</view>
+						</view>
+						<view class="contact-main">
+							<view class="contact-top">
+								<view class="contact-name-row">
+									<text class="contact-name">陌生人来信</text>
+									<text class="preview-tag normal-tag">MBTI {{ item.sender_mbti || '-' }}</text>
+								</view>
+								<text class="contact-time">{{ formatTime(item.created_at) }}</text>
+							</view>
+							<view class="contact-preview-row">
+								<text class="contact-preview">{{ item.content || '-' }}</text>
+							</view>
+						</view>
+						<button class="mini-reply-btn" @click="openInboxReply(item)">回复</button>
+					</view>
+					</view>
+				</scroll-view>
 			</view>
 
 		</view>
@@ -108,7 +144,7 @@
 					</view>
 					<view class="chat-head-actions">
 						<view class="quota-badge">
-							<text>{{ selfProfile.heart_message_quota || 0 }} 点</text>
+							<!-- <text>{{ selfProfile.heart_message_quota || 0 }} 点</text> -->
 						</view>
 						<text class="chat-close" @click="closeChatPopup">×</text>
 					</view>
@@ -146,8 +182,6 @@
 									<view v-else class="avatar avatar-fallback">{{ getAvatarText(activeContact.nickname || activeContact.name) }}</view>
 								</view>
 								<view class="bubble-box">
-									<text v-if="item.type === 1" class="bubble-type heart-tag">心动消息</text>
-									<text v-else class="bubble-type normal-tag">普通消息</text>
 									<view class="bubble">
 										<text class="bubble-text">{{ item.content }}</text>
 									</view>
@@ -158,22 +192,6 @@
 				</scroll-view>
 
 				<view class="composer">
-					<view class="type-row">
-						<view
-							class="type-chip"
-							:class="messageType === 0 ? 'type-chip active' : ''"
-							@click="messageType = 0"
-						>
-							普通消息
-						</view>
-						<view
-							class="type-chip heart-chip"
-							:class="messageType === 1 ? 'type-chip active heart-chip' : 'type-chip heart-chip'"
-							@click="messageType = 1"
-						>
-							心动消息
-						</view>
-					</view>
 					<textarea
 						v-model.trim="draftMessage"
 						class="composer-input"
@@ -181,21 +199,55 @@
 						placeholder="输入你想说的话"
 					></textarea>
 					<view class="composer-foot">
-						<text class="composer-tip">
-							{{ messageType === 1 ? '发送心动消息会消耗 1 点心动值' : '发送普通消息不会消耗心动值' }}
-						</text>
-						<button class="send-btn" :disabled="sending" @click="sendMessage">发送</button>
+						<text class="composer-tip">发送后需等待对方回复，你才能继续发送下一条</text>
+					</view>
+					<view class="composer-actions">
+						<button class="send-btn" :disabled="sending || !canSendToActive" @click="sendMessage">发送</button>
+					</view>
+				</view>
+			</view>
+		</view>
+
+		<view v-if="showInboxReplyPopup && activeInboxItem" class="chat-popup-mask" @click="closeInboxReplyPopup">
+			<view class="chat-popup" @click.stop>
+				<view class="chat-head">
+					<view class="chat-user-text">
+						<text class="chat-name">回复陌生人来信</text>
+						<text class="chat-meta">仅显示发件人 MBTI：{{ activeInboxItem.sender_mbti || '-' }}</text>
+					</view>
+					<text class="chat-close" @click="closeInboxReplyPopup">×</text>
+				</view>
+				<view class="inbox-letter-box">
+					<text class="inbox-letter-time">{{ formatDateTime(activeInboxItem.created_at) }}</text>
+					<text class="inbox-letter-text">{{ activeInboxItem.content || '-' }}</text>
+				</view>
+				<view class="composer">
+					<textarea
+						v-model.trim="inboxReplyText"
+						class="composer-input"
+						maxlength="300"
+						placeholder="输入你的回复内容"
+					></textarea>
+					<view class="composer-foot">
+						<text class="composer-tip">回复后需要等待对方再次发送，你才能继续发下一条</text>
+					</view>
+					<view class="composer-actions">
+						<button class="send-btn" :disabled="inboxSending" @click="sendInboxReply">回复</button>
 					</view>
 				</view>
 			</view>
 		</view>
 
 		<view class="bottom-nav">
-			<view class="bottom-tab bottom-tab-active">
+			<view
+				class="bottom-tab"
+				:class="activeTab === 'contacts' ? 'bottom-tab-active' : ''"
+				@click="openContacts"
+			>
 				<text class="bottom-tab-icon">人</text>
 				<text class="bottom-tab-text">联系人</text>
 			</view>
-			<view class="bottom-tab" @click="openInbox">
+			<view class="bottom-tab" :class="activeTab === 'inbox' ? 'bottom-tab-active' : ''" @click="openInbox">
 				<text class="bottom-tab-icon">信</text>
 				<text class="bottom-tab-text">收信箱</text>
 			</view>
@@ -216,9 +268,12 @@ try {
 export default {
 	data() {
 		return {
+			activeTab: 'contacts',
 			loading: false,
+			inboxLoading: false,
 			chatLoading: false,
 			sending: false,
+			inboxSending: false,
 			keyword: '',
 			personnelId: '',
 			selfProfile: {
@@ -231,12 +286,23 @@ export default {
 				heart_message_quota: 0
 			},
 			contacts: [],
+			inboxList: [],
 			activeContact: null,
 			showChatPopup: false,
+			showInboxReplyPopup: false,
+			activeInboxItem: null,
 			messages: [],
 			draftMessage: '',
-			messageType: 0,
-			scrollIntoView: ''
+			inboxReplyText: '',
+			canSendToActive: true,
+			cannotSendReason: '',
+			scrollIntoView: '',
+			realtimeTimer: null,
+			realtimeIdleMs: 7000,
+			realtimeWaitingReplyMs: 2600,
+			realtimeActiveTypingMs: 2200,
+			realtimeErrorRetryMs: 5000,
+			realtimeFetching: false
 		}
 	},
 	onLoad() {
@@ -244,6 +310,18 @@ export default {
 			return
 		}
 		this.loadHome()
+		this.loadInbox()
+	},
+	onShow() {
+		if (this.showChatPopup && this.activeContact && this.activeContact._id) {
+			this.startRealtime()
+		}
+	},
+	onHide() {
+		this.stopRealtime()
+	},
+	onUnload() {
+		this.stopRealtime()
 	},
 	methods: {
 		getStoredProfile() {
@@ -284,6 +362,7 @@ export default {
 					this.showChatPopup = false
 					this.activeContact = null
 					this.messages = []
+					this.stopRealtime()
 					return
 				}
 				if (this.activeContact && this.activeContact._id) {
@@ -294,6 +373,7 @@ export default {
 						this.showChatPopup = false
 						this.activeContact = null
 						this.messages = []
+						this.stopRealtime()
 					}
 				}
 			} catch (error) {
@@ -304,6 +384,133 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+		async loadInbox() {
+			if (!personnelAdmin || !this.personnelId) {
+				return
+			}
+			this.inboxLoading = true
+			try {
+				const res = await personnelAdmin.listUserInboxLetters({
+					personnelId: this.personnelId,
+					keyword: this.keyword
+				})
+				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
+				this.inboxList = Array.isArray(res && res.list) ? res.list : []
+			} catch (error) {
+				uni.showToast({
+					title: (error && error.message) || '收信箱加载失败',
+					icon: 'none'
+				})
+			} finally {
+				this.inboxLoading = false
+			}
+		},
+		startRealtime() {
+			this.stopRealtime()
+			this.scheduleRealtime(300)
+		},
+		scheduleRealtime(delayMs) {
+			const nextDelay = Number(delayMs) > 0 ? Number(delayMs) : this.realtimeIdleMs
+			this.realtimeTimer = setTimeout(() => {
+				this.realtimeTick()
+			}, nextDelay)
+		},
+		stopRealtime() {
+			if (this.realtimeTimer) {
+				clearTimeout(this.realtimeTimer)
+				this.realtimeTimer = null
+			}
+			this.realtimeFetching = false
+		},
+		getRealtimeDelay(hasNewMessage) {
+			if (hasNewMessage) {
+				return this.realtimeActiveTypingMs
+			}
+			if (this.draftMessage) {
+				return this.realtimeActiveTypingMs
+			}
+			if (!this.canSendToActive) {
+				return this.realtimeWaitingReplyMs
+			}
+			return this.realtimeIdleMs
+		},
+		mergeMessageList(incoming = []) {
+			if (!Array.isArray(incoming) || !incoming.length) {
+				return this.messages
+			}
+			const map = {}
+			const merged = []
+			this.messages.forEach((item) => {
+				if (!item || !item._id || map[item._id]) {
+					return
+				}
+				map[item._id] = true
+				merged.push(item)
+			})
+			incoming.forEach((item) => {
+				if (!item || !item._id || map[item._id]) {
+					return
+				}
+				map[item._id] = true
+				merged.push(item)
+			})
+			merged.sort(
+				(left, right) =>
+					new Date(left.created_at || left.created_at_text || 0).getTime() -
+					new Date(right.created_at || right.created_at_text || 0).getTime()
+			)
+			return merged
+		},
+		async realtimeTick() {
+			if (!personnelAdmin || !this.personnelId) {
+				return
+			}
+			if (!this.showChatPopup || !this.activeContact || !this.activeContact._id) {
+				return
+			}
+			if (this.realtimeFetching || this.chatLoading || this.sending) {
+				this.scheduleRealtime(this.realtimeActiveTypingMs)
+				return
+			}
+			this.realtimeFetching = true
+			const contactId = this.activeContact._id
+			let hasNewMessage = false
+			try {
+				const lastMessage = this.messages.length ? this.messages[this.messages.length - 1] : null
+				const since = lastMessage
+					? lastMessage.created_at_text || lastMessage.created_at || ''
+					: ''
+				const res = await personnelAdmin.listUserHeartMessages({
+					personnelId: this.personnelId,
+					contactId,
+					since
+				})
+				if (!this.showChatPopup || !this.activeContact || this.activeContact._id !== contactId) {
+					return
+				}
+				const incoming = Array.isArray(res && res.list) ? res.list : []
+				const nextMessages = this.mergeMessageList(incoming)
+				const prevLast = this.messages.length ? this.messages[this.messages.length - 1]._id : ''
+				const nextLast = nextMessages.length ? nextMessages[nextMessages.length - 1]._id : ''
+				hasNewMessage = !!nextLast && nextLast !== prevLast
+				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
+				this.activeContact = Object.assign({}, this.activeContact, res && res.contact ? res.contact : {})
+				this.messages = nextMessages
+				this.canSendToActive = !!(res && res.can_send !== false)
+				this.cannotSendReason = (res && res.can_send_reason) || '请等待对方回复后再发送下一条'
+				if (hasNewMessage) {
+					this.$nextTick(() => {
+						this.scrollIntoView = 'msg-' + nextLast
+					})
+				}
+			} catch (error) {
+				this.scheduleRealtime(this.realtimeErrorRetryMs)
+				return
+			} finally {
+				this.realtimeFetching = false
+			}
+			this.scheduleRealtime(this.getRealtimeDelay(hasNewMessage))
 		},
 		async selectContact(item) {
 			if (!item || !item._id || !personnelAdmin) {
@@ -320,6 +527,8 @@ export default {
 				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
 				this.activeContact = Object.assign({}, item, res && res.contact ? res.contact : {})
 				this.messages = Array.isArray(res && res.list) ? res.list : []
+				this.canSendToActive = !!(res && res.can_send !== false)
+				this.cannotSendReason = (res && res.can_send_reason) || '请等待对方回复后再发送下一条'
 				this.$nextTick(() => {
 					const lastMessage = this.messages[this.messages.length - 1]
 					this.scrollIntoView = lastMessage ? 'msg-' + lastMessage._id : ''
@@ -331,35 +540,109 @@ export default {
 				})
 			} finally {
 				this.chatLoading = false
+				if (this.showChatPopup && this.activeContact && this.activeContact._id) {
+					this.startRealtime()
+				}
 			}
 		},
 		closeChatPopup() {
 			this.showChatPopup = false
+			this.stopRealtime()
 		},
 		resetKeyword() {
 			this.keyword = ''
+			if (this.activeTab === 'inbox') {
+				this.loadInbox()
+				return
+			}
+			this.loadHome()
+		},
+		openContacts() {
+			this.activeTab = 'contacts'
+			this.loadHome()
+		},
+		handleSearch() {
+			if (this.activeTab === 'inbox') {
+				this.loadInbox()
+				return
+			}
 			this.loadHome()
 		},
 		openInbox() {
-			uni.showToast({
-				title: '收信箱功能准备中',
-				icon: 'none'
-			})
+			this.activeTab = 'inbox'
+			this.loadInbox()
+		},
+		openInboxReply(item) {
+			if (!item || !item.contact_id) {
+				return
+			}
+			if (item.can_reply === false) {
+				uni.showToast({
+					title: item.can_reply_reason || '请等待对方再次来信',
+					icon: 'none'
+				})
+				return
+			}
+			this.activeInboxItem = item
+			this.inboxReplyText = ''
+			this.showInboxReplyPopup = true
+		},
+		closeInboxReplyPopup() {
+			this.showInboxReplyPopup = false
+			this.activeInboxItem = null
+			this.inboxReplyText = ''
+		},
+		async sendInboxReply() {
+			if (!this.activeInboxItem || !this.activeInboxItem.contact_id) {
+				return
+			}
+			if (!this.inboxReplyText) {
+				uni.showToast({
+					title: '请输入回复内容',
+					icon: 'none'
+				})
+				return
+			}
+			if (this.inboxSending) {
+				return
+			}
+			this.inboxSending = true
+			try {
+				await personnelAdmin.sendUserHeartMessage({
+					personnelId: this.personnelId,
+					contactId: this.activeInboxItem.contact_id,
+					content: this.inboxReplyText,
+					type: 0
+				})
+				this.closeInboxReplyPopup()
+				await Promise.all([this.loadHome(), this.loadInbox()])
+				uni.showToast({
+					title: '回复成功',
+					icon: 'success'
+				})
+			} catch (error) {
+				uni.showToast({
+					title: (error && error.message) || '回复失败',
+					icon: 'none'
+				})
+			} finally {
+				this.inboxSending = false
+			}
 		},
 		async sendMessage() {
 			if (!this.activeContact || !this.activeContact._id) {
 				return
 			}
-			if (!this.draftMessage) {
+			if (!this.canSendToActive) {
 				uni.showToast({
-					title: '请输入消息内容',
+					title: this.cannotSendReason || '请等待对方回复后再发送下一条',
 					icon: 'none'
 				})
 				return
 			}
-			if (this.messageType === 1 && Number(this.selfProfile.heart_message_quota || 0) < 1) {
+			if (!this.draftMessage) {
 				uni.showToast({
-					title: '心动值不足',
+					title: '请输入消息内容',
 					icon: 'none'
 				})
 				return
@@ -373,12 +656,11 @@ export default {
 					personnelId: this.personnelId,
 					contactId: this.activeContact._id,
 					content: this.draftMessage,
-					type: this.messageType
+					type: 0
 				})
 				const currentContactId = this.activeContact._id
 				this.draftMessage = ''
-				this.messageType = 0
-				await this.loadHome()
+				await Promise.all([this.loadHome(), this.loadInbox()])
 				const nextActive = this.contacts.find((item) => item._id === currentContactId)
 				if (nextActive) {
 					await this.selectContact(nextActive)
@@ -465,13 +747,15 @@ export default {
 <style>
 .page {
 	position: relative;
-	min-height: 100vh;
+	height: 100vh;
 	background:
 		radial-gradient(circle at top left, rgba(222, 236, 224, 0.86), transparent 28%),
 		radial-gradient(circle at top right, rgba(244, 230, 199, 0.76), transparent 24%),
 		linear-gradient(180deg, #faf9f5 0%, #f2f0e9 38%, #eae8e0 100%);
 	box-sizing: border-box;
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
 }
 
 .page-glow {
@@ -550,7 +834,13 @@ export default {
 .wechat-shell {
 	position: relative;
 	z-index: 1;
-	padding: 0 0 164rpx;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	padding: 0 0 calc(164rpx + env(safe-area-inset-bottom));
+	box-sizing: border-box;
+	overflow: hidden;
 }
 
 .search-bar {
@@ -597,6 +887,18 @@ export default {
 	background: rgba(255, 255, 255, 0.9);
 	box-shadow: 0 18rpx 34rpx rgba(126, 128, 111, 0.1);
 	backdrop-filter: blur(8rpx);
+}
+
+.contacts-panel {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.contact-scroll {
+	flex: 1;
+	min-height: 0;
 }
 
 .panel-head,
@@ -660,7 +962,6 @@ export default {
 	background: #ece8dc;
 }
 
-.contact-item:last-child::after,
 .contact-item.active::after {
 	display: none;
 }
@@ -766,6 +1067,13 @@ export default {
 	margin-top: 6rpx;
 }
 
+.turn-tip {
+	display: block;
+	margin-top: 8rpx;
+	font-size: 22rpx;
+	color: #b1762d;
+}
+
 .contact-preview-row {
 	align-items: center;
 	gap: 12rpx;
@@ -806,6 +1114,17 @@ export default {
 	box-shadow: 0 0 0 8rpx rgba(124, 171, 121, 0.12);
 }
 
+.mini-reply-btn {
+	height: 56rpx;
+	line-height: 56rpx;
+	padding: 0 20rpx;
+	margin: 0;
+	border-radius: 12rpx;
+	font-size: 24rpx;
+	color: #ffffff;
+	background: linear-gradient(135deg, #7ea870 0%, #cdaa61 100%);
+}
+
 .chat-panel {
 	background:
 		linear-gradient(180deg, rgba(249, 248, 242, 0.96) 0%, rgba(244, 241, 233, 0.96) 100%);
@@ -829,6 +1148,9 @@ export default {
 .chat-popup {
 	width: 100%;
 	max-height: 100%;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
 	border-radius: 28rpx;
 	overflow: hidden;
 	background:
@@ -887,15 +1209,18 @@ export default {
 }
 
 .message-scroll {
-	height: 720rpx;
+	flex: 1;
+	height: auto;
+	min-height: 0;
 	padding: 24rpx 24rpx 8rpx;
 	box-sizing: border-box;
 }
 
 .popup-message-scroll {
-	height: 68vh;
-	min-height: 520rpx;
-	max-height: 820rpx;
+	flex: 1;
+	height: auto;
+	min-height: 220rpx;
+	max-height: none;
 }
 
 .message-list {
@@ -976,6 +1301,7 @@ export default {
 }
 
 .composer {
+	flex-shrink: 0;
 	padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
 	background: linear-gradient(180deg, #faf9f4 0%, #f5f1e7 100%);
 	border-top: 1rpx solid #e8e2d4;
@@ -1018,9 +1344,15 @@ export default {
 
 .composer-foot {
 	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 18rpx;
 	margin-top: 16rpx;
+}
+
+.composer-actions {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 14rpx;
 }
 
 .composer-tip {
@@ -1042,6 +1374,28 @@ export default {
 
 .send-btn[disabled] {
 	opacity: 0.6;
+}
+
+.inbox-letter-box {
+	margin: 20rpx 24rpx 0;
+	padding: 20rpx;
+	border-radius: 16rpx;
+	background: rgba(255, 255, 255, 0.9);
+	box-shadow: inset 0 0 0 1rpx #e6e1d5;
+}
+
+.inbox-letter-time {
+	display: block;
+	font-size: 22rpx;
+	color: #8d8f83;
+}
+
+.inbox-letter-text {
+	display: block;
+	margin-top: 10rpx;
+	font-size: 26rpx;
+	line-height: 1.6;
+	color: #353a30;
 }
 
 .quota-badge {
