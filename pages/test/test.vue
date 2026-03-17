@@ -423,14 +423,25 @@
 
 	const stageSummary = computed(() => {
 		const stage = stageList[pendingStageNumber.value - 1] || stageList[0]
-		const cumulativeAnswers = answers.value.slice(0, stage.end)
-		const cumulativeCounts = countDimensions(cumulativeAnswers)
+		const stageAnswers = answers.value.slice(stage.start, stage.end)
+		const stageCounts = countDimensions(stageAnswers)
+		const stageQuota = Math.max(1, stage.end - stage.start)
+		const stageType = buildTypeFromCounts(stageCounts)
 		return {
 			title: `${stage.label}完成`,
-			description: `${userName.value ? `${userName.value}，` : ''}你已经完成 ${stage.end} / ${totalQuestions} 题，这一阶段呈现出的性格倾向已经越来越清晰。`,
-			personalityDescription: buildStagePersonalityDescription(cumulativeCounts),
-			badges: axisPairs.map((pair) => `${pair.label}：${getAxisBadgeText(cumulativeCounts, pair)}`),
-			encouragement: stage.encouragement
+			description: buildStageSummaryDescription({
+				stage,
+				stageCounts,
+				stageType,
+				stageAnsweredCount: stageAnswers.length,
+				stageQuota
+			}),
+			personalityDescription: buildStagePersonalityDescription(stageCounts),
+			badges: axisPairs.map(
+				(pair) =>
+					`${pair.label}：${getAxisBadgeText(stageCounts, pair)}（${stageCounts[pair.left]}:${stageCounts[pair.right]}）`
+			),
+			encouragement: buildStageEncouragement(stage, stageCounts)
 		}
 	})
 
@@ -516,6 +527,91 @@
 
 	function getAxisBadgeText(counts, pair) {
 		return counts[pair.left] >= counts[pair.right] ? pair.badgeLeft : pair.badgeRight
+	}
+
+	function getSortedDimensions(counts) {
+		return Object.keys(counts)
+			.map((key) => ({
+				key,
+				count: Number(counts[key] || 0)
+			}))
+			.sort((a, b) => {
+				if (b.count !== a.count) {
+					return b.count - a.count
+				}
+				return a.key.localeCompare(b.key)
+			})
+	}
+
+	function getStrongestAxisTrend(counts) {
+		const sorted = axisPairs
+			.map((pair) => {
+				const leftCount = Number(counts[pair.left] || 0)
+				const rightCount = Number(counts[pair.right] || 0)
+				const dominant = leftCount >= rightCount ? pair.left : pair.right
+				return {
+					...pair,
+					leftCount,
+					rightCount,
+					dominant,
+					diff: Math.abs(leftCount - rightCount)
+				}
+			})
+			.sort((a, b) => {
+				if (b.diff !== a.diff) {
+					return b.diff - a.diff
+				}
+				return a.label.localeCompare(b.label)
+			})
+		return sorted[0] || null
+	}
+
+	function getTrendStrengthWord(diff) {
+		if (diff >= 5) {
+			return '明显'
+		}
+		if (diff >= 3) {
+			return '比较明显'
+		}
+		if (diff >= 1) {
+			return '轻微'
+		}
+		return '暂时'
+	}
+
+	function buildStageSummaryDescription({
+		stage,
+		stageCounts,
+		stageType,
+		stageAnsweredCount,
+		stageQuota
+	}) {
+		const topDimensions = getSortedDimensions(stageCounts).slice(0, 2)
+		const topText = topDimensions
+			.map((item) => `${item.key}(${item.count})`)
+			.join('、')
+		const strongestAxis = getStrongestAxisTrend(stageCounts)
+		let axisText = ''
+		if (strongestAxis) {
+			const strengthWord = getTrendStrengthWord(strongestAxis.diff)
+			axisText =
+				`在${strongestAxis.label}上${strengthWord}偏向 ${strongestAxis.dominant} ` +
+				`（${strongestAxis.left}:${strongestAxis.right} = ${strongestAxis.leftCount}:${strongestAxis.rightCount}）。`
+		}
+		return (
+			`${userName.value ? `${userName.value}，` : ''}` +
+			`你已完成本阶段 ${stageAnsweredCount}/${stageQuota} 题。` +
+			`本阶段临时类型倾向是 ${stageType}，当前更高频的维度是 ${topText || '暂无明显倾向'}。` +
+			axisText
+		)
+	}
+
+	function buildStageEncouragement(stage, stageCounts) {
+		const strongestAxis = getStrongestAxisTrend(stageCounts)
+		if (!strongestAxis || strongestAxis.diff === 0) {
+			return `${stage.encouragement} 当前各维度很接近，继续按第一直觉作答会更准确。`
+		}
+		return `${stage.encouragement} 这一阶段你在“${strongestAxis.label}”上已经出现了清晰偏好。`
 	}
 
 	function buildStagePersonalityDescription(counts) {

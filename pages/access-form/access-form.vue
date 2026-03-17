@@ -489,6 +489,76 @@
 					console.error('confirmProfile query by openid failed', error)
 				}
 				if (matchedRecord && matchedRecord._id && this.hasNameAndPasscode(matchedRecord)) {
+					if (this.saving) {
+						return
+					}
+					this.saving = true
+					uni.showLoading({
+						title: '保存中',
+						mask: true
+					})
+					try {
+						const nickname = this.profileForm.nickname.trim()
+						const avatarFileId = await this.uploadAvatarIfNeeded()
+						const user = this.currentUser || {}
+						const loginOpenId =
+							this.loginOpenIds[0] ||
+							this.getLoginOpenId(user) ||
+							String(matchedRecord.wx_openid || '').trim()
+						const updateResult = await personnelAdmin.update({
+							id: matchedRecord._id,
+							data: {
+								nickname: nickname,
+								personal_photo: avatarFileId,
+								wx_openid: loginOpenId,
+								wx_unionid: user.wx_unionid || matchedRecord.wx_unionid || '',
+								wx_nickname: nickname,
+								wx_avatar: avatarFileId
+							}
+						})
+						const persistedRecord = {
+							...matchedRecord,
+							_id: (updateResult && updateResult.id) || matchedRecord._id,
+							person_id:
+								updateResult && typeof updateResult.person_id !== 'undefined'
+									? updateResult.person_id
+									: matchedRecord.person_id,
+							admin_role:
+								updateResult && typeof updateResult.admin_role !== 'undefined'
+									? Number(updateResult.admin_role) || 0
+									: Number(matchedRecord.admin_role) || 0,
+							passcode:
+								(updateResult && updateResult.passcode) || matchedRecord.passcode || '',
+							nickname: nickname,
+							personal_photo: avatarFileId,
+							wx_openid: loginOpenId,
+							wx_unionid: user.wx_unionid || matchedRecord.wx_unionid || '',
+							wx_nickname: nickname,
+							wx_avatar: avatarFileId
+						}
+						this.matchedOpenidRecord = persistedRecord
+						this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(persistedRecord))
+						uni.showToast({
+							title: '资料已同步，正在进入测试',
+							icon: 'none'
+						})
+						setTimeout(() => {
+							uni.navigateTo({
+								url:
+									`/pages/test/test?name=${encodeURIComponent(persistedRecord.name || '')}` +
+									`&personnelId=${encodeURIComponent(persistedRecord._id || '')}` +
+									`&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
+							})
+						}, 350)
+					} catch (error) {
+						this.showErrorModal((error && error.message) || '资料同步失败')
+					} finally {
+						this.saving = false
+						uni.hideLoading()
+					}
+					return
+				}
+				if (false && matchedRecord && matchedRecord._id && this.hasNameAndPasscode(matchedRecord)) {
 					this.savePersonnelProfileToStorage(
 						this.buildPersonnelProfilePayload({
 							...matchedRecord,
