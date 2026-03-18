@@ -1139,16 +1139,17 @@ export default {
 	bottom: 0;
 	z-index: 40;
 	display: flex;
-	align-items: flex-end;
+	align-items: center;
 	justify-content: center;
-	padding: 40rpx 24rpx calc(120rpx + env(safe-area-inset-bottom));
+	padding: calc(24rpx + env(safe-area-inset-top)) 24rpx calc(24rpx + env(safe-area-inset-bottom));
 	background: rgba(38, 42, 34, 0.38);
 	box-sizing: border-box;
 }
 
 .chat-popup {
 	width: 100%;
-	max-height: 100%;
+	height: calc(100vh - (48rpx + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+	max-height: calc(100vh - (48rpx + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
 	display: flex;
 	flex-direction: column;
 	min-height: 0;
@@ -1303,7 +1304,7 @@ export default {
 
 .composer {
 	flex-shrink: 0;
-	padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+	padding: 14rpx 24rpx calc(10rpx + env(safe-area-inset-bottom));
 	background: linear-gradient(180deg, #faf9f4 0%, #f5f1e7 100%);
 	border-top: 1rpx solid #e8e2d4;
 }
@@ -1332,13 +1333,15 @@ export default {
 
 .composer-input {
 	width: 100%;
-	min-height: 148rpx;
-	margin-top: 18rpx;
-	padding: 20rpx 22rpx;
+	height: 96rpx;
+	min-height: 96rpx;
+	margin-top: 12rpx;
+	padding: 14rpx 20rpx;
 	border-radius: 18rpx;
 	background: rgba(255, 255, 255, 0.94);
 	box-sizing: border-box;
 	font-size: 28rpx;
+	line-height: 1.5;
 	color: #222222;
 	box-shadow: inset 0 0 0 1rpx #e6e1d5;
 }
