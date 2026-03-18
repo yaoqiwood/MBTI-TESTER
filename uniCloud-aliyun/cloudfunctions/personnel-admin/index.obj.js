@@ -39,25 +39,25 @@ const HEADER_FIELD_MAP = {
 	年龄: 'age',
 	个人照片: 'personal_photo',
 	照片: 'personal_photo',
-	手机号: 'mobile',
+	手机�? 'mobile',
 	手机号码: 'mobile',
 	身份证号: 'id_card',
-	身份证号码: 'id_card',
+	身份证号�? 'id_card',
 	mbti: 'mbti',
 	籍贯: 'native_place',
 	职业: 'profession',
 	住址: 'address',
 	家庭大致情况: 'family_overview',
 	家庭情况: 'family_overview',
-	所在教会: 'church',
-	推荐人: 'referrer',
+	所在教�? 'church',
+	推荐�? 'referrer',
 	自我介绍: 'self_introduction',
 	感情情况: 'relationship_status',
 	活动出行方式: 'travel_mode',
 	出行方式: 'travel_mode',
-	当前审核状态: 'review_status',
-	审核状态: 'review_status',
-	审核人: 'reviewer',
+	当前审核状�? 'review_status',
+	审核状�? 'review_status',
+	审核�? 'reviewer',
 	remark: 'remark',
 	说明: 'remark',
 	备注: 'remark',
@@ -83,13 +83,13 @@ function normalizeReviewStatus(value) {
 	if (!normalized) {
 		return 'pending'
 	}
-	if (normalized === 'pending' || normalized === '待审核') {
+	if (normalized === 'pending' || normalized === '待审�?) {
 		return 'pending'
 	}
 	if (normalized === 'approved' || normalized === '通过' || normalized === '已通过') {
 		return 'approved'
 	}
-	if (normalized === 'rejected' || normalized === '驳回' || normalized === '已驳回') {
+	if (normalized === 'rejected' || normalized === '驳回' || normalized === '已驳�?) {
 		return 'rejected'
 	}
 	return 'pending'
@@ -105,7 +105,7 @@ function normalizePasscode(value, { autoGenerate = false } = {}) {
 		return autoGenerate ? generateRandomPasscode() : ''
 	}
 	if (!/^\d{4}$/.test(normalized)) {
-		throw new Error('口令必须是4位数字')
+		throw new Error('口令必须�?位数�?)
 	}
 	return normalized
 }
@@ -221,13 +221,13 @@ function normalizePayload(payload = {}, options = {}) {
 		throw new Error('手机号格式不正确')
 	}
 	if (record.id_card && !/(^\d{15}$)|(^\d{17}[\dXx]$)/.test(record.id_card)) {
-		throw new Error('身份证号格式不正确')
+		throw new Error('身份证号格式不正�?)
 	}
 	if (record.mbti && !/^(E|I)(N|S)(T|F)(J|P)$/.test(record.mbti)) {
-		throw new Error('MBTI 格式不正确')
+		throw new Error('MBTI 格式不正�?)
 	}
 	if (record.passcode && !/^\d{4}$/.test(record.passcode)) {
-		throw new Error('口令必须是4位数字')
+		throw new Error('口令必须�?位数�?)
 	}
 
 	return record
@@ -532,7 +532,7 @@ function buildPersonnelLabel(record = {}) {
 	const nickname = trimString(record.nickname)
 	const name = trimString(record.name)
 	const mbti = trimString(record.mbti).toUpperCase()
-	const title = nickname || name || '未命名参与者'
+	const title = nickname || name || '未命名参与�?
 	const suffix = name && nickname && name !== nickname ? ` / ${name}` : name && !nickname ? ` / ${name}` : ''
 	const mbtiSuffix = mbti ? ` / ${mbti}` : ''
 	return `#${personId || '-'} ${title}${suffix}${mbtiSuffix}`
@@ -586,10 +586,10 @@ function normalizeGenderValue(value = '') {
 	if (!normalized) {
 		return ''
 	}
-	if (['男', 'male', 'man', 'm', '1'].includes(normalized)) {
+	if (['�?, 'male', 'man', 'm', '1'].includes(normalized)) {
 		return 'male'
 	}
-	if (['女', 'female', 'woman', 'f', '2'].includes(normalized)) {
+	if (['�?, 'female', 'woman', 'f', '2'].includes(normalized)) {
 		return 'female'
 	}
 	return ''
@@ -657,7 +657,7 @@ async function ensureHeartMessagePersonnel(senderId, receiverId) {
 		throw new Error('接收方参与者不存在')
 	}
 	if (sender._id === receiver._id) {
-		throw new Error('不能给自己发送心动私信')
+		throw new Error('不能给自己发送心动私�?)
 	}
 	return {
 		sender,
@@ -672,7 +672,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		throw new Error('私信内容不能为空')
 	}
 	if (content.length > 300) {
-		throw new Error('私信内容最多 300 个字')
+		throw new Error('私信内容最�?300 个字')
 	}
 
 	const status = normalizeHeartMessageStatus(payload.status, currentRecord ? currentRecord.status : 'draft')
@@ -682,7 +682,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		currentRecord ? currentRecord.quota_cost : 1
 	)
 	if (type === 1 && quotaCost < 1) {
-		throw new Error('扣减次数至少为 1')
+		throw new Error('扣减次数至少�?1')
 	}
 
 	let deliveredAt = currentRecord ? currentRecord.delivered_at || null : null
@@ -1044,7 +1044,7 @@ module.exports = {
 							: '',
 					latest_message_status: latestMessage ? latestMessage.status || 'delivered' : '',
 					can_send: canSend,
-					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条',
+					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一�?,
 					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
 					remaining_heart_value: getRemainingHeartValue(item, 3)
 				}
@@ -1081,7 +1081,7 @@ module.exports = {
 		}
 		const contact = await getPersonnelById(contactId)
 		if (!contact) {
-			throw new Error('联系人不存在或已被删除')
+			throw new Error('联系人不存在或已被删�?)
 		}
 
 		const allList = (await getCachedHeartMessages())
@@ -1130,14 +1130,14 @@ module.exports = {
 					? latestMessage.created_at_text || latestMessage.created_at
 					: '',
 			can_send: canSend,
-			can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条'
+			can_send_reason: canSend ? '' : '请等待对方回复后再发送下一�?
 		}
 	},
 
 	async listUserInboxLetters({ personnelId = '', keyword = '' } = {}) {
 		const self = await getPersonnelById(personnelId)
 		if (!self) {
-			throw new Error('褰撳墠鐢ㄦ埛璧勬枡涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('褰撳墠鐢ㄦ埛璧勬枡涓嶅瓨鍦ㄦ垨宸茶鍒犻�?)
 		}
 
 		const normalizedKeyword = trimString(keyword).toLowerCase()
@@ -1228,7 +1228,7 @@ module.exports = {
 		const currentQuota = normalizeNonNegativeInt(current.private_message_quota, 0)
 		const nextQuotaValue = normalizeNonNegativeInt(quota, -1)
 		if (nextQuotaValue < 0) {
-			throw new Error('次数必须为大于等于 0 的整数')
+			throw new Error('次数必须为大于等�?0 的整�?)
 		}
 
 		let nextQuota = nextQuotaValue
@@ -1312,7 +1312,7 @@ module.exports = {
 			receiver._id
 		)
 		if (latestPairMessage && trimString(latestPairMessage.sender_record_id) === sender._id) {
-			throw new Error('请等待对方回复后再发送下一条')
+			throw new Error('请等待对方回复后再发送下一�?)
 		}
 
 		const messageType = normalizeHeartMessageType(type, 0)
@@ -1331,9 +1331,25 @@ module.exports = {
 
 		const senderHeartQuota = getRemainingHeartValue(sender, 3)
 		if (messageType === 1 && senderHeartQuota < 1) {
-			throw new Error('你的心动次数已用完')
+			throw new Error('你的心动次数已用�?)
 		}
 
+		if (messageType !== 1) {
+			const createRes = await heartMessageCollection.add({
+				...payload,
+				created_at: new Date(),
+				is_deleted: false
+			})
+			invalidateRuntimeCache({
+				heartMessages: true
+			})
+			return {
+				id: createRes.id,
+				type: messageType,
+				remaining_heart_value: senderHeartQuota,
+				remaining_heart_message_quota: senderHeartQuota
+			}
+		}
 		const transaction = await db.startTransaction()
 		try {
 			const transactionPersonnel = transaction.collection('mbti-personnel')
@@ -1378,7 +1394,7 @@ module.exports = {
 		const { data: heartMessageList = [] } = await heartMessageCollection.doc(id).get()
 		const currentRecord = heartMessageList[0]
 		if (!currentRecord || isDeletedRecord(currentRecord.is_deleted)) {
-			throw new Error('私信记录不存在或已删除')
+			throw new Error('私信记录不存在或已删�?)
 		}
 
 		const senderId = trimString((data && data.sender_record_id) || currentRecord.sender_record_id)
@@ -1408,7 +1424,7 @@ module.exports = {
 			if (previousSenderId === nextSenderId) {
 				const quotaDiff = nextQuotaCost - previousQuotaCost
 				if (quotaDiff > 0 && senderQuota < quotaDiff) {
-					throw new Error('发送方可用私信次数不足，无法提高消耗次数')
+					throw new Error('发送方可用私信次数不足，无法提高消耗次�?)
 				}
 				if (quotaDiff !== 0) {
 					await transactionPersonnel.doc(sender._id).update({
@@ -1458,7 +1474,7 @@ module.exports = {
 		const { data = [] } = await heartMessageCollection.doc(id).get()
 		const current = data[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('私信记录不存在或已删除')
+			throw new Error('私信记录不存在或已删�?)
 		}
 
 		await heartMessageCollection.doc(id).update({
@@ -1480,7 +1496,7 @@ module.exports = {
 		}
 		const nextAdminRole = normalizeAdminRole(adminRole, -1)
 		if (![ADMIN_ROLE.NORMAL, ADMIN_ROLE.ADMIN].includes(nextAdminRole)) {
-			throw new Error('只支持 0 或 1')
+			throw new Error('只支�?0 �?1')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
@@ -1489,7 +1505,7 @@ module.exports = {
 		}
 		const currentAdminRole = normalizeAdminRole(current.admin_role, ADMIN_ROLE.NORMAL)
 		if (currentAdminRole === ADMIN_ROLE.SUPER_ADMIN) {
-			throw new Error('超级管理员权限不可修改')
+			throw new Error('超级管理员权限不可修�?)
 		}
 		if (currentAdminRole === nextAdminRole) {
 			return {
@@ -1662,13 +1678,13 @@ module.exports = {
 			defval: ''
 		})
 		if (!rows || rows.length < 3) {
-			throw new Error('表格格式不正确，至少需要时间行、表头行和一行数据')
+			throw new Error('表格格式不正确，至少需要时间行、表头行和一行数�?)
 		}
 
 		const headerRow = rows[1]
 		const headerMap = headerRow.map((header) => HEADER_FIELD_MAP[normalizeHeader(header)] || '')
 		if (headerMap.indexOf('nickname') === -1 || headerMap.indexOf('name') === -1) {
-			throw new Error('表头缺少必要字段：昵称、姓名')
+			throw new Error('表头缺少必要字段：昵称、姓�?)
 		}
 
 		const dataRows = rows.slice(2)
@@ -1709,7 +1725,7 @@ module.exports = {
 			}
 
 			if (!docsToAdd.length) {
-				throw new Error(errors.length ? '没有可导入的数据，请检查表格内容' : '未识别到有效数据行')
+				throw new Error(errors.length ? '没有可导入的数据，请检查表格内�? : '未识别到有效数据�?)
 			}
 
 			for (let i = 0; i < docsToAdd.length; i++) {
@@ -1839,7 +1855,7 @@ module.exports = {
 
 		const normalizedMbti = trimString(mbti).toUpperCase()
 		if (!/^(E|I)(N|S)(T|F)(J|P)$/.test(normalizedMbti)) {
-			throw new Error('MBTI 格式不正确')
+			throw new Error('MBTI 格式不正�?)
 		}
 
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
@@ -1863,3 +1879,4 @@ module.exports = {
 		}
 	}
 }
+
