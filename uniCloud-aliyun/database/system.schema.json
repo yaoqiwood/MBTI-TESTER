@@ -30,10 +30,10 @@
 			"description": "true means heart chat page is enabled",
 			"defaultValue": true
 		},
-		"access_form_review_mode": {
+		"helper_page_review_mode": {
 			"bsonType": "bool",
-			"title": "access form review mode",
-			"description": "true means access-form page runs in review-friendly mode",
+			"title": "helper page review mode",
+			"description": "true means helper page runs in review mode for app review",
 			"defaultValue": false
 		},
 		"remark": {

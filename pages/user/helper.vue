@@ -82,60 +82,69 @@
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">信息确认</text>
 				<text class="subhead"
-					>填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。</text
+					>{{
+						accessFormReviewMode
+							? '当前为快捷进入模式，可直接进入测试。'
+							: '填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。'
+					}}</text
 				>
 			</view>
 
 			<view class="form-card">
-				<view class="field-block">
-					<text class="field-label">姓名</text>
-					<view class="input-shell" :class="{ active: showNameOptions }">
-						<input
-							v-model="nameInput"
-							class="text-input"
-							type="text"
-							placeholder="输入姓名进行搜索"
-							@focus="handleNameFocus"
-							@input="handleNameInput"
-							@blur="handleNameBlur"
-							confirm-type="done"
-						/>
-					</view>
-					<view v-if="showNameOptions && filteredNames.length" class="options-panel">
-						<view
-							v-for="item in filteredNames"
-							:key="item._id"
-							class="option-item"
-							@touchstart="selectName(item)"
-							@mousedown="selectName(item)"
+				<template v-if="!accessFormReviewMode">
+					<view class="field-block">
+						<text class="field-label">姓名</text>
+						<view class="input-shell" :class="{ active: showNameOptions }">
+							<input
+								v-model="nameInput"
+								class="text-input"
+								type="text"
+								placeholder="输入姓名进行搜索"
+								@focus="handleNameFocus"
+								@input="handleNameInput"
+								@blur="handleNameBlur"
+								confirm-type="done"
+							/>
+						</view>
+						<view v-if="showNameOptions && filteredNames.length" class="options-panel">
+							<view
+								v-for="item in filteredNames"
+								:key="item._id"
+								class="option-item"
+								@touchstart="selectName(item)"
+								@mousedown="selectName(item)"
+							>
+								<text>{{ item.name }}</text>
+							</view>
+						</view>
+						<text v-else-if="showNameOptions && nameInput" class="empty-tip"
+							>没有匹配姓名，离开输入框后会自动清空。</text
 						>
-							<text>{{ item.name }}</text>
+					</view>
+
+					<view class="field-block">
+						<text class="field-label">口令</text>
+						<view class="input-shell">
+							<input
+								v-model="password"
+								class="text-input"
+								type="text"
+								password
+								maxlength="4"
+								@input="handlePasswordInput"
+								placeholder="请输入口令"
+								confirm-type="done"
+							/>
 						</view>
 					</view>
-					<text v-else-if="showNameOptions && nameInput" class="empty-tip"
-						>没有匹配姓名，离开输入框后会自动清空。</text
-					>
-				</view>
-
-				<view class="field-block">
-					<text class="field-label">口令</text>
-					<view class="input-shell">
-						<input
-							v-model="password"
-							class="text-input"
-							type="text"
-							password
-							maxlength="4"
-							@input="handlePasswordInput"
-							placeholder="请输入口令"
-							confirm-type="done"
-						/>
-					</view>
-				</view>
+				</template>
 
 				<view class="action-row">
-					<view class="action-btn primary-btn" @click="submitForm">
-						<text>确认</text>
+					<view
+						class="action-btn primary-btn"
+						@click="accessFormReviewMode ? enterTestDirectly() : submitForm()"
+					>
+						<text>{{ accessFormReviewMode ? '进入测试' : '确认' }}</text>
 					</view>
 					<view class="action-btn ghost-btn" @click="goHome">
 						<text>返回首页</text>
@@ -161,6 +170,7 @@
 				loginOpenIds: [],
 				password: '',
 				showNameOptions: false,
+				accessFormReviewMode: false,
 				showProfilePopup: false,
 				saving: false,
 				lastErrorMessage: '',
@@ -176,6 +186,7 @@
 		},
 		async onLoad() {
 			await this.loadCurrentUser()
+			await this.loadSystemConfig()
 			await this.initOpenidProfileState()
 		},
 		computed: {
@@ -184,6 +195,18 @@
 			}
 		},
 		methods: {
+			async loadSystemConfig() {
+				try {
+					const result = await personnelUser.getSystemConfig({
+						configCode: 'default'
+					})
+					const config = (result && result.config) || {}
+					this.accessFormReviewMode = !!config.helper_page_review_mode
+				} catch (error) {
+					console.error('loadSystemConfig failed', error)
+					this.accessFormReviewMode = false
+				}
+			},
 			savePersonnelProfileToStorage(payload) {
 				try {
 					uni.setStorageSync(PERSONNEL_PROFILE_STORAGE_KEY, {
@@ -782,6 +805,41 @@
 					this.saving = false
 					uni.hideLoading()
 				}
+			},
+			enterTestDirectly() {
+				if (this.showProfilePopup) {
+					uni.showToast({
+						title: '请先填写昵称和头像',
+						icon: 'none'
+					})
+					return
+				}
+
+				const targetRecord = this.matchedOpenidRecord || this.selectedRecord || {}
+				const targetName = String(targetRecord.name || this.selectedName || this.nameInput || '').trim()
+				const targetPersonnelId = String(targetRecord._id || '').trim()
+				const targetWxOpenid = String(
+					this.loginOpenIds[0] || this.getLoginOpenId(this.currentUser || {}) || ''
+				).trim()
+
+				let url = '/pages/feed/entry'
+				const query = []
+				if (targetName) {
+					query.push(`name=${encodeURIComponent(targetName)}`)
+				}
+				if (targetPersonnelId) {
+					query.push(`personnelId=${encodeURIComponent(targetPersonnelId)}`)
+				}
+				if (targetWxOpenid) {
+					query.push(`wxOpenid=${encodeURIComponent(targetWxOpenid)}`)
+				}
+				if (query.length) {
+					url += `?${query.join('&')}`
+				}
+
+				uni.navigateTo({
+					url
+				})
 			},
 			goHome() {
 				uni.navigateTo({

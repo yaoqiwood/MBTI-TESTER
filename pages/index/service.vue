@@ -5,8 +5,8 @@
 			<view class="hero-backdrop hero-backdrop-right"></view>
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
-				<text class="headline">鐢ㄤ竴鍦烘氮婕殑鎬ф牸婕父锛屾壘鍒颁綘鐖辩殑琛ㄨ揪鏂瑰紡</text>
-				<text class="subhead">杩欐槸涓€寮犳病鏈夐鐩殑棣栭〉銆傚厛鎰熷彈 12 绉嶄汉鏍煎舰璞★紝鍐嶈繘鍏ュ師娴嬭瘯椤靛紑濮嬩綔绛斻€</text>
+				<text class="headline">用一场浪漫的性格漫游，找到你爱的表达方式</text>
+				<text class="subhead">这是一张没有题目的首页。先感受 12 种人格形象，再进入原测试页开始作答。</text>
 			</view>
 
 			<view class="hero-stage">
@@ -25,30 +25,30 @@
 
 			<view class="hero-actions">
 				<view class="hero-action-btn primary-btn" @click="goTest">
-					<text>杩涘叆娴嬭瘯</text>
+					<text>进入测试</text>
 				</view>
 				<view class="hero-action-btn ghost-btn" @click="scrollToGallery">
-					<text>鍏堢湅浜烘牸褰㈣薄</text>
+					<text>先看人格形象</text>
 				</view>
 			</view>
 		</view>
 
 		<view class="summary-panel">
 			<view class="summary-card">
-				<text class="summary-label">椋庢牸鍏抽敭璇</text>
-				<text class="summary-value">鐩磋 / 鐑儓 / 鍏遍福 / 鎺㈢储</text>
+				<text class="summary-label">风格关键词</text>
+				<text class="summary-value">直觉 / 热烈 / 共鸣 / 探索</text>
 			</view>
 			<view class="summary-card">
-				<text class="summary-label">閫傚悎鍦烘櫙</text>
-				<text class="summary-value">鎭嬬埍閰嶅銆佽嚜鎴戣鐭ャ€佹湅鍙嬬牬鍐</text>
+				<text class="summary-label">适合场景</text>
+				<text class="summary-value">恋爱配对、自我认知、朋友破冰</text>
 			</view>
 		</view>
 
 		<view class="gallery" id="gallery">
 			<view class="section-head">
 				<text class="section-kicker">12 PERSONAS</text>
-				<text class="section-title">鍗佷簩绉嶄汉鏍煎舰璞</text>
-				<text class="section-desc">涓嶆槸棰樼洰椤碉紝鑰屾槸浣犵殑绗竴鐪煎嵃璞″銆傛瘡涓€寮犲崱锛屽厛鍛婅瘔浣犱竴绉嶆皵璐ㄣ€</text>
+				<text class="section-title">十二种人格形象</text>
+				<text class="section-desc">不是题目列表，而是你的第一眼印象墙。每一张卡片，先告诉你一种气质。</text>
 			</view>
 
 			<view class="card-grid">
@@ -76,9 +76,9 @@
 		</view>
 
 		<view class="footer-cta">
-			<text class="footer-title">鍑嗗濂戒簡灏卞紑濮</text>
-			<text class="footer-text">鍘熸祴璇曢〉宸蹭繚鐣欙紝褰撳墠鍏堥€氳繃鎸夐挳鍒囨崲杩囧幓銆</text>
-			<button class="primary-btn wide-btn" @click="goTest">鍓嶅線鍘熸祴璇曢〉</button>
+			<text class="footer-title">准备好了就开始</text>
+			<text class="footer-text">原测试页已经保留，当前先通过按钮切换过去。</text>
+			<button class="primary-btn wide-btn" @click="goTest">前往原测试页</button>
 		</view>
 	</view>
 </template>
@@ -87,9 +87,9 @@
 const personas = [
 	{
 		code: 'INFP',
-		name: '鏈堝厜鐞嗘兂瀹?,
-		tagline: '娓╂煍銆佹兂璞″姏銆佹儏缁叡楦?,
-		note: '鎿呴暱鍦ㄥ叧绯婚噷鍒堕€犵粏鑵绘皼鍥达紝鍠滄琚湡姝ｇ悊瑙ｃ€?,
+		name: '月光理想家',
+		tagline: '温柔、想象力、情绪共鸣',
+		note: '擅长在关系里创造细腻氛围，喜欢被真正理解。',
 		cardBg: 'linear-gradient(160deg, #fff6f0 0%, #ffd7c2 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffcfb3 0%, #ff9e7a 100%)',
 		accent: '#8f4d32',
@@ -97,9 +97,9 @@ const personas = [
 	},
 	{
 		code: 'ENFP',
-		name: '鐑熺伀鍐掗櫓瀹?,
-		tagline: '鐑儏銆佺伒鎰熴€佸嵆鏃跺績鍔?,
-		note: '鑳芥妸涓€鍦烘櫘閫氬璇濓紝鐐圭噧鎴愯浜鸿浣忓緢涔呯殑澶滄櫄銆?,
+		name: '烟火冒险家',
+		tagline: '热情、灵感、即时心动',
+		note: '能把一场普通对话，点燃成让人记很久的夜晚。',
 		cardBg: 'linear-gradient(160deg, #fff9e8 0%, #ffe29f 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffe48b 0%, #ffc44d 100%)',
 		accent: '#8d5a00',
@@ -107,9 +107,9 @@ const personas = [
 	},
 	{
 		code: 'INFJ',
-		name: '闈欒哀棰勮█瀹?,
-		tagline: '娲炲療銆佸厠鍒躲€佹繁搴﹁繛鎺?,
-		note: '琛ㄩ潰骞抽潤锛屽唴蹇冨嵈鏃╁凡鐪嬭鍏崇郴鐨勬湭鏉ヨ建杩广€?,
+		name: '静谧预言家',
+		tagline: '洞察、克制、深度连接',
+		note: '表面平静，内心却早已看见关系的未来轨迹。',
 		cardBg: 'linear-gradient(160deg, #eef7ff 0%, #c9e7ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #b7defe 0%, #72b8ff 100%)',
 		accent: '#1f5d96',
@@ -117,9 +117,9 @@ const personas = [
 	},
 	{
 		code: 'ENFJ',
-		name: '鏆栧満鎸囨尌瀹?,
-		tagline: '鎰熸煋鍔涖€佸寘瀹广€佸甫棰嗘劅',
-		note: '涔犳儻鐓ч【鎵€鏈変汉鐨勬劅鍙楋紝涔熸渶鎳傚緱鎬庢牱璁╃埍钀藉湴銆?,
+		name: '暖场指挥家',
+		tagline: '感染力、包容、带领感',
+		note: '习惯照顾所有人的感受，也最懂得怎样让爱落地。',
 		cardBg: 'linear-gradient(160deg, #f5efff 0%, #dcc8ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #d6c3ff 0%, #a27bff 100%)',
 		accent: '#5b36ae',
@@ -127,9 +127,9 @@ const personas = [
 	},
 	{
 		code: 'INTP',
-		name: '鏄熷浘鍒嗘瀽甯?,
-		tagline: '鐞嗘€с€佸ソ濂囥€佸弽宸瓍鍔?,
-		note: '涓嶈交鏄撳紑鍙ｏ紝浣嗕竴鏃﹁鐪熷洖搴旓紝鍙ュ彞閮藉緢鏈夊垎閲忋€?,
+		name: '星图分析师',
+		tagline: '理性、好奇、反差魅力',
+		note: '不轻易开口，但一旦认真回应，句句都很有分量。',
 		cardBg: 'linear-gradient(160deg, #edfdf6 0%, #c4f2dd 100%)',
 		avatarBg: 'linear-gradient(180deg, #b2ebd0 0%, #5bc18e 100%)',
 		accent: '#1e6a4a',
@@ -137,9 +137,9 @@ const personas = [
 	},
 	{
 		code: 'ENTP',
-		name: '鐏垫劅鐓藉姩鑰?,
-		tagline: '鏈烘晱銆佽烦璺冦€佺帺蹇冨崄瓒?,
-		note: '鎿呴暱璁╁叧绯讳繚鎸佹柊椴滄劅锛屾€昏兘鎻愬嚭鎰忔兂涓嶅埌鐨勫彲鑳姐€?,
+		name: '灵感煽动者',
+		tagline: '机敏、跳跃、玩心十足',
+		note: '擅长让关系保持新鲜感，总能提出意想不到的可能。',
 		cardBg: 'linear-gradient(160deg, #fff3f7 0%, #ffc7d8 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffbfd1 0%, #ff729c 100%)',
 		accent: '#9a2f54',
@@ -147,9 +147,9 @@ const personas = [
 	},
 	{
 		code: 'ISFP',
-		name: '闆捐壊鑹烘湳瀹?,
-		tagline: '鎰熷彈鍔涖€佸缇庛€佹參鐑湡蹇?,
-		note: '涓嶅枾闂癸紝浣嗕細鐢ㄧ粏鑺傘€佺溂绁炲拰闄即琛ㄨ揪鍋忕埍銆?,
+		name: '雾色艺术家',
+		tagline: '感受力、审美、慢热真心',
+		note: '不爱喧闹，却会用细节、眼神和陪伴表达偏爱。',
 		cardBg: 'linear-gradient(160deg, #f7f4ef 0%, #ead7c1 100%)',
 		avatarBg: 'linear-gradient(180deg, #e6d2b8 0%, #c79a66 100%)',
 		accent: '#7a5528',
@@ -157,9 +157,9 @@ const personas = [
 	},
 	{
 		code: 'ESFP',
-		name: '蹇冨姩鐜板満娲?,
-		tagline: '娲诲姏銆佷翰杩戙€佸嵆鏃跺弽棣?,
-		note: '鍠滄鎶婂枩娆㈣鍑烘潵锛屼篃鎿呴暱鎶婂揩涔愬垎浜粰韬竟鐨勪汉銆?,
+		name: '心动现场派',
+		tagline: '活力、亲近、即时反馈',
+		note: '喜欢把喜欢说出来，也擅长把快乐分享给身边的人。',
 		cardBg: 'linear-gradient(160deg, #f2fff6 0%, #c8f7d4 100%)',
 		avatarBg: 'linear-gradient(180deg, #bff2c7 0%, #5dc576 100%)',
 		accent: '#1f6b33',
@@ -167,9 +167,9 @@ const personas = [
 	},
 	{
 		code: 'ISTJ',
-		name: '绉╁簭瀹堟姢鑰?,
-		tagline: '绋冲畾銆佸彲闈犮€佹參鎱㈠厬鐜?,
-		note: '鐖变笉鏄儕澶╁姩鍦帮紝鑰屾槸鎶婄瓟搴旇繃鐨勪簨鎯呬竴浠朵欢鍋氬埌銆?,
+		name: '秩序守护者',
+		tagline: '稳定、可靠、慢慢兑现',
+		note: '爱不是惊天动地，而是把答应过的事一件件做到。',
 		cardBg: 'linear-gradient(160deg, #f3f5f8 0%, #d6dde8 100%)',
 		avatarBg: 'linear-gradient(180deg, #cfd7e5 0%, #8da0bf 100%)',
 		accent: '#44556f',
@@ -177,9 +177,9 @@ const personas = [
 	},
 	{
 		code: 'ESTJ',
-		name: '琛屽姩涓荤悊浜?,
-		tagline: '鐩存帴銆佹灉鏂€佹帉鎺ц妭濂?,
-		note: '鎿呴暱鎺ㄥ姩鍏崇郴鍓嶈繘锛屽畨鍏ㄦ劅鏉ヨ嚜鏄庣‘鍜屾墽琛屻€?,
+		name: '行动主理人',
+		tagline: '直接、果断、掌控节奏',
+		note: '擅长推动关系向前，安全感来自明确和执行。',
 		cardBg: 'linear-gradient(160deg, #fff4ec 0%, #ffd3b3 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffcaa1 0%, #f58a4b 100%)',
 		accent: '#8b451e',
@@ -187,9 +187,9 @@ const personas = [
 	},
 	{
 		code: 'INTJ',
-		name: '鍐风劙绛栧垝鑰?,
-		tagline: '杩滆銆佽竟鐣屻€佹瀬鑷磋鐪?,
-		note: '鐪嬭捣鏉ュ厠鍒讹紝鐪熸鍠滄鏃朵細鎷垮嚭灏戣鐨勬姇鍏ュ拰涓撴敞銆?,
+		name: '冷焰策划者',
+		tagline: '远见、边界、极致认真',
+		note: '看起来克制，真正喜欢时会拿出少见的投入和专注。',
 		cardBg: 'linear-gradient(160deg, #eef1ff 0%, #c9d2ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #c1cbff 0%, #7387ff 100%)',
 		accent: '#3343a2',
@@ -197,9 +197,9 @@ const personas = [
 	},
 	{
 		code: 'ESFJ',
-		name: '鐢滃害缁勭粐鑰?,
-		tagline: '鍏虫€€銆佷綋璐淬€佸叧绯荤淮鎶?,
-		note: '澶╃劧浼氱収椤炬皵姘涳紝涔熶細鐢ㄥ緢澶氬皬浠紡璁ょ湡缁忚惀鎰熸儏銆?,
+		name: '甜度组织者',
+		tagline: '关怀、体贴、关系维护',
+		note: '天然会照顾气氛，也会用很多小仪式认真经营感情。',
 		cardBg: 'linear-gradient(160deg, #fff8f3 0%, #ffe3d1 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffdcca 0%, #ffab7d 100%)',
 		accent: '#9a5736',
@@ -234,7 +234,7 @@ export default {
 			}
 
 			uni.showLoading({
-				title: '鐧诲綍涓?,
+				title: '登录中',
 				mask: true
 			})
 
@@ -250,13 +250,13 @@ export default {
 					loginType: 'weixin'
 				})
 				uni.showToast({
-					title: '寰俊鐧诲綍鎴愬姛',
+					title: '微信登录成功',
 					icon: 'none'
 				})
 				return true
 			} catch (error) {
 				uni.showToast({
-					title: (error && (error.errMsg || error.message)) || '寰俊鐧诲綍澶辫触',
+					title: (error && (error.errMsg || error.message)) || '微信登录失败',
 					icon: 'none',
 					duration: 3000
 				})
@@ -275,7 +275,7 @@ export default {
 							resolve(res)
 							return
 						}
-						reject(new Error('鏈幏鍙栧埌寰俊鐧诲綍鍑瘉'))
+						reject(new Error('未获取到微信登录凭证'))
 					},
 					fail: (error) => {
 						reject(error)
@@ -293,7 +293,7 @@ export default {
 				const viewport = res && res[1]
 				if (!galleryRect || !viewport) {
 					uni.showToast({
-						title: '璇峰悜涓嬫粦鍔ㄦ煡鐪嬩汉鏍煎舰璞?,
+						title: '请向下滑动查看人格形象',
 						icon: 'none'
 					})
 					return

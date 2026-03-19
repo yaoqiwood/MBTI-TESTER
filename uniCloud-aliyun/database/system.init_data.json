@@ -3,7 +3,7 @@
 		"config_code": "default",
 		"config_name": "system default config",
 		"enable_heart_chat_page": true,
-		"access_form_review_mode": false,
-		"remark": "default: heart chat page is enabled"
+		"helper_page_review_mode": false,
+		"remark": "default: heart chat page is enabled; helper page review mode is disabled"
 	}
 ]

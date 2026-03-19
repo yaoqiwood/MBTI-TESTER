@@ -1,9 +1,10 @@
-﻿const XLSX = require('xlsx')
+const XLSX = require('xlsx')
 const db = uniCloud.database()
 const personnelCollection = db.collection('mbti-personnel')
 const heartMessageCollection = db.collection('mbti-heart-message')
 const attachmentCollection = db.collection('mbti-personnel-attachment')
 const userCollection = db.collection('uni-id-users')
+const systemCollection = db.collection('system')
 const COUNTER_COLLECTION = 'mbti-personnel-counter'
 const COUNTER_DOC_ID = 'mbti-personnel'
 const REVIEW_STATUS = ['pending', 'approved', 'rejected']
@@ -856,6 +857,30 @@ module.exports = {
 			openIds,
 			wxOpenid,
 			wxUnionid: trimString(userRecord.wx_unionid)
+		}
+	},
+
+	async getSystemConfig({ configCode = 'default' } = {}) {
+		const normalizedConfigCode = trimString(configCode) || 'default'
+		const { data: configList = [] } = await systemCollection
+			.where({
+				config_code: normalizedConfigCode
+			})
+			.limit(1)
+			.get()
+		const config = configList[0] || {}
+
+		return {
+			ok: true,
+			configCode: normalizedConfigCode,
+			config: {
+				config_code: normalizedConfigCode,
+				helper_page_review_mode: !!config.helper_page_review_mode,
+				enable_heart_chat_page:
+					typeof config.enable_heart_chat_page === 'boolean'
+						? config.enable_heart_chat_page
+						: true
+			}
 		}
 	},
 

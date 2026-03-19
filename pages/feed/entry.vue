@@ -96,7 +96,7 @@
 			<view v-else class="question-card" :class="{ locked: isTransitioning }">
 				<view class="question-meta">
 					<text class="question-index">Q{{ currentIndex + 1 }}</text>
-					<!-- <text class="question-type">{{ currentQuestion.type }} 缁村害</text> -->
+					<!-- <text class="question-type">{{ currentQuestion.type }} 维度</text> -->
 				</view>
 
 				<text class="question-title">{{ currentQuestion.title }}</text>
@@ -112,7 +112,7 @@
 					>
 						<view class="option-head">
 							<!-- <text class="option-dimension">{{ option.dimension }}</text> -->
-							<!-- <text class="option-tip">鐐瑰嚮閫夋嫨</text> -->
+							<!-- <text class="option-tip">点击选择</text> -->
 						</view>
 						<text class="option-text">{{ option.text }}</text>
 					</view>
@@ -262,6 +262,7 @@
 	const userName = ref('')
 	const personnelId = ref('')
 	const wxOpenid = ref('')
+	const helperPageReviewMode = ref(false)
 	const currentIndex = ref(0)
 	const answers = ref([])
 	const questionFlow = ref(buildQuestionFlow())
@@ -284,7 +285,7 @@
 		P: 0
 	})
 
-	onLoad((options) => {
+	onLoad(async (options) => {
 		if (options && options.name) {
 			userName.value = decodeURIComponent(options.name)
 		}
@@ -294,10 +295,24 @@
 		if (options && options.wxOpenid) {
 			wxOpenid.value = decodeURIComponent(options.wxOpenid)
 		}
+		await loadSystemConfig()
 		if (!wxOpenid.value) {
-			resolveWxOpenidFromLogin()
+			await resolveWxOpenidFromLogin()
 		}
 	})
+
+	async function loadSystemConfig() {
+		try {
+			const result = await personnelUser.getSystemConfig({
+				configCode: 'default'
+			})
+			const config = (result && result.config) || {}
+			helperPageReviewMode.value = !!config.helper_page_review_mode
+		} catch (error) {
+			console.error('loadSystemConfig failed', error)
+			helperPageReviewMode.value = false
+		}
+	}
 
 	function getCandidateOpenIds(user = {}) {
 		const loginOpenid = user && user.wx_openid
@@ -669,6 +684,9 @@
 	}
 
 	async function persistMbtiResult() {
+		if (helperPageReviewMode.value) {
+			return
+		}
 		if ((!personnelId.value && !wxOpenid.value) || isSavingResult.value) {
 			return
 		}
