@@ -770,7 +770,7 @@
 						}
 					})
 					if (result && result.ok === false) {
-						this.showErrorModal(result.message || '淇濆瓨澶辫触')
+						this.showErrorModal(result.message || '保存失败')
 						return
 					}
 
