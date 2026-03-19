@@ -218,6 +218,62 @@
 		P: '开放节奏'
 	}
 
+	const stageDescriptionTemplates = [
+		({ intro, stageAnsweredCount, stageQuota, stageType, topText, axisText }) =>
+			`${intro}这一轮你已经走完本阶段 ${stageAnsweredCount}/${stageQuota} 题，当前浮现出的关系轮廓更像 ${stageType}。最常出现的维度集中在 ${topText || '暂无明显倾向'}。${axisText}`,
+		({ intro, stageAnsweredCount, stageQuota, stageType, topText, axisText }) =>
+			`${intro}到了这一段末尾，你在本阶段完成了 ${stageAnsweredCount}/${stageQuota} 题，偏好开始从零散选择慢慢收束，临时类型更接近 ${stageType}。眼下出现频率更高的是 ${topText || '暂无明显倾向'}。${axisText}`,
+		({ intro, stageAnsweredCount, stageQuota, stageType, topText, axisText }) =>
+			`${intro}这一阶段的题目已经答完 ${stageAnsweredCount}/${stageQuota} 题，你的判断方式正在变得更有连续性，目前呈现出的阶段类型偏向 ${stageType}。从作答分布来看，${topText || '各维度暂时比较平均'} 更突出。${axisText}`,
+		({ intro, stageAnsweredCount, stageQuota, stageType, topText, axisText }) =>
+			`${intro}最后这一段也已经记录了 ${stageAnsweredCount}/${stageQuota} 题，本阶段给出的信号已经足够拼出一版较完整的关系画像，当前阶段类型落在 ${stageType}。在具体维度上，${topText || '整体仍比较均衡'} 更显眼。${axisText}`
+	]
+
+	const stageAxisSummaryTemplates = [
+		({ strongestAxis, strengthWord }) =>
+			`其中在${strongestAxis.label}上，你${strengthWord}偏向 ${strongestAxis.dominant}（${strongestAxis.left}:${strongestAxis.right} = ${strongestAxis.leftCount}:${strongestAxis.rightCount}）。`,
+		({ strongestAxis, strengthWord }) =>
+			`尤其是${strongestAxis.label}这一组，已经能看出你更靠近 ${strongestAxis.dominant}，而且这种倾向${strengthWord}（${strongestAxis.leftCount}:${strongestAxis.rightCount}）。`,
+		({ strongestAxis, strengthWord }) =>
+			`如果只看最醒目的一条线索，${strongestAxis.label}目前最能说明你的选择方向，你暂时更站在 ${strongestAxis.dominant} 这一侧，力度算是${strengthWord}。`,
+		({ strongestAxis, strengthWord }) =>
+			`临近这一阶段收尾时，${strongestAxis.label}给出的信号最清楚：你更偏向 ${strongestAxis.dominant}，比分是 ${strongestAxis.leftCount}:${strongestAxis.rightCount}，倾向已经${strengthWord}。`
+	]
+
+	const stageEncouragementTemplates = [
+		{
+			balanced: (stage) => `${stage.encouragement} 这一段还保留着一些摇摆感，继续按直觉选，后面的轮廓会自然拉开。`,
+			leaning: (stage, strongestAxis) =>
+				`${stage.encouragement} 你在“${strongestAxis.label}”上已经开始偏向一侧，接下来可以看看这种感觉会不会继续加深。`
+		},
+		{
+			balanced: (stage) => `${stage.encouragement} 目前几组维度咬得很紧，这反而说明你的选择很真实，不用刻意放大某一种样子。`,
+			leaning: (stage, strongestAxis) =>
+				`${stage.encouragement} 到了这里，“${strongestAxis.label}”已经成为比较稳定的一条线索，后面的题目会帮你把它再确认一次。`
+		},
+		{
+			balanced: (stage) => `${stage.encouragement} 现在的你更像是在几个方向之间细细权衡，最后一段往往最能把这种细微差别说清楚。`,
+			leaning: (stage, strongestAxis) =>
+				`${stage.encouragement} 这一阶段里，“${strongestAxis.label}”的偏好已经不只是偶然冒头了，最后几题会决定它是短暂信号还是核心特征。`
+		},
+		{
+			balanced: (stage) => `${stage.encouragement} 整体来看你不是单一类型的直线答案，而是带着几分平衡感，这会让最终结果更立体。`,
+			leaning: (stage, strongestAxis) =>
+				`${stage.encouragement} 回看整段作答，“${strongestAxis.label}”始终是最清楚的一条主线，最终结果大概率也会保留这份底色。`
+		}
+	]
+
+	const stagePersonalityTemplates = [
+		({ social, focus, decision, rhythm }) =>
+			`你在人际互动里${social}；在关注一个人或一段关系时，${focus}；${decision}；整体相处节奏上，${rhythm}。`,
+		({ social, focus, decision, rhythm }) =>
+			`从这一阶段的回答来看，你多半会先以这样的方式进入关系：${social}。真正被你看见的往往是那些${focus}的部分；碰到判断和选择时，${decision}；至于相处节奏，你更像是${rhythm}。`,
+		({ social, focus, decision, rhythm }) =>
+			`这一轮呈现出的你，像是一个会这样靠近关系的人：${social}，也会${focus}。面对问题时，你通常${decision}；而在推进关系这件事上，你大多${rhythm}。`,
+		({ social, focus, decision, rhythm }) =>
+			`如果把这一阶段的你写成一张关系侧写，大概会是这样：${social}；你常常${focus}；遇到分歧或需要决定时，${decision}；放到长期相处里，则更倾向于${rhythm}。`
+	]
+
 	const typeHeadlines = {
 		INTJ: '你会先看整体方向，再决定关系值不值得继续投入。',
 		INTP: '你在关系里很重视精神交流和自由空间。',
@@ -606,27 +662,41 @@
 			.map((item) => `${item.key}(${item.count})`)
 			.join('、')
 		const strongestAxis = getStrongestAxisTrend(stageCounts)
+		const stageIndex = Math.max(0, pendingStageNumber.value - 1)
 		let axisText = ''
 		if (strongestAxis) {
 			const strengthWord = getTrendStrengthWord(strongestAxis.diff)
-			axisText =
-				`在${strongestAxis.label}上${strengthWord}偏向 ${strongestAxis.dominant} ` +
-				`（${strongestAxis.left}:${strongestAxis.right} = ${strongestAxis.leftCount}:${strongestAxis.rightCount}）。`
+			const axisTemplate =
+				stageAxisSummaryTemplates[stageIndex] ||
+				stageAxisSummaryTemplates[stageAxisSummaryTemplates.length - 1]
+			axisText = axisTemplate({
+				strongestAxis,
+				strengthWord
+			})
 		}
-		return (
-			`${userName.value ? `${userName.value}，` : ''}` +
-			`你已完成本阶段 ${stageAnsweredCount}/${stageQuota} 题。` +
-			`本阶段临时类型倾向是 ${stageType}，当前更高频的维度是 ${topText || '暂无明显倾向'}。` +
+		const descriptionTemplate =
+			stageDescriptionTemplates[stageIndex] ||
+			stageDescriptionTemplates[stageDescriptionTemplates.length - 1]
+		return descriptionTemplate({
+			intro: userName.value ? `${userName.value}，` : '',
+			stageAnsweredCount,
+			stageQuota,
+			stageType,
+			topText,
 			axisText
-		)
+		})
 	}
 
 	function buildStageEncouragement(stage, stageCounts) {
 		const strongestAxis = getStrongestAxisTrend(stageCounts)
+		const stageIndex = Math.max(0, pendingStageNumber.value - 1)
+		const encouragementTemplate =
+			stageEncouragementTemplates[stageIndex] ||
+			stageEncouragementTemplates[stageEncouragementTemplates.length - 1]
 		if (!strongestAxis || strongestAxis.diff === 0) {
-			return `${stage.encouragement} 当前各维度很接近，继续按第一直觉作答会更准确。`
+			return encouragementTemplate.balanced(stage)
 		}
-		return `${stage.encouragement} 这一阶段你在“${strongestAxis.label}”上已经出现了清晰偏好。`
+		return encouragementTemplate.leaning(stage, strongestAxis)
 	}
 
 	function buildStagePersonalityDescription(counts) {
@@ -634,7 +704,16 @@
 		const focus = counts.S >= counts.N ? axisPairs[1].sentenceLeft : axisPairs[1].sentenceRight
 		const decision = counts.T >= counts.F ? axisPairs[2].sentenceLeft : axisPairs[2].sentenceRight
 		const rhythm = counts.J >= counts.P ? axisPairs[3].sentenceLeft : axisPairs[3].sentenceRight
-		return `你在人际互动里${social}；在关注一个人或一段关系时，${focus}；${decision}；整体相处节奏上，${rhythm}。`
+		const stageIndex = Math.max(0, pendingStageNumber.value - 1)
+		const personalityTemplate =
+			stagePersonalityTemplates[stageIndex] ||
+			stagePersonalityTemplates[stagePersonalityTemplates.length - 1]
+		return personalityTemplate({
+			social,
+			focus,
+			decision,
+			rhythm
+		})
 	}
 
 	function selectOption(option) {
