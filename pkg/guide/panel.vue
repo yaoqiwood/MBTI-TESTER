@@ -1,15 +1,15 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view v-if="showCandidatePopup" class="candidate-popup-mask" @click="closeCandidatePopup">
 			<view class="candidate-popup" @click.stop>
 				<view class="candidate-head">
-					<text class="section-title">选择人员加入管理员</text>
+					<text class="section-title">选择人员加入用户</text>
 					<button class="ghost-btn mini-ghost-btn" @click="closeCandidatePopup">关闭</button>
 				</view>
 				<input
 					v-model.trim="candidateKeyword"
 					class="search-input"
-					placeholder="搜索候选人并提升为管理员"
+					placeholder="搜索候选人并提升为用户"
 					confirm-type="search"
 					@confirm="loadCandidateList"
 				/>
@@ -29,7 +29,7 @@
 							<text class="candidate-name">#{{ item.person_id }} · {{ item.nickname || '-' }} / {{ item.name || '-' }}</text>
 							<text class="candidate-meta">手机：{{ item.mobile || '-' }}　MBTI：{{ item.mbti || '-' }}</text>
 						</view>
-						<button class="mini-btn" :disabled="actionLoading" @click="promoteToAdmin(item)">设为管理员</button>
+						<button class="mini-btn" :disabled="actionLoading" @click="promoteToUser(item)">设为用户</button>
 					</view>
 					<view v-if="candidateList.length > candidatePagination.pageSize" class="candidate-pagination">
 						<uni-pagination
@@ -48,24 +48,24 @@
 			<button class="back-btn" @click="goBack">返回上一页</button>
 		</view>
 
-		<view v-if="accessChecked" class="panel-card admin-card">
+		<view v-if="accessChecked" class="panel-card user-card">
 			<view class="card-head">
-				<text class="card-title">管理员管理</text>
-				<text class="card-tip">默认只显示管理员与超级管理员；超级管理员不可变更，普通管理员可降级为普通测试者。</text>
+				<text class="card-title">用户管理</text>
+				<text class="card-tip">默认只显示用户与高级用户；高级用户不可变更，普通用户可降级为普通测试者。</text>
 			</view>
 
 			<view class="stats-wrap">
 				<view class="stat-card">
-					<text class="stat-label">管理员总数</text>
-					<text class="stat-value">{{ adminStats.total }}</text>
+					<text class="stat-label">用户总数</text>
+					<text class="stat-value">{{ userStats.total }}</text>
 				</view>
 				<view class="stat-card">
-					<text class="stat-label">普通管理员</text>
-					<text class="stat-value">{{ adminStats.admins }}</text>
+					<text class="stat-label">普通用户</text>
+					<text class="stat-value">{{ userStats.users }}</text>
 				</view>
 				<view class="stat-card">
-					<text class="stat-label">超级管理员</text>
-					<text class="stat-value">{{ adminStats.superAdmins }}</text>
+					<text class="stat-label">高级用户</text>
+					<text class="stat-value">{{ userStats.superUsers }}</text>
 				</view>
 				<view class="stat-card">
 					<text class="stat-label">候选人数</text>
@@ -75,27 +75,27 @@
 
 			<view class="toolbar-row">
 				<input
-					v-model.trim="adminKeyword"
+					v-model.trim="userKeyword"
 					class="search-input"
 					placeholder="搜索编号 / 昵称 / 姓名 / 手机 / MBTI"
 					confirm-type="search"
-					@confirm="loadAdminList"
+					@confirm="loadUserList"
 				/>
 				<view class="toolbar-actions">
-					<button class="light-btn" @click="loadAdminList">刷新</button>
-					<button class="solid-btn" @click="openCandidatePopup">新增管理员</button>
+					<button class="light-btn" @click="loadUserList">刷新</button>
+					<button class="solid-btn" @click="openCandidatePopup">新增用户</button>
 				</view>
 			</view>
 
 			<view v-if="showAddPanel" class="candidate-panel">
 				<view class="candidate-head">
-					<text class="section-title">选择人员加入管理员</text>
+					<text class="section-title">选择人员加入用户</text>
 					<button class="ghost-btn mini-ghost-btn" @click="toggleAddPanel">收起</button>
 				</view>
 				<input
 					v-model.trim="candidateKeyword"
 					class="search-input"
-					placeholder="搜索普通测试者并提升为管理员"
+					placeholder="搜索普通测试者并提升为用户"
 					confirm-type="search"
 					@confirm="loadCandidateList"
 				/>
@@ -115,7 +115,7 @@
 							<text class="candidate-name">#{{ item.person_id }} · {{ item.nickname || '-' }} / {{ item.name || '-' }}</text>
 							<text class="candidate-meta">手机：{{ item.mobile || '-' }}　MBTI：{{ item.mbti || '-' }}</text>
 						</view>
-						<button class="mini-btn" :disabled="actionLoading" @click="promoteToAdmin(item)">设为管理员</button>
+						<button class="mini-btn" :disabled="actionLoading" @click="promoteToUser(item)">设为用户</button>
 					</view>
 					<view v-if="candidateList.length > candidatePagination.pageSize" class="candidate-pagination">
 						<uni-pagination
@@ -136,18 +136,18 @@
 						<text class="col col-name">昵称 / 姓名</text>
 						<text class="col col-mobile">手机号</text>
 						<text class="col col-mbti">MBTI</text>
-						<text class="col col-role">管理员级别</text>
+						<text class="col col-role">用户级别</text>
 						<text class="col col-status">审核状态</text>
 						<text class="col col-time">更新时间</text>
 						<text class="col col-action">操作</text>
 					</view>
 					<view v-if="loading" class="empty-box">
-						<text>正在加载管理员数据...</text>
+						<text>正在加载用户数据...</text>
 					</view>
-					<view v-else-if="!adminList.length" class="empty-box">
-						<text>当前没有管理员数据</text>
+					<view v-else-if="!userList.length" class="empty-box">
+						<text>当前没有用户数据</text>
 					</view>
-					<view v-for="item in pagedAdminList" :key="item._id" class="table-row body-row">
+					<view v-for="item in pagedUserList" :key="item._id" class="table-row body-row">
 						<text class="col col-id">#{{ item.person_id || '-' }}</text>
 						<view class="col col-name name-cell">
 							<text class="primary-text">{{ item.nickname || '-' }}</text>
@@ -156,29 +156,29 @@
 						<text class="col col-mobile">{{ item.mobile || '-' }}</text>
 						<text class="col col-mbti">{{ item.mbti || '-' }}</text>
 						<view class="col col-role">
-							<text class="role-pill" :class="roleClass(item.admin_role)">{{ adminRoleText(item.admin_role) }}</text>
+							<text class="role-pill" :class="roleClass(item.user_role)">{{ userRoleText(item.user_role) }}</text>
 						</view>
 						<text class="col col-status">{{ reviewStatusText(item.review_status) }}</text>
 						<text class="col col-time">{{ formatDate(item.updated_at || item.updated_at_text) }}</text>
 						<view class="col col-action action-cell">
 							<button
-								v-if="Number(item.admin_role) === 2"
+								v-if="Number(item.user_role) === 2"
 								class="mini-btn danger-btn"
 								:disabled="actionLoading"
-								@click="demoteAdmin(item)"
+								@click="demoteUser(item)"
 							>
 								降级为普通
 							</button>
-							<text v-else class="fixed-tip">超级管理员不可变更</text>
+							<text v-else class="fixed-tip">高级用户不可变更</text>
 						</view>
 					</view>
-					<view v-if="adminList.length > adminPagination.pageSize" class="table-pagination">
+					<view v-if="userList.length > userPagination.pageSize" class="table-pagination">
 						<uni-pagination
 							show-icon
-							:current="adminPagination.page"
-							:page-size="adminPagination.pageSize"
-							:total="adminList.length"
-							@change="handleAdminPageChange"
+							:current="userPagination.page"
+							:page-size="userPagination.pageSize"
+							:total="userList.length"
+							@change="handleUserPageChange"
 						/>
 					</view>
 				</view>
@@ -188,29 +188,29 @@
 </template>
 
 <script>
-let personnelAdmin = null
+let personnelUser = null
 const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
 try {
-	personnelAdmin = uniCloud.importObject('personnel-admin')
+	personnelUser = uniCloud.importObject('personnel-user')
 } catch (error) {
-	console.error('import personnel-admin failed', error)
+	console.error('import personnel-user failed', error)
 }
 
 export default {
 	data() {
 		return {
-			currentAdminRole: 0,
+			currentUserRole: 0,
 			accessChecked: false,
 			loading: false,
 			actionLoading: false,
 			candidateLoading: false,
 			showCandidatePopup: false,
 			showAddPanel: false,
-			adminKeyword: '',
+			userKeyword: '',
 			candidateKeyword: '',
-			adminList: [],
-			adminPagination: {
+			userList: [],
+			userPagination: {
 				page: 1,
 				pageSize: 8
 			},
@@ -219,19 +219,19 @@ export default {
 				page: 1,
 				pageSize: 5
 			},
-			adminStats: {
+			userStats: {
 				total: 0,
-				admins: 0,
-				superAdmins: 0
+				users: 0,
+				superUsers: 0
 			}
 		}
 	},
 	computed: {
-		pagedAdminList() {
-			const page = Number(this.adminPagination.page) || 1
-			const pageSize = Number(this.adminPagination.pageSize) || 8
+		pagedUserList() {
+			const page = Number(this.userPagination.page) || 1
+			const pageSize = Number(this.userPagination.pageSize) || 8
 			const start = (page - 1) * pageSize
-			return this.adminList.slice(start, start + pageSize)
+			return this.userList.slice(start, start + pageSize)
 		},
 		pagedCandidateList() {
 			const page = Number(this.candidatePagination.page) || 1
@@ -241,30 +241,30 @@ export default {
 		}
 	},
 	onLoad() {
-		this.currentAdminRole = this.getCurrentAdminRole()
+		this.currentUserRole = this.getCurrentUserRole()
 		if (!this.ensurePageAccess()) {
 			return
 		}
 		this.accessChecked = true
-		this.loadAdminList()
+		this.loadUserList()
 	},
 	methods: {
-		getCurrentAdminRole() {
+		getCurrentUserRole() {
 			try {
 				const profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
-				return Number(profile && profile.admin_role) || 0
+				return Number(profile && profile.user_role) || 0
 			} catch (error) {
-				console.error('getCurrentAdminRole failed', error)
+				console.error('getCurrentUserRole failed', error)
 				return 0
 			}
 		},
 		ensurePageAccess() {
-			if (Number(this.currentAdminRole) === 3) {
+			if (Number(this.currentUserRole) === 3) {
 				return true
 			}
 			uni.showModal({
 				title: '权限不足',
-				content: '只有 admin_role 为 3 的超级管理员可以查看管理员管理页面。',
+				content: '只有 user_role 为 3 的高级用户可以查看用户管理页面。',
 				showCancel: false,
 				success: () => {
 					this.goBack()
@@ -280,49 +280,49 @@ export default {
 			}
 			uni.reLaunch({ url: '/pkg/guide/hub' })
 		},
-		async loadAdminList() {
+		async loadUserList() {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!personnelAdmin) {
+			if (!personnelUser) {
 				this.showUnavailable()
 				return
 			}
 			this.loading = true
 			try {
-				const res = await personnelAdmin.listAdmins({ keyword: this.adminKeyword })
-				this.adminList = Array.isArray(res && res.list) ? res.list : []
-				this.adminPagination.page = 1
-				this.adminStats = {
+				const res = await personnelUser.listUsers({ keyword: this.userKeyword })
+				this.userList = Array.isArray(res && res.list) ? res.list : []
+				this.userPagination.page = 1
+				this.userStats = {
 					total: Number(res && res.stats && res.stats.total) || 0,
-					admins: Number(res && res.stats && res.stats.admins) || 0,
-					superAdmins: Number(res && res.stats && res.stats.superAdmins) || 0
+					users: Number(res && res.stats && res.stats.users) || 0,
+					superUsers: Number(res && res.stats && res.stats.superUsers) || 0
 				}
 			} catch (error) {
-				console.error('loadAdminList failed', error)
+				console.error('loadUserList failed', error)
 				uni.showToast({
-					title: error.message || '管理员加载失败',
+					title: error.message || '用户加载失败',
 					icon: 'none'
 				})
 			} finally {
 				this.loading = false
 			}
 		},
-		handleAdminPageChange(event) {
+		handleUserPageChange(event) {
 			const current = Number(event && event.current)
-			this.adminPagination.page = current > 0 ? current : 1
+			this.userPagination.page = current > 0 ? current : 1
 		},
 		async loadCandidateList() {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!personnelAdmin) {
+			if (!personnelUser) {
 				this.showUnavailable()
 				return
 			}
 			this.candidateLoading = true
 			try {
-				const res = await personnelAdmin.listAdminCandidates({ keyword: this.candidateKeyword })
+				const res = await personnelUser.listUserCandidates({ keyword: this.candidateKeyword })
 				this.candidateList = Array.isArray(res && res.list) ? res.list : []
 				this.candidatePagination.page = 1
 			} catch (error) {
@@ -355,20 +355,20 @@ export default {
 		closeCandidatePopup() {
 			this.showCandidatePopup = false
 		},
-		async promoteToAdmin(item) {
+		async promoteToUser(item) {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!item || !item._id || this.actionLoading || !personnelAdmin) {
+			if (!item || !item._id || this.actionLoading || !personnelUser) {
 				return
 			}
 			this.actionLoading = true
 			try {
-				await personnelAdmin.updateAdminRole({ id: item._id, adminRole: 2 })
-				uni.showToast({ title: '已设为管理员', icon: 'success' })
-				await Promise.all([this.loadAdminList(), this.loadCandidateList()])
+				await personnelUser.updateUserRole({ id: item._id, userRole: 2 })
+				uni.showToast({ title: '已设为用户', icon: 'success' })
+				await Promise.all([this.loadUserList(), this.loadCandidateList()])
 			} catch (error) {
-				console.error('promoteToAdmin failed', error)
+				console.error('promoteToUser failed', error)
 				uni.showToast({
 					title: error.message || '设置失败',
 					icon: 'none'
@@ -377,27 +377,27 @@ export default {
 				this.actionLoading = false
 			}
 		},
-		demoteAdmin(item) {
+		demoteUser(item) {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!item || !item._id || Number(item.admin_role) !== 2 || this.actionLoading || !personnelAdmin) {
+			if (!item || !item._id || Number(item.user_role) !== 2 || this.actionLoading || !personnelUser) {
 				return
 			}
 			uni.showModal({
 				title: '确认降级',
-				content: `确认将 ${item.nickname || item.name || '该管理员'} 降级为普通测试者吗？`,
+				content: `确认将 ${item.nickname || item.name || '该用户'} 降级为普通测试者吗？`,
 				success: async (res) => {
 					if (!res.confirm) {
 						return
 					}
 					this.actionLoading = true
 					try {
-						await personnelAdmin.updateAdminRole({ id: item._id, adminRole: 0 })
+						await personnelUser.updateUserRole({ id: item._id, userRole: 0 })
 						uni.showToast({ title: '已降级为普通', icon: 'success' })
-						await Promise.all([this.loadAdminList(), this.loadCandidateList()])
+						await Promise.all([this.loadUserList(), this.loadCandidateList()])
 					} catch (error) {
-						console.error('demoteAdmin failed', error)
+						console.error('demoteUser failed', error)
 						uni.showToast({
 							title: error.message || '降级失败',
 							icon: 'none'
@@ -408,13 +408,13 @@ export default {
 				}
 			})
 		},
-		adminRoleText(role) {
+		userRoleText(role) {
 			const value = Number(role)
 			if (value === 3) {
-				return '超级管理员'
+				return '高级用户'
 			}
 			if (value === 2) {
-				return '管理员'
+				return '用户'
 			}
 			return '普通测试者'
 		},
@@ -424,7 +424,7 @@ export default {
 				return 'role-super'
 			}
 			if (value === 2) {
-				return 'role-admin'
+				return 'role-user'
 			}
 			return 'role-normal'
 		},
@@ -724,7 +724,7 @@ export default {
 	white-space: nowrap;
 }
 
-.role-admin {
+.role-user {
 	background: #dff4e8;
 	color: #1e6b45;
 }

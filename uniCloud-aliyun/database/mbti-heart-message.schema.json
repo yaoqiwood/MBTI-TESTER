@@ -1,4 +1,4 @@
-{
+﻿{
 	"bsonType": "object",
 	"required": [
 		"sender_record_id",
@@ -126,9 +126,9 @@
 				}
 			]
 		},
-		"admin_remark": {
+		"user_remark": {
 			"bsonType": "string",
-			"title": "管理员备注",
+			"title": "用户备注",
 			"trim": "both"
 		},
 		"delivered_at": {

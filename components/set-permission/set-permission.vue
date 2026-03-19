@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <view class="root">
 	<view v-if="showGuide" class="guide"></view>
 	<view class="box" :style="{width:170*roles.length+'rpx'}">
@@ -32,7 +32,7 @@
 					},
 					{
 						"value": "admin",
-						"text": "管理员"
+						"text": "用户"
 					}
 				],
 				showGuide:false

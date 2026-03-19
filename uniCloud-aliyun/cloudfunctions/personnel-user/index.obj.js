@@ -12,11 +12,11 @@ const MAX_PAGE_SIZE = 50
 const PERSONNEL_CACHE_TTL_MS = 15 * 1000
 const HEART_MESSAGE_CACHE_TTL_MS = 10 * 1000
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
-const ADMIN_ROLE = {
+const USER_ROLE = {
 	NORMAL: 0,
 	COLLABORATOR: 1,
-	ADMIN: 2,
-	SUPER_ADMIN: 3
+	USER: 2,
+	SUPER_USER: 3
 }
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
 const runtimeCache = {
@@ -121,15 +121,15 @@ function normalizeTimestamp(value, fallback) {
 	return date
 }
 
-function normalizeAdminRole(value, fallback = ADMIN_ROLE.NORMAL) {
+function normalizeUserRole(value, fallback = USER_ROLE.NORMAL) {
 	if (value === '' || value === null || typeof value === 'undefined') {
 		return fallback
 	}
 	const numericValue = Number(value)
 	if (
 		!Number.isInteger(numericValue) ||
-		numericValue < ADMIN_ROLE.NORMAL ||
-		numericValue > ADMIN_ROLE.SUPER_ADMIN
+		numericValue < USER_ROLE.NORMAL ||
+		numericValue > USER_ROLE.SUPER_USER
 	) {
 		return fallback
 	}
@@ -168,7 +168,7 @@ function normalizePayload(payload = {}, options = {}) {
 	const now = new Date()
 	const ageValue = Number(payload.age)
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
-	const adminRole = normalizeAdminRole(payload.admin_role, ADMIN_ROLE.NORMAL)
+	const userRole = normalizeUserRole(payload.user_role, USER_ROLE.NORMAL)
 	const passcode = normalizePasscode(payload.passcode, options)
 	const remainingHeartValue = getRemainingHeartValue(payload, 3)
 	const record = {
@@ -203,7 +203,7 @@ function normalizePayload(payload = {}, options = {}) {
 		review_status: reviewStatus,
 		reviewer: trimString(payload.reviewer),
 		remark: trimString(payload.remark),
-		admin_role: adminRole,
+		user_role: userRole,
 		private_message_quota: normalizeNonNegativeInt(payload.private_message_quota, 0),
 		heart_message_quota: normalizeNonNegativeInt(payload.heart_message_quota, remainingHeartValue),
 		remaining_heart_value: remainingHeartValue,
@@ -257,18 +257,18 @@ function buildStats(list = []) {
 		pending: list.filter((item) => item.review_status === 'pending').length,
 		approved: list.filter((item) => item.review_status === 'approved').length,
 		rejected: list.filter((item) => item.review_status === 'rejected').length,
-		admins: list.filter(
-			(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN
+		users: list.filter(
+			(item) => normalizeUserRole(item.user_role, USER_ROLE.NORMAL) === USER_ROLE.USER
 		).length,
-		superAdmins: list.filter(
-			(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN
+		superUsers: list.filter(
+			(item) => normalizeUserRole(item.user_role, USER_ROLE.NORMAL) === USER_ROLE.SUPER_USER
 		).length
 	}
 }
 
-function isAdminRecord(record = {}) {
-	const adminRole = normalizeAdminRole(record.admin_role, ADMIN_ROLE.NORMAL)
-	return adminRole === ADMIN_ROLE.ADMIN || adminRole === ADMIN_ROLE.SUPER_ADMIN
+function isUserRecord(record = {}) {
+	const userRole = normalizeUserRole(record.user_role, USER_ROLE.NORMAL)
+	return userRole === USER_ROLE.USER || userRole === USER_ROLE.SUPER_USER
 }
 
 function matchesKeyword(record = {}, normalizedKeyword = '') {
@@ -573,7 +573,7 @@ function matchesHeartMessageKeyword(record = {}, normalizedKeyword = '') {
 		record.receiver_nickname,
 		record.receiver_mbti,
 		record.content,
-		record.admin_remark
+		record.user_remark
 	].some((field) =>
 		String(field || '')
 			.toLowerCase()
@@ -709,7 +709,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		is_anonymous: payload.is_anonymous === false ? false : true,
 		quota_cost: quotaCost,
 		status,
-		admin_remark: trimString(payload.admin_remark),
+		user_remark: trimString(payload.user_remark),
 		delivered_at: deliveredAt,
 		updated_at: now
 	}
@@ -748,7 +748,7 @@ async function updatePersonnelRecord({ id, data } = {}) {
 		id,
 		person_id: current.person_id,
 		passcode: payload.passcode,
-		admin_role: payload.admin_role
+		user_role: payload.user_role
 	}
 }
 
@@ -807,7 +807,7 @@ module.exports = {
 			names.push({
 				_id: item._id,
 				name,
-				admin_role: normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL)
+				user_role: normalizeUserRole(item.user_role, USER_ROLE.NORMAL)
 			})
 			if (names.length >= maxLimit) {
 				break
@@ -859,17 +859,17 @@ module.exports = {
 		}
 	},
 
-	async listAdmins({ keyword = '' } = {}) {
+	async listUsers({ keyword = '' } = {}) {
 		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedDates)
-			.filter((item) => isAdminRecord(item))
+			.filter((item) => isUserRecord(item))
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
 			.sort((left, right) => {
-				const leftRole = normalizeAdminRole(left.admin_role, ADMIN_ROLE.NORMAL)
-				const rightRole = normalizeAdminRole(right.admin_role, ADMIN_ROLE.NORMAL)
+				const leftRole = normalizeUserRole(left.user_role, USER_ROLE.NORMAL)
+				const rightRole = normalizeUserRole(right.user_role, USER_ROLE.NORMAL)
 				if (leftRole !== rightRole) {
 					return rightRole - leftRole
 				}
@@ -880,26 +880,26 @@ module.exports = {
 			list,
 			stats: {
 				total: list.length,
-				admins: list.filter(
-					(item) => normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.ADMIN
+				users: list.filter(
+					(item) => normalizeUserRole(item.user_role, USER_ROLE.NORMAL) === USER_ROLE.USER
 				).length,
-				superAdmins: list.filter(
+				superUsers: list.filter(
 					(item) =>
-						normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL) === ADMIN_ROLE.SUPER_ADMIN
+						normalizeUserRole(item.user_role, USER_ROLE.NORMAL) === USER_ROLE.SUPER_USER
 				).length
 			}
 		}
 	},
 
-	async listAdminCandidates({ keyword = '' } = {}) {
+	async listUserCandidates({ keyword = '' } = {}) {
 		const data = await getCachedPersonnelRecords()
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const list = data
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedDates)
 			.filter((item) => {
-				const role = normalizeAdminRole(item.admin_role, ADMIN_ROLE.NORMAL)
-				return role !== ADMIN_ROLE.ADMIN && role !== ADMIN_ROLE.SUPER_ADMIN
+				const role = normalizeUserRole(item.user_role, USER_ROLE.NORMAL)
+				return role !== USER_ROLE.USER && role !== USER_ROLE.SUPER_USER
 			})
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
 			.sort((left, right) => Number(left.person_id || 0) - Number(right.person_id || 0))
@@ -1325,7 +1325,7 @@ module.exports = {
 				status: 'delivered',
 				quota_cost: messageType === 1 ? 1 : 0,
 				is_anonymous: false,
-				admin_remark: ''
+				user_remark: ''
 			}
 		})
 
@@ -1490,12 +1490,12 @@ module.exports = {
 		}
 	},
 
-	async updateAdminRole({ id, adminRole } = {}) {
+	async updateUserRole({ id, userRole } = {}) {
 		if (!trimString(id)) {
 			throw new Error('缂哄皯璁板綍ID')
 		}
-		const nextAdminRole = normalizeAdminRole(adminRole, -1)
-		if (![ADMIN_ROLE.NORMAL, ADMIN_ROLE.ADMIN].includes(nextAdminRole)) {
+		const nextUserRole = normalizeUserRole(userRole, -1)
+		if (![USER_ROLE.NORMAL, USER_ROLE.USER].includes(nextUserRole)) {
 			throw new Error('鍙敮鎸?0 鎴?1')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
@@ -1503,20 +1503,20 @@ module.exports = {
 		if (!current || isDeletedRecord(current.is_deleted)) {
 			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
 		}
-		const currentAdminRole = normalizeAdminRole(current.admin_role, ADMIN_ROLE.NORMAL)
-		if (currentAdminRole === ADMIN_ROLE.SUPER_ADMIN) {
+		const currentUserRole = normalizeUserRole(current.user_role, USER_ROLE.NORMAL)
+		if (currentUserRole === USER_ROLE.SUPER_USER) {
 				throw new Error('操作失败')
 		}
-		if (currentAdminRole === nextAdminRole) {
+		if (currentUserRole === nextUserRole) {
 			return {
 				id,
 				person_id: current.person_id,
-				admin_role: currentAdminRole
+				user_role: currentUserRole
 			}
 		}
 
 		await personnelCollection.doc(id).update({
-			admin_role: nextAdminRole,
+			user_role: nextUserRole,
 			updated_at: new Date()
 		})
 		invalidateRuntimeCache({
@@ -1526,7 +1526,7 @@ module.exports = {
 		return {
 			id,
 			person_id: current.person_id,
-			admin_role: nextAdminRole
+			user_role: nextUserRole
 		}
 	},
 

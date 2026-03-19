@@ -131,7 +131,7 @@
 	import { computed, reactive, ref } from 'vue'
 	import { onLoad } from '@dcloudio/uni-app'
 	import questionsSource from '../../static/json/mbti-88-questions.json'
-	const personnelAdmin = uniCloud.importObject('personnel-admin')
+	const personnelUser = uniCloud.importObject('personnel-user')
 
 	const questions = questionsSource.questions || []
 	const totalQuestions = questions.length
@@ -334,7 +334,7 @@
 			if (!currentUserInfo.uid) {
 				return
 			}
-			const result = await personnelAdmin.getCurrentLoginWxOpenid({
+			const result = await personnelUser.getCurrentLoginWxOpenid({
 				uid: currentUserInfo.uid
 			})
 			wxOpenid.value = (result && result.openIds && result.openIds[0]) || ''
@@ -680,7 +680,7 @@
 		try {
 			let targetId = personnelId.value
 			if (!targetId && wxOpenid.value) {
-				const profileRes = await personnelAdmin.getByWxOpenid({
+				const profileRes = await personnelUser.getByWxOpenid({
 					wxOpenid: wxOpenid.value
 				})
 				targetId = (profileRes && profileRes.record && profileRes.record._id) || ''
@@ -688,7 +688,7 @@
 			if (!targetId) {
 				throw new Error('未找到当前用户档案')
 			}
-			await personnelAdmin.saveMbtiResult({
+			await personnelUser.saveMbtiResult({
 				id: targetId,
 				mbti: resultType.value
 			})

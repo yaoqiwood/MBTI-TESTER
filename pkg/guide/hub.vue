@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view class="panel-card">
 			<view class="card-head">
@@ -32,14 +32,14 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 	export default {
 		data() {
 			return {
-				currentAdminRole: 0,
+				currentUserRole: 0,
 				featureList: [
 					{
 						key: 'personnel-management',
 						title: '人员管理',
 						desc: '进入人员管理页面，维护参与者资料、审核状态与相关信息。',
 						available: true,
-						minAdminRole: 1,
+						minUserRole: 1,
 						url: '/pkg/guide/roster'
 					},
 					{
@@ -47,15 +47,15 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						title: 'MBTI 组合配对查询',
 						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
 						available: true,
-						minAdminRole: 1,
+						minUserRole: 1,
 						url: '/pkg/guide/insight'
 					},
 					{
-						key: 'admin-user',
-						title: '管理员管理',
-						desc: '进入管理员管理页面，维护管理员、超级管理员与候选人员。',
+						key: 'user-user',
+						title: '用户管理',
+						desc: '进入用户管理页面，维护用户、高级用户与候选人员。',
 						available: true,
-						minAdminRole: 3,
+						minUserRole: 3,
 						url: '/pkg/guide/panel'
 					},
 					{
@@ -63,7 +63,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						title: '心动私信管理',
 						desc: '用于管理心动私信内容、发送关系与审核策略。',
 						available: true,
-						minAdminRole: 1,
+						minUserRole: 1,
 						url: '/pkg/guide/relay'
 					}
 				]
@@ -75,15 +75,15 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 			}
 		},
 		onLoad() {
-			this.currentAdminRole = this.getCurrentAdminRole()
+			this.currentUserRole = this.getCurrentUserRole()
 		},
 		methods: {
-			getCurrentAdminRole() {
+			getCurrentUserRole() {
 				try {
 					const profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
-					return Number(profile && profile.admin_role) || 0
+					return Number(profile && profile.user_role) || 0
 				} catch (error) {
-					console.error('getCurrentAdminRole failed', error)
+					console.error('getCurrentUserRole failed', error)
 					return 0
 				}
 			},
@@ -91,8 +91,8 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 				if (!item) {
 					return false
 				}
-				const requiredRole = Number(item.minAdminRole || 0)
-				return Number(this.currentAdminRole) >= requiredRole
+				const requiredRole = Number(item.minUserRole || 0)
+				return Number(this.currentUserRole) >= requiredRole
 			},
 			formatModuleTag(index) {
 				const moduleNo = index + 1

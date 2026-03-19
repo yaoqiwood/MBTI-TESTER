@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view class="page-glow page-glow-left"></view>
 		<view class="page-glow page-glow-right"></view>
@@ -257,12 +257,12 @@
 
 <script>
 const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
-let personnelAdmin = null
+let personnelUser = null
 
 try {
-	personnelAdmin = uniCloud.importObject('personnel-admin')
+	personnelUser = uniCloud.importObject('personnel-user')
 } catch (error) {
-	console.error('import personnel-admin failed', error)
+	console.error('import personnel-user failed', error)
 }
 
 export default {
@@ -335,12 +335,12 @@ export default {
 		},
 		ensurePageAccess() {
 			const profile = this.getStoredProfile()
-			const adminRole = Number(profile && profile.admin_role) || 0
+			const userRole = Number(profile && profile.user_role) || 0
 			if (!profile || !(profile.personnel_id || profile.id)) {
 				uni.reLaunch({ url: '/pages/mbti-home/home' })
 				return false
 			}
-			if (adminRole !== 0) {
+			if (userRole !== 0) {
 				uni.reLaunch({ url: '/pkg/guide/hub' })
 				return false
 			}
@@ -348,12 +348,12 @@ export default {
 			return !!this.personnelId
 		},
 		async loadHome() {
-			if (!personnelAdmin || !this.personnelId) {
+			if (!personnelUser || !this.personnelId) {
 				return
 			}
 			this.loading = true
 			try {
-				const res = await personnelAdmin.getUserHeartMessageHome({
+				const res = await personnelUser.getUserHeartMessageHome({
 					personnelId: this.personnelId,
 					keyword: this.keyword
 				})
@@ -387,12 +387,12 @@ export default {
 			}
 		},
 		async loadInbox() {
-			if (!personnelAdmin || !this.personnelId) {
+			if (!personnelUser || !this.personnelId) {
 				return
 			}
 			this.inboxLoading = true
 			try {
-				const res = await personnelAdmin.listUserInboxLetters({
+				const res = await personnelUser.listUserInboxLetters({
 					personnelId: this.personnelId,
 					keyword: this.keyword
 				})
@@ -464,7 +464,7 @@ export default {
 			return merged
 		},
 		async realtimeTick() {
-			if (!personnelAdmin || !this.personnelId) {
+			if (!personnelUser || !this.personnelId) {
 				return
 			}
 			if (!this.showChatPopup || !this.activeContact || !this.activeContact._id) {
@@ -482,7 +482,7 @@ export default {
 				const since = lastMessage
 					? lastMessage.created_at_text || lastMessage.created_at || ''
 					: ''
-				const res = await personnelAdmin.listUserHeartMessages({
+				const res = await personnelUser.listUserHeartMessages({
 					personnelId: this.personnelId,
 					contactId,
 					since
@@ -514,14 +514,14 @@ export default {
 			this.scheduleRealtime(this.getRealtimeDelay(hasNewMessage))
 		},
 		async selectContact(item) {
-			if (!item || !item._id || !personnelAdmin) {
+			if (!item || !item._id || !personnelUser) {
 				return
 			}
 			this.showChatPopup = true
 			this.activeContact = item
 			this.chatLoading = true
 			try {
-				const res = await personnelAdmin.listUserHeartMessages({
+				const res = await personnelUser.listUserHeartMessages({
 					personnelId: this.personnelId,
 					contactId: item._id
 				})
@@ -609,7 +609,7 @@ export default {
 			}
 			this.inboxSending = true
 			try {
-				await personnelAdmin.sendUserHeartMessage({
+				await personnelUser.sendUserHeartMessage({
 					personnelId: this.personnelId,
 					contactId: this.activeInboxItem.contact_id,
 					content: this.inboxReplyText,
@@ -653,7 +653,7 @@ export default {
 			}
 			this.sending = true
 			try {
-				await personnelAdmin.sendUserHeartMessage({
+				await personnelUser.sendUserHeartMessage({
 					personnelId: this.personnelId,
 					contactId: this.activeContact._id,
 					content: this.draftMessage,

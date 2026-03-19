@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view class="toolbar">
 			<button class="ghost-btn" @click="goBack">返回上一页</button>
@@ -9,7 +9,7 @@
 			<view class="card-head">
 				<text class="card-title">心动私信管理表</text>
 				<text class="card-tip">
-					管理员可为参与者分配私信次数，并创建匿名心动私信记录。当前版本默认由管理员录入发送关系，被发送者不会看到发送者身份。
+					用户可为参与者分配私信次数，并创建匿名心动私信记录。当前版本默认由用户录入发送关系，被发送者不会看到发送者身份。
 				</text>
 			</view>
 			<view class="stats-wrap">
@@ -182,9 +182,9 @@
 						></textarea>
 					</view>
 					<view class="field field-full">
-						<text class="label">管理员备注</text>
+						<text class="label">用户备注</text>
 						<textarea
-							v-model.trim="form.admin_remark"
+							v-model.trim="form.user_remark"
 							class="textarea"
 							maxlength="200"
 							placeholder="可填写来源、投递说明、保留意见等"
@@ -228,7 +228,7 @@
 						</view>
 						<view class="col col-content content-cell">
 							<text class="content-text">{{ item.content || '-' }}</text>
-							<text class="secondary-text">{{ item.admin_remark || '无备注' }}</text>
+							<text class="secondary-text">{{ item.user_remark || '无备注' }}</text>
 						</view>
 						<text class="col col-quota">{{ item.quota_cost || 1 }}</text>
 						<text class="col col-time">{{ formatDate(item.created_at || item.created_at_text) }}</text>
@@ -263,12 +263,12 @@
 </template>
 
 <script>
-let personnelAdmin = null
+let personnelUser = null
 
 try {
-	personnelAdmin = uniCloud.importObject('personnel-admin')
+	personnelUser = uniCloud.importObject('personnel-user')
 } catch (error) {
-	console.error('import personnel-admin failed', error)
+	console.error('import personnel-user failed', error)
 }
 
 function createStats() {
@@ -286,7 +286,7 @@ function createForm() {
 		sender_record_id: '',
 		receiver_record_id: '',
 		content: '',
-		admin_remark: '',
+		user_remark: '',
 		status: 'draft',
 		quota_cost: '1',
 		is_anonymous: true
@@ -430,14 +430,14 @@ export default {
 			}, 250)
 		},
 		async loadCandidates(page) {
-			if (!personnelAdmin) {
+			if (!personnelUser) {
 				this.showUnavailable()
 				return
 			}
 			this.candidateLoading = true
 			try {
 				const nextPage = Number(page) > 0 ? Number(page) : Number(this.candidatePagination.page || 1)
-				const res = await personnelAdmin.listPrivateMessageCandidates({
+				const res = await personnelUser.listPrivateMessageCandidates({
 					keyword: this.candidateKeyword,
 					page: nextPage,
 					pageSize: this.candidatePagination.pageSize
@@ -466,13 +466,13 @@ export default {
 			}
 		},
 		async loadMessages(page) {
-			if (!personnelAdmin) {
+			if (!personnelUser) {
 				this.showUnavailable()
 				return
 			}
 			this.loading = true
 			try {
-				const res = await personnelAdmin.listHeartMessages({
+				const res = await personnelUser.listHeartMessages({
 					keyword: this.messageKeyword,
 					status: this.messageStatus,
 					page: page || this.pagination.page,
@@ -543,7 +543,7 @@ export default {
 			this.loadCandidates(Number(this.candidatePagination.page || 1) + 1)
 		},
 		async changeQuota(item, mode) {
-			if (!personnelAdmin || !item || !item._id) {
+			if (!personnelUser || !item || !item._id) {
 				return
 			}
 			const quotaValue = Number(this.quotaInputs[item._id])
@@ -552,7 +552,7 @@ export default {
 				return
 			}
 			try {
-				await personnelAdmin.updatePrivateMessageQuota({
+				await personnelUser.updatePrivateMessageQuota({
 					id: item._id,
 					quota: quotaValue,
 					mode
@@ -578,7 +578,7 @@ export default {
 				sender_record_id: item.sender_record_id || '',
 				receiver_record_id: item.receiver_record_id || '',
 				content: item.content || '',
-				admin_remark: item.admin_remark || '',
+				user_remark: item.user_remark || '',
 				status: item.status || 'draft',
 				quota_cost: String(item.quota_cost || 1),
 				is_anonymous: item.is_anonymous !== false
@@ -637,7 +637,7 @@ export default {
 			return ''
 		},
 		async submitForm() {
-			if (!personnelAdmin) {
+			if (!personnelUser) {
 				this.showUnavailable()
 				return
 			}
@@ -656,18 +656,18 @@ export default {
 					sender_record_id: this.form.sender_record_id,
 					receiver_record_id: this.form.receiver_record_id,
 					content: this.form.content,
-					admin_remark: this.form.admin_remark,
+					user_remark: this.form.user_remark,
 					status: this.form.status,
 					quota_cost: Number(this.form.quota_cost),
 					is_anonymous: this.form.is_anonymous
 				}
 				if (isEditMode) {
-					await personnelAdmin.updateHeartMessage({
+					await personnelUser.updateHeartMessage({
 						id: this.currentId,
 						data: payload
 					})
 				} else {
-					await personnelAdmin.createHeartMessage({
+					await personnelUser.createHeartMessage({
 						data: payload
 					})
 				}
@@ -688,7 +688,7 @@ export default {
 			}
 		},
 		removeMessage(item) {
-			if (!item || !item._id || !personnelAdmin) {
+			if (!item || !item._id || !personnelUser) {
 				return
 			}
 			uni.showModal({
@@ -699,7 +699,7 @@ export default {
 						return
 					}
 					try {
-						await personnelAdmin.removeHeartMessage({ id: item._id })
+						await personnelUser.removeHeartMessage({ id: item._id })
 						uni.showToast({ title: '删除成功', icon: 'success' })
 						await this.loadMessages(this.pagination.page)
 					} catch (error) {

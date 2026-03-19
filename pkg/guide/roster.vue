@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view v-if="showDetailPopup && detailRecord" class="detail-mask" @click="closeDetail">
 			<view class="detail-dialog" @click.stop>
@@ -66,11 +66,11 @@
 					<button class="mini-btn" @click="handleActionMenu('edit')">编辑</button>
 					<button
 						class="mini-btn"
-						:class="Number(actionMenuRecord.admin_role) === 1 ? 'success-btn' : ''"
-						:disabled="Number(actionMenuRecord.admin_role) === 1 || roleUpdatingId === actionMenuRecord._id"
+						:class="Number(actionMenuRecord.user_role) === 1 ? 'success-btn' : ''"
+						:disabled="Number(actionMenuRecord.user_role) === 1 || roleUpdatingId === actionMenuRecord._id"
 						@click="handleActionMenu('coworker')"
 					>
-						{{ Number(actionMenuRecord.admin_role) === 1 ? '已是同工' : '设定为同工' }}
+						{{ Number(actionMenuRecord.user_role) === 1 ? '已是同工' : '设定为同工' }}
 					</button>
 					<button
 						class="mini-btn danger-btn"
@@ -84,7 +84,7 @@
 		</view>
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
-				<text class="hero-kicker">MBTI PERSONNEL ADMIN</text>
+				<text class="hero-kicker">MBTI PERSONNEL USER</text>
 				<text class="hero-title">后台人员信息录入</text>
 				<text class="hero-desc"
 					>首页已切换为管理录入页，原 MBTI 首页仍然保留，可从这里直接进入。</text
@@ -370,9 +370,9 @@
 
 <script>
 	const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
-	var personnelAdmin = null
+	var personnelUser = null
 	if (typeof uniCloud !== 'undefined' && uniCloud.importObject) {
-		personnelAdmin = uniCloud.importObject('personnel-admin')
+		personnelUser = uniCloud.importObject('personnel-user')
 	}
 
 	function createDefaultStats() {
@@ -521,22 +521,22 @@
 			this.loadList()
 		},
 		methods: {
-			getCurrentAdminRole: function () {
+			getCurrentUserRole: function () {
 				try {
 					var profile = uni.getStorageSync(PERSONNEL_PROFILE_STORAGE_KEY)
-					return Number(profile && profile.admin_role) || 0
+					return Number(profile && profile.user_role) || 0
 				} catch (error) {
-					console.error('getCurrentAdminRole failed', error)
+					console.error('getCurrentUserRole failed', error)
 					return 0
 				}
 			},
 			ensurePageAccess: function () {
-				if (this.getCurrentAdminRole() >= 1) {
+				if (this.getCurrentUserRole() >= 1) {
 					return true
 				}
 				uni.showModal({
 					title: '权限不足',
-					content: '只有 admin_role 为 1、2、3 的管理员可以进入人员管理页面。',
+					content: '只有 user_role 为 1、2、3 的用户可以进入人员管理页面。',
 					showCancel: false,
 					success: function () {
 						var pageStack = getCurrentPages()
@@ -582,7 +582,7 @@
 				})
 			},
 			importSignupSheet: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -607,7 +607,7 @@
 						cloudPath:
 							'mbti-import/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext
 					})
-					var res = await personnelAdmin.importExcel({
+					var res = await personnelUser.importExcel({
 						fileID: uploadRes.fileID
 					})
 					this.loadList({
@@ -666,7 +666,7 @@
 				})
 			},
 			loadList: async function (options) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -674,7 +674,7 @@
 					options && options.page ? Number(options.page) : Number(this.pagination.page || 1)
 				this.loading = true
 				try {
-					var res = await personnelAdmin.list({
+					var res = await personnelUser.list({
 						keyword: this.keyword,
 						reviewStatus: this.reviewStatusFilter,
 						page: nextPage,
@@ -783,7 +783,7 @@
 			},
 			/*
 			resetAllPasscodes: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -812,7 +812,7 @@
 					mask: true
 				})
 				try {
-					var res = await personnelAdmin.resetAllPasscodes()
+					var res = await personnelUser.resetAllPasscodes()
 					await this.loadList({
 						page: this.pagination.page
 					})
@@ -833,7 +833,7 @@
 			},
 			*/
 			removeRecord: async function (item) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -862,7 +862,7 @@
 					mask: true
 				})
 				try {
-					await personnelAdmin.softDelete({
+					await personnelUser.softDelete({
 						id: item._id
 					})
 					uni.showToast({
@@ -887,7 +887,7 @@
 				}
 			},
 			toggleApprove: async function (item) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -927,7 +927,7 @@
 					mask: true
 				})
 				try {
-					await personnelAdmin.update({
+					await personnelUser.update({
 						id: item._id,
 						data: {
 							review_status: nextStatus,
@@ -952,11 +952,11 @@
 				}
 			},
 			setAsCoworker: async function (item) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
-				if (!item || !item._id || this.roleUpdatingId || Number(item.admin_role) === 1) {
+				if (!item || !item._id || this.roleUpdatingId || Number(item.user_role) === 1) {
 					return
 				}
 
@@ -982,10 +982,10 @@
 					mask: true
 				})
 				try {
-					await personnelAdmin.update({
+					await personnelUser.update({
 						id: item._id,
 						data: {
-							admin_role: 1
+							user_role: 1
 						}
 					})
 					uni.showToast({
@@ -1063,7 +1063,7 @@
 				return year + '-' + month + '-' + day + ' ' + hour + ':' + minute
 			},
 			uploadPhoto: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -1121,7 +1121,7 @@
 				return ''
 			},
 			submitForm: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -1167,12 +1167,12 @@
 						remark: this.form.remark
 					}
 					if (this.isEditMode) {
-						saveRes = await personnelAdmin.update({
+						saveRes = await personnelUser.update({
 							id: this.currentId,
 							data: payload
 						})
 					} else {
-						saveRes = await personnelAdmin.create({
+						saveRes = await personnelUser.create({
 							data: payload
 						})
 					}

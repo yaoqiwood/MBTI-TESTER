@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view v-if="showProfilePopup" class="profile-mask" @click="closeProfilePopup">
 			<view class="profile-dialog" @click.stop>
@@ -147,7 +147,7 @@
 </template>
 
 <script>
-	const personnelAdmin = uniCloud.importObject('personnel-admin')
+	const personnelUser = uniCloud.importObject('personnel-user')
 	const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
 	export default {
@@ -225,7 +225,7 @@
 					id: record._id || '',
 					personnel_id: record._id || '',
 					person_id: typeof record.person_id !== 'undefined' ? record.person_id : '',
-					admin_role: Number(record.admin_role) || 0,
+					user_role: Number(record.user_role) || 0,
 					name: record.name || '',
 					nickname: record.nickname || '',
 					passcode: record.passcode || '',
@@ -318,7 +318,7 @@
 				try {
 					const uid =
 						(this.currentUser && this.currentUser._id) || (uniCloud.getCurrentUserInfo() || {}).uid || ''
-					const result = await personnelAdmin.getCurrentLoginWxOpenid({
+					const result = await personnelUser.getCurrentLoginWxOpenid({
 						uid
 					})
 					console.log('[access-form] getCurrentLoginWxOpenid result', result)
@@ -343,7 +343,7 @@
 					return null
 				}
 				for (let i = 0; i < openIds.length; i++) {
-					const result = await personnelAdmin.getByWxOpenid({
+					const result = await personnelUser.getByWxOpenid({
 						wxOpenid: openIds[i]
 					})
 					if (result && result.record && result.record._id) {
@@ -368,7 +368,7 @@
 						this.selectedRecord = {
 							_id: record._id,
 							name: record.name,
-							admin_role: Number(record.admin_role) || 0
+							user_role: Number(record.user_role) || 0
 						}
 					}
 					if (this.shouldAutoRouteToTest(record || {})) {
@@ -400,7 +400,7 @@
 					let record = null
 					for (let i = 0; i < openIds.length; i++) {
 						console.log('[access-form] querying personnel by openid', openIds[i])
-						const result = await personnelAdmin.getByWxOpenid({
+						const result = await personnelUser.getByWxOpenid({
 							wxOpenid: openIds[i]
 						})
 						console.log('[access-form] getByWxOpenid result', {
@@ -505,7 +505,7 @@
 							this.loginOpenIds[0] ||
 							this.getLoginOpenId(user) ||
 							String(matchedRecord.wx_openid || '').trim()
-						const updateResult = await personnelAdmin.update({
+						const updateResult = await personnelUser.update({
 							id: matchedRecord._id,
 							data: {
 								nickname: nickname,
@@ -523,10 +523,10 @@
 								updateResult && typeof updateResult.person_id !== 'undefined'
 									? updateResult.person_id
 									: matchedRecord.person_id,
-							admin_role:
-								updateResult && typeof updateResult.admin_role !== 'undefined'
-									? Number(updateResult.admin_role) || 0
-									: Number(matchedRecord.admin_role) || 0,
+							user_role:
+								updateResult && typeof updateResult.user_role !== 'undefined'
+									? Number(updateResult.user_role) || 0
+									: Number(matchedRecord.user_role) || 0,
 							passcode:
 								(updateResult && updateResult.passcode) || matchedRecord.passcode || '',
 							nickname: nickname,
@@ -588,7 +588,7 @@
 			},
 			async searchNameOptions(keyword) {
 				try {
-					const res = await personnelAdmin.searchNames({
+					const res = await personnelUser.searchNames({
 						keyword: keyword || '',
 						limit: 5
 					})
@@ -729,7 +729,7 @@
 					const avatarFileId = await this.uploadAvatarIfNeeded()
 					const user = this.currentUser || {}
 					const loginOpenId = this.loginOpenIds[0] || this.getLoginOpenId(user)
-					const result = await personnelAdmin.upsertByUser({
+					const result = await personnelUser.upsertByUser({
 						userId: uid,
 						personnelId: personnelId,
 						data: {
@@ -753,10 +753,10 @@
 						id: result && result.id ? result.id : personnelId,
 						personnel_id: personnelId,
 						person_id: result && typeof result.person_id !== 'undefined' ? result.person_id : '',
-						admin_role:
-							result && typeof result.admin_role !== 'undefined'
-								? Number(result.admin_role) || 0
-								: Number(this.selectedRecord && this.selectedRecord.admin_role) || 0,
+						user_role:
+							result && typeof result.user_role !== 'undefined'
+								? Number(result.user_role) || 0
+								: Number(this.selectedRecord && this.selectedRecord.user_role) || 0,
 						name: name,
 						nickname: this.profileForm.nickname.trim(),
 						passcode: this.password.trim(),

@@ -24,7 +24,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 const uniIdCo = uniCloud.importObject('uni-id-co', {
 	customUI: true
 })
-const personnelAdmin = uniCloud.importObject('personnel-admin')
+const personnelUser = uniCloud.importObject('personnel-user')
 
 export default {
 	data() {
@@ -68,7 +68,7 @@ export default {
 				id: record._id || '',
 				personnel_id: record._id || '',
 				person_id: typeof record.person_id !== 'undefined' ? record.person_id : '',
-				admin_role: Number(record.admin_role) || 0,
+				user_role: Number(record.user_role) || 0,
 				name: record.name || '',
 				nickname: record.nickname || '',
 				passcode: record.passcode || '',
@@ -132,7 +132,7 @@ export default {
 				return []
 			}
 			try {
-				const result = await personnelAdmin.getCurrentLoginWxOpenid({
+				const result = await personnelUser.getCurrentLoginWxOpenid({
 					uid
 				})
 				return (result && result.openIds) || []
@@ -141,8 +141,8 @@ export default {
 				return []
 			}
 		},
-		isAdminRole(adminRole) {
-			const role = Number(adminRole)
+		isUserRole(roleValue) {
+			const role = Number(roleValue)
 			return role === 1 || role === 2 || role === 3
 		},
 		hasMbtiResult(record = {}) {
@@ -164,7 +164,7 @@ export default {
 			}
 
 			for (let i = 0; i < openIds.length; i += 1) {
-				const result = await personnelAdmin.getByWxOpenid({
+				const result = await personnelUser.getByWxOpenid({
 					wxOpenid: openIds[i]
 				})
 				if (result && result.record && result.record._id) {
@@ -175,10 +175,10 @@ export default {
 		},
 		resolveTargetUrl(profile) {
 			const targetUrl =
-				profile && this.isAdminRole(profile.admin_role)
+				profile && this.isUserRole(profile.user_role)
 					? '/pkg/guide/hub'
 					: profile &&
-						  Number(profile.admin_role) === 0 &&
+						  Number(profile.user_role) === 0 &&
 						  this.hasMbtiResult(profile)
 						? '/pkg/guide/detail'
 						: '/pages/index/service'
@@ -186,7 +186,7 @@ export default {
 		},
 		updateLoadingText(targetUrl) {
 			if (targetUrl === '/pkg/guide/hub') {
-				this.loadingText = 'Admin detected, opening dashboard...'
+				this.loadingText = 'User detected, opening dashboard...'
 			} else if (targetUrl === '/pkg/guide/detail') {
 				this.loadingText = 'User detected, opening contacts...'
 			} else {

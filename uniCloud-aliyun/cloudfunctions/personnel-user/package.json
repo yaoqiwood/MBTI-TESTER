@@ -1,7 +1,7 @@
-{
-	"name": "personnel-admin",
+﻿{
+	"name": "personnel-user",
 	"version": "1.0.0",
-	"description": "MBTI personnel admin cloud object",
+	"description": "MBTI personnel user cloud object",
 	"main": "index.obj.js",
 	"dependencies": {
 		"xlsx": "^0.18.5"

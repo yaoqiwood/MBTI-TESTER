@@ -1,26 +1,26 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
-				<text class="hero-kicker">MBTI PERSONNEL ADMIN</text>
+				<text class="hero-kicker">MBTI PERSONNEL USER</text>
 				<text class="hero-title">后台人员信息录入</text>
 				<text class="hero-desc"
-					>首页已切换为管理录入页，�?MBTI 首页仍然保留，可从这里直接进入�?/text
+					>首页已切换为管理录入页，�?MBTI 首页仍然保留，可从这里直接进入�?/text
 				>
 			</view>
 			<view class="hero-actions">
 				<button class="solid-btn" @click="importSignupSheet">报名表格导入</button>
-				<button class="ghost-btn" @click="goLegacyHome">�?MBTI 首页</button>
+				<button class="ghost-btn" @click="goLegacyHome">�?MBTI 首页</button>
 			</view>
 		</view>
 
 		<view class="stats-wrap">
 			<view class="stat-card">
-				<text class="stat-label">总人�?/text>
+				<text class="stat-label">总人�?/text>
 				<text class="stat-value">{{ stats.total }}</text>
 			</view>
 			<view class="stat-card">
-				<text class="stat-label">待审�?/text>
+				<text class="stat-label">待审�?/text>
 				<text class="stat-value">{{ stats.pending }}</text>
 			</view>
 			<view class="stat-card">
@@ -28,7 +28,7 @@
 				<text class="stat-value">{{ stats.approved }}</text>
 			</view>
 			<view class="stat-card">
-				<text class="stat-label">已驳�?/text>
+				<text class="stat-label">已驳�?/text>
 				<text class="stat-value">{{ stats.rejected }}</text>
 			</view>
 		</view>
@@ -68,8 +68,8 @@
 
 		<view v-if="!showFormOnly" class="table-card">
 			<view class="card-head">
-				<text class="card-title">人员信息�?/text>
-				<text class="card-tip">小程序端使用横向滚动表格，避免字段过多时布局挤压�?/text>
+				<text class="card-title">人员信息�?/text>
+				<text class="card-tip">小程序端使用横向滚动表格，避免字段过多时布局挤压�?/text>
 			</view>
 			<scroll-view scroll-x class="table-scroll">
 				<view class="table">
@@ -78,10 +78,10 @@
 						<text class="col col-name">昵称 / 姓名</text>
 						<text class="col col-gender">性别</text>
 						<text class="col col-age">年龄</text>
-						<text class="col col-mobile">手机�?/text>
+						<text class="col col-mobile">手机�?/text>
 						<text class="col col-mbti">MBTI</text>
-						<text class="col col-status">审核状�?/text>
-						<text class="col col-reviewer">审核�?/text>
+						<text class="col col-status">审核状�?/text>
+						<text class="col col-reviewer">审核�?/text>
 						<text class="col col-time">提交时间</text>
 						<text class="col col-action">操作</text>
 					</view>
@@ -126,7 +126,7 @@
 		<view v-if="showFormOnly" class="form-card">
 			<view class="card-head">
 				<text class="card-title">{{ isEditMode ? '编辑人员' : '新增人员' }}</text>
-				<text class="card-tip">提交时间和修改时间由云端自动维护，自增编号由云对象分配�?/text>
+				<text class="card-tip">提交时间和修改时间由云端自动维护，自增编号由云对象分配�?/text>
 			</view>
 
 			<view class="section-block">
@@ -134,11 +134,11 @@
 				<view class="form-grid">
 					<view class="field">
 						<text class="label">昵称</text>
-						<input v-model="form.nickname" class="input" placeholder="请输入昵�? />
+						<input v-model="form.nickname" class="input" placeholder="请输入昵�? />
 					</view>
 					<view class="field">
 						<text class="label">姓名</text>
-						<input v-model="form.name" class="input" placeholder="请输入姓�? />
+						<input v-model="form.name" class="input" placeholder="请输入姓�? />
 					</view>
 					<view class="field">
 						<text class="label">性别</text>
@@ -148,15 +148,15 @@
 					</view>
 					<view class="field">
 						<text class="label">年龄</text>
-						<input v-model="form.age" class="input" type="number" placeholder="请输入年�? />
+						<input v-model="form.age" class="input" type="number" placeholder="请输入年�? />
 					</view>
 					<view class="field">
-						<text class="label">手机�?/text>
+						<text class="label">手机�?/text>
 						<input v-model="form.mobile" class="input" type="number" placeholder="请输入手机号" />
 					</view>
 					<view class="field">
 						<text class="label">身份证号</text>
-						<input v-model="form.id_card" class="input" placeholder="请输入身份证�? />
+						<input v-model="form.id_card" class="input" placeholder="请输入身份证�? />
 					</view>
 					<view class="field">
 						<text class="label">MBTI</text>
@@ -166,11 +166,11 @@
 					</view>
 					<view class="field">
 						<text class="label">籍贯</text>
-						<input v-model="form.native_place" class="input" placeholder="请输入籍�? />
+						<input v-model="form.native_place" class="input" placeholder="请输入籍�? />
 					</view>
 					<view class="field">
 						<text class="label">职业</text>
-						<input v-model="form.profession" class="input" placeholder="请输入职�? />
+						<input v-model="form.profession" class="input" placeholder="请输入职�? />
 					</view>
 					<view class="field field-full">
 						<text class="label">住址</text>
@@ -180,7 +180,7 @@
 			</view>
 
 			<view class="section-block">
-				<text class="section-title">照片与背�?/text>
+				<text class="section-title">照片与背�?/text>
 				<view class="photo-box">
 					<image
 						v-if="form.personal_photo"
@@ -188,7 +188,7 @@
 						:src="form.personal_photo"
 						mode="aspectFill"
 					></image>
-					<view v-else class="photo-placeholder">未上传照�?/view>
+					<view v-else class="photo-placeholder">未上传照�?/view>
 					<view class="photo-actions">
 						<button class="light-btn" @click="uploadPhoto">上传照片</button>
 						<button class="ghost-btn" @click="clearPhoto">清空照片</button>
@@ -200,15 +200,15 @@
 						<textarea
 							v-model="form.family_overview"
 							class="textarea"
-							placeholder="请输入家庭大致情�?
+							placeholder="请输入家庭大致情�?
 						></textarea>
 					</view>
 					<view class="field">
-						<text class="label">所在教�?/text>
-						<input v-model="form.church" class="input" placeholder="请输入所在教�? />
+						<text class="label">所在教�?/text>
+						<input v-model="form.church" class="input" placeholder="请输入所在教�? />
 					</view>
 					<view class="field">
-						<text class="label">推荐�?/text>
+						<text class="label">推荐�?/text>
 						<input v-model="form.referrer" class="input" placeholder="请输入推荐人" />
 					</view>
 					<view class="field field-full">
@@ -216,7 +216,7 @@
 						<textarea
 							v-model="form.self_introduction"
 							class="textarea"
-							placeholder="请输入自我介�?
+							placeholder="请输入自我介�?
 						></textarea>
 					</view>
 				</view>
@@ -246,7 +246,7 @@
 						</picker>
 					</view>
 					<view class="field">
-						<text class="label">当前审核状�?/text>
+						<text class="label">当前审核状�?/text>
 						<picker
 							:range="reviewStatusOptionLabels"
 							:value="reviewStatusIndex"
@@ -256,7 +256,7 @@
 						</picker>
 					</view>
 					<view class="field">
-						<text class="label">审核�?/text>
+						<text class="label">审核�?/text>
 						<input v-model="form.reviewer" class="input" placeholder="请输入审核人" />
 					</view>
 					<view class="field field-full">
@@ -264,7 +264,7 @@
 						<textarea
 							v-model="form.remark"
 							class="textarea"
-							placeholder="请输入备注说�?
+							placeholder="请输入备注说�?
 						></textarea>
 					</view>
 				</view>
@@ -281,9 +281,9 @@
 </template>
 
 <script>
-	var personnelAdmin = null
+	var personnelUser = null
 	if (typeof uniCloud !== 'undefined' && uniCloud.importObject) {
-		personnelAdmin = uniCloud.importObject('personnel-admin')
+		personnelUser = uniCloud.importObject('personnel-user')
 	}
 
 	function createDefaultStats() {
@@ -339,7 +339,7 @@
 				},
 				currentId: '',
 				form: createForm(),
-				genderOptions: ['�?, '�?, '未知'],
+				genderOptions: ['�?, '�?, '未知'],
 				mbtiOptions: [
 					'INTJ',
 					'INTP',
@@ -358,13 +358,13 @@
 					'ESTP',
 					'ESFP'
 				],
-				relationshipOptions: ['单身', '恋爱�?, '已婚', '离异', '其他'],
+				relationshipOptions: ['单身', '恋爱�?, '已婚', '离异', '其他'],
 				travelModeOptions: ['步行', '公交', '地铁', '骑行', '自驾', '打车', '其他'],
 				reviewStatusFilters: [
 					{ label: '全部', value: 'all' },
-					{ label: '待审�?, value: 'pending' },
+					{ label: '待审�?, value: 'pending' },
 					{ label: '已通过', value: 'approved' },
-					{ label: '已驳�?, value: 'rejected' }
+					{ label: '已驳�?, value: 'rejected' }
 				]
 			}
 		},
@@ -430,7 +430,7 @@
 						success: function (res) {
 							var file = (res.tempFiles && res.tempFiles[0]) || null
 							if (!file) {
-								reject(new Error('未选择到有效文�?))
+								reject(new Error('未选择到有效文�?))
 								return
 							}
 							resolve(file)
@@ -442,7 +442,7 @@
 				})
 			},
 			importSignupSheet: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -458,7 +458,7 @@
 					}
 					this.importing = true
 					uni.showLoading({
-						title: '导入�?,
+						title: '导入�?,
 						mask: true
 					})
 					var ext = (fileName.split('.').pop() || 'xlsx').toLowerCase()
@@ -467,7 +467,7 @@
 						cloudPath:
 							'mbti-import/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext
 					})
-					var res = await personnelAdmin.importExcel({
+					var res = await personnelUser.importExcel({
 						fileID: uploadRes.fileID
 					})
 					this.loadList({
@@ -480,12 +480,12 @@
 							res.importedCount +
 							' 条；跳过 ' +
 							res.skippedCount +
-							' �? +
+							' �? +
 							(res.errors && res.errors.length
 								? '\n\n前几条跳过原因：\n' +
 									res.errors
 										.map(function (item) {
-											return '�? + item.row + '行：' + item.message
+											return '�? + item.row + '行：' + item.message
 										})
 										.join('\n')
 								: ''),
@@ -518,7 +518,7 @@
 				})
 			},
 			loadList: async function (options) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -526,7 +526,7 @@
 					options && options.page ? Number(options.page) : Number(this.pagination.page || 1)
 				this.loading = true
 				try {
-					var res = await personnelAdmin.list({
+					var res = await personnelUser.list({
 						keyword: this.keyword,
 						reviewStatus: this.reviewStatusFilter,
 						page: nextPage,
@@ -589,7 +589,7 @@
 				})
 			},
 			removeRecord: async function (item) {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -599,7 +599,7 @@
 				var modalRes = await new Promise(function (resolve) {
 					uni.showModal({
 						title: '提示',
-						content: '确认删除该人员吗？删除后将以逻辑删除方式隐藏�?,
+						content: '确认删除该人员吗？删除后将以逻辑删除方式隐藏�?,
 						success: function (res) {
 							resolve(res)
 						},
@@ -614,11 +614,11 @@
 
 				this.deletingId = item._id
 				uni.showLoading({
-					title: '删除�?,
+					title: '删除�?,
 					mask: true
 				})
 				try {
-					await personnelAdmin.softDelete({
+					await personnelUser.softDelete({
 						id: item._id
 					})
 					uni.showToast({
@@ -676,7 +676,7 @@
 						return this.reviewStatusFilters[i].label
 					}
 				}
-				return '待审�?
+				return '待审�?
 			},
 			statusClass: function (value) {
 				return 'status-pill status-' + (value || 'pending')
@@ -697,7 +697,7 @@
 				return year + '-' + month + '-' + day + ' ' + hour + ':' + minute
 			},
 			uploadPhoto: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -712,7 +712,7 @@
 						return
 					}
 					uni.showLoading({
-						title: '上传�?
+						title: '上传�?
 					})
 					var ext = filePath.split('.').pop() || 'jpg'
 					var uploadRes = await uniCloud.uploadFile({
@@ -747,15 +747,15 @@
 					return '手机号格式不正确'
 				}
 				if (this.form.id_card && !/(^\d{15}$)|(^\d{17}[\dXx]$)/.test(this.form.id_card)) {
-					return '身份证号格式不正�?
+					return '身份证号格式不正�?
 				}
 				if (this.form.mbti && !/^(E|I)(N|S)(T|F)(J|P)$/.test(this.form.mbti)) {
-					return 'MBTI 格式不正�?
+					return 'MBTI 格式不正�?
 				}
 				return ''
 			},
 			submitForm: async function () {
-				if (!personnelAdmin) {
+				if (!personnelUser) {
 					this.showUnavailable()
 					return
 				}
@@ -773,7 +773,7 @@
 				}
 				this.saving = true
 				uni.showLoading({
-					title: '保存�?,
+					title: '保存�?,
 					mask: true
 				})
 				try {
@@ -800,12 +800,12 @@
 						remark: this.form.remark
 					}
 					if (this.isEditMode) {
-						await personnelAdmin.update({
+						await personnelUser.update({
 							id: this.currentId,
 							data: payload
 						})
 					} else {
-						await personnelAdmin.create({
+						await personnelUser.create({
 							data: payload
 						})
 					}
@@ -834,7 +834,7 @@
 			},
 			showUnavailable: function () {
 				uni.showModal({
-					content: '当前环境未启�?uniCloud 云对象，请先绑定并部署云空间�?,
+					content: '当前环境未启�?uniCloud 云对象，请先绑定并部署云空间�?,
 					showCancel: false
 				})
 			}

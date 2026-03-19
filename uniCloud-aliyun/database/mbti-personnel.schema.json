@@ -1,4 +1,4 @@
-{
+﻿{
 	"bsonType": "object",
 	"required": ["person_id", "nickname", "name", "review_status", "submitted_at", "updated_at"],
 	"permission": {
@@ -211,9 +211,9 @@
 			"title": "备注",
 			"trim": "both"
 		},
-		"admin_role": {
+		"user_role": {
 			"bsonType": "int",
-			"title": "是否为管理员",
+			"title": "是否为用户",
 			"defaultValue": 0,
 			"enum": [
 				{
@@ -225,15 +225,15 @@
 					"value": 1
 				},
 				{
-					"text": "管理员",
+					"text": "用户",
 					"value": 2
 				},
 				{
-					"text": "超级管理员",
+					"text": "高级用户",
 					"value": 3
 				}
 			],
-			"description": "0 为普通参与者-没有后台权限，1 为同工-可以进入后台查看，2 为管理员-拥有可以进入后台增删人员，3 为超级管理员-是为开发者权限"
+			"description": "0 为普通参与者-没有后台权限，1 为同工-可以进入后台查看，2 为用户-拥有可以进入后台增删人员，3 为高级用户-为开发者权限"
 		},
 		"private_message_quota": {
 			"bsonType": "int",

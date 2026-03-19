@@ -1,4 +1,4 @@
-# 聊天实现原理说明（userHeartMessage）
+﻿# 聊天实现原理说明（userHeartMessage）
 
 ## 1. 目标与约束
 
@@ -25,7 +25,7 @@
 
 后端云对象：
 
-- `uniCloud-aliyun/cloudfunctions/personnel-admin/index.obj.js`
+- `uniCloud-aliyun/cloudfunctions/personnel-user/index.obj.js`
 
 数据表：
 
@@ -34,7 +34,7 @@
 
 通信方式：
 
-- 前端通过 `uniCloud.importObject('personnel-admin')` 调云函数。
+- 前端通过 `uniCloud.importObject('personnel-user')` 调云函数。
 - 聊天窗口打开后，前端定时调用 `listUserHeartMessages` 获取新消息。
 
 ---
