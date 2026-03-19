@@ -176,6 +176,7 @@
 				lastErrorMessage: '',
 				lastErrorAt: 0,
 				autoRoutedByOpenid: false,
+				hasPromptedRetest: false,
 				currentUser: null,
 				restoredByOpenid: false,
 				profileForm: {
@@ -283,6 +284,42 @@
 					this.hasNameAndPasscode(record) &&
 					!this.hasMbtiResult(record)
 				)
+			},
+			hasBoundMbtiRecord(record = {}) {
+				return this.hasNameAndPasscode(record) && this.hasMbtiResult(record)
+			},
+			promptRetestForBoundRecord(record = {}) {
+				if (!record || !record._id || this.hasPromptedRetest) {
+					return
+				}
+
+				this.hasPromptedRetest = true
+				this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(record))
+				uni.showModal({
+					title: '提示',
+					content: '当前已经检测到您已有MBTI信息，是否重测？',
+					confirmText: '是',
+					cancelText: '否',
+					success: (res) => {
+						if (res.confirm) {
+							const fastOpenid =
+								this.loginOpenIds[0] || this.getLoginOpenId(this.currentUser || {})
+							uni.reLaunch({
+								url:
+									`/pages/feed/entry?name=${encodeURIComponent(record.name || '')}` +
+									`&personnelId=${encodeURIComponent(record._id || '')}` +
+									`&wxOpenid=${encodeURIComponent(fastOpenid || '')}`
+							})
+							return
+						}
+						uni.reLaunch({
+							url: '/pages/index/index'
+						})
+					},
+					fail: () => {
+						this.hasPromptedRetest = false
+					}
+				})
 			},
 			routeToTestByRecord(record = {}) {
 				if (!record || !record._id || this.autoRoutedByOpenid) {
@@ -398,6 +435,10 @@
 					}
 					if (this.shouldAutoRouteToTest(record || {})) {
 						this.routeToTestByRecord(record)
+						return
+					}
+					if (this.hasBoundMbtiRecord(record || {})) {
+						this.promptRetestForBoundRecord(record)
 						return
 					}
 					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
@@ -701,6 +742,10 @@
 				})
 			},
 			async submitForm() {
+				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
+					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
+					return
+				}
 				if (this.showProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',
@@ -809,6 +854,10 @@
 				}
 			},
 			enterTestDirectly() {
+				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
+					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
+					return
+				}
 				if (this.showProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',

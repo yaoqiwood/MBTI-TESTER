@@ -250,7 +250,7 @@
 		"remaining_heart_value": {
 			"bsonType": "int",
 			"title": "remaining heart value",
-			"defaultValue": 3,
+			"defaultValue": 1,
 			"description": "remaining heart value count"
 		},
 		"is_deleted": {

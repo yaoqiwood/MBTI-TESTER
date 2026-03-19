@@ -160,7 +160,7 @@ function normalizeNonNegativeInt(value, fallback = 0) {
 	return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
 }
 
-function getRemainingHeartValue(record = {}, fallback = 3) {
+function getRemainingHeartValue(record = {}, fallback = 1) {
 	const legacyFallback = normalizeNonNegativeInt(record.heart_message_quota, fallback)
 	return normalizeNonNegativeInt(record.remaining_heart_value, legacyFallback)
 }
@@ -171,7 +171,7 @@ function normalizePayload(payload = {}, options = {}) {
 	const reviewStatus = normalizeReviewStatus(payload.review_status)
 	const userRole = normalizeUserRole(payload.user_role, USER_ROLE.NORMAL)
 	const passcode = normalizePasscode(payload.passcode, options)
-	const remainingHeartValue = getRemainingHeartValue(payload, 3)
+	const remainingHeartValue = getRemainingHeartValue(payload, 1)
 	const record = {
 		user_id: trimString(payload.user_id),
 		wx_openid: trimString(payload.wx_openid),
@@ -962,7 +962,7 @@ module.exports = {
 				review_status: item.review_status || 'pending',
 				private_message_quota: normalizeNonNegativeInt(item.private_message_quota, 0),
 				heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
-				remaining_heart_value: getRemainingHeartValue(item, 3),
+				remaining_heart_value: getRemainingHeartValue(item, 1),
 				label: buildPersonnelLabel(item)
 			}))
 		const total = list.length
@@ -1071,7 +1071,7 @@ module.exports = {
 					can_send: canSend,
 					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条',
 					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
-					remaining_heart_value: getRemainingHeartValue(item, 3)
+					remaining_heart_value: getRemainingHeartValue(item, 1)
 				}
 			})
 			.filter((item) => matchesKeyword(item, normalizedKeyword))
@@ -1093,7 +1093,7 @@ module.exports = {
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
 				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
-				remaining_heart_value: getRemainingHeartValue(self, 3)
+				remaining_heart_value: getRemainingHeartValue(self, 1)
 			},
 			contacts
 		}
@@ -1138,7 +1138,7 @@ module.exports = {
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
 				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
-				remaining_heart_value: getRemainingHeartValue(self, 3)
+				remaining_heart_value: getRemainingHeartValue(self, 1)
 			},
 			contact: {
 				_id: contact._id,
@@ -1233,7 +1233,7 @@ module.exports = {
 				mbti: self.mbti || '',
 				personal_photo: self.personal_photo || '',
 				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
-				remaining_heart_value: getRemainingHeartValue(self, 3)
+				remaining_heart_value: getRemainingHeartValue(self, 1)
 			},
 			list
 		}
@@ -1354,7 +1354,7 @@ module.exports = {
 			}
 		})
 
-		const senderHeartQuota = getRemainingHeartValue(sender, 3)
+		const senderHeartQuota = getRemainingHeartValue(sender, 1)
 		if (messageType === 1 && senderHeartQuota < 1) {
 				throw new Error('操作失败')
 		}

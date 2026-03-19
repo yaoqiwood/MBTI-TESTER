@@ -29,7 +29,8 @@ const personnelUser = uniCloud.importObject('personnel-user')
 export default {
 	data() {
 		return {
-			loadingText: 'Checking login status...'
+			loadingText: 'Checking login status...',
+			enableHeartChatPage: true
 		}
 	},
 	async onLoad() {
@@ -79,6 +80,25 @@ export default {
 				wx_nickname: record.wx_nickname || '',
 				wx_avatar: record.wx_avatar || ''
 			}
+		},
+		buildDefaultProfile(user = {}, openIds = []) {
+			const wxOpenid = openIds[0] || this.getCandidateOpenIds(user)[0] || ''
+			return this.buildPersonnelProfilePayload({
+				_id: '',
+				person_id: '',
+				user_role: 0,
+				name: '',
+				nickname: user.nickname || '',
+				passcode: '',
+				personal_photo:
+					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || '',
+				user_id: user._id || '',
+				wx_openid: wxOpenid,
+				wx_unionid: user.wx_unionid || '',
+				wx_nickname: user.nickname || '',
+				wx_avatar:
+					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
+			})
 		},
 		getCandidateOpenIds(user = {}) {
 			const wxOpenid = user && user.wx_openid
@@ -141,6 +161,21 @@ export default {
 				return []
 			}
 		},
+		async loadSystemConfig() {
+			try {
+				const result = await personnelUser.getSystemConfig({
+					configCode: 'default'
+				})
+				const config = (result && result.config) || {}
+				this.enableHeartChatPage =
+					typeof config.enable_heart_chat_page === 'boolean'
+						? config.enable_heart_chat_page
+						: true
+			} catch (error) {
+				console.error('loadSystemConfig failed', error)
+				this.enableHeartChatPage = true
+			}
+		},
 		isUserRole(roleValue) {
 			const role = Number(roleValue)
 			return role === 1 || role === 2 || role === 3
@@ -168,10 +203,18 @@ export default {
 					wxOpenid: openIds[i]
 				})
 				if (result && result.record && result.record._id) {
-					return result.record
+					return {
+						record: result.record,
+						openIds,
+						currentUser
+					}
 				}
 			}
-			return null
+			return {
+				record: null,
+				openIds,
+				currentUser
+			}
 		},
 		resolveTargetUrl(profile) {
 			const targetUrl =
@@ -179,7 +222,8 @@ export default {
 					? '/pkg/guide/hub'
 					: profile &&
 						  Number(profile.user_role) === 0 &&
-						  this.hasMbtiResult(profile)
+						  this.hasMbtiResult(profile) &&
+						  this.enableHeartChatPage
 						? '/pkg/guide/detail'
 						: '/pages/index/service'
 			return targetUrl
@@ -195,6 +239,7 @@ export default {
 		},
 		async routeByLoginProfile() {
 			let profile = null
+			let fallbackProfile = null
 
 			// #ifdef MP-WEIXIN
 			const loggedIn = await this.ensureWeixinLogin()
@@ -211,12 +256,18 @@ export default {
 			// #endif
 
 			try {
+				await this.loadSystemConfig()
 				this.loadingText = 'Matching your profile in the database...'
-				profile = await this.getProfileFromDatabase()
+				const profileResult = await this.getProfileFromDatabase()
+				profile = profileResult && profileResult.record
 				if (profile && profile._id) {
 					this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(profile))
 				} else {
-					this.clearPersonnelProfileStorage()
+					fallbackProfile = this.buildDefaultProfile(
+						(profileResult && profileResult.currentUser) || {},
+						(profileResult && profileResult.openIds) || []
+					)
+					this.savePersonnelProfileToStorage(fallbackProfile)
 				}
 			} catch (error) {
 				console.error('routeByLoginProfile failed', error)
@@ -224,7 +275,7 @@ export default {
 				profile = null
 			}
 
-			const targetUrl = this.resolveTargetUrl(profile)
+			const targetUrl = this.resolveTargetUrl(profile || fallbackProfile)
 			this.updateLoadingText(targetUrl)
 
 			setTimeout(() => {
