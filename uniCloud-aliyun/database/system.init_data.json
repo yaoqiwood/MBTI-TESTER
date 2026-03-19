@@ -1,0 +1,8 @@
+[
+	{
+		"config_code": "default",
+		"config_name": "system default config",
+		"enable_heart_chat_page": true,
+		"remark": "default: heart chat page is enabled"
+	}
+]

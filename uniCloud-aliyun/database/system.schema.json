@@ -1,0 +1,53 @@
+{
+	"bsonType": "object",
+	"required": ["config_code", "enable_heart_chat_page", "created_at", "updated_at"],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "document id"
+		},
+		"config_code": {
+			"bsonType": "string",
+			"title": "config code",
+			"description": "configuration unique code, default only one row: default",
+			"trim": "both"
+		},
+		"config_name": {
+			"bsonType": "string",
+			"title": "config name",
+			"description": "configuration display name",
+			"defaultValue": "system default config",
+			"trim": "both"
+		},
+		"enable_heart_chat_page": {
+			"bsonType": "bool",
+			"title": "enable heart chat page",
+			"description": "true means heart chat page is enabled",
+			"defaultValue": true
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "remark",
+			"trim": "both"
+		},
+		"created_at": {
+			"bsonType": "timestamp",
+			"title": "created at",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "updated at",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}
