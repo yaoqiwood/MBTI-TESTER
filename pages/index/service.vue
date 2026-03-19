@@ -59,10 +59,33 @@
 					:style="{ background: item.cardBg }"
 				>
 					<view class="persona-top">
-						<view class="avatar-shell" :style="{ background: item.avatarBg }">
-							<view class="avatar-face"></view>
-							<view class="avatar-body"></view>
-							<view class="avatar-accent" :style="{ background: item.accent }"></view>
+						<view
+							class="avatar-shell"
+							:style="{
+								background: item.avatarPanelBg
+							}"
+						>
+							<view
+								class="avatar-aura"
+								:style="{
+									background: item.avatarAura
+								}"
+							></view>
+							<view class="avatar-figure">
+								<view
+									class="avatar-head"
+									:style="{
+										background: item.avatarHead
+									}"
+								></view>
+								<view
+									class="avatar-body"
+									:style="{
+										background: item.avatarBody
+									}"
+								></view>
+							</view>
+							<text class="avatar-caption">{{ item.avatarTitle }}</text>
 						</view>
 						<view class="persona-badge" :style="{ background: item.badgeBg }">
 							<text class="persona-code">{{ item.code }}</text>
@@ -91,7 +114,11 @@ const personas = [
 		tagline: '温柔、想象力、情绪共鸣',
 		note: '擅长在关系里创造细腻氛围，喜欢被真正理解。',
 		cardBg: 'linear-gradient(160deg, #fff6f0 0%, #ffd7c2 100%)',
-		avatarBg: 'linear-gradient(180deg, #ffcfb3 0%, #ff9e7a 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(255,238,229,0.72) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(255, 198, 170, 0.95) 0%, rgba(255, 198, 170, 0) 62%)',
+		avatarHead: '#f3cfbe',
+		avatarBody: 'linear-gradient(180deg, #b96d74 0%, #8f4d32 100%)',
+		avatarTitle: '治愈系',
 		accent: '#8f4d32',
 		badgeBg: '#fff2e8'
 	},
@@ -101,7 +128,11 @@ const personas = [
 		tagline: '热情、灵感、即时心动',
 		note: '能把一场普通对话，点燃成让人记很久的夜晚。',
 		cardBg: 'linear-gradient(160deg, #fff9e8 0%, #ffe29f 100%)',
-		avatarBg: 'linear-gradient(180deg, #ffe48b 0%, #ffc44d 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,244,208,0.78) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(255, 197, 74, 0.92) 0%, rgba(255, 197, 74, 0) 62%)',
+		avatarHead: '#f4cebc',
+		avatarBody: 'linear-gradient(180deg, #ffb347 0%, #d97a00 100%)',
+		avatarTitle: '冒险派',
 		accent: '#8d5a00',
 		badgeBg: '#fff6cf'
 	},
@@ -111,7 +142,11 @@ const personas = [
 		tagline: '洞察、克制、深度连接',
 		note: '表面平静，内心却早已看见关系的未来轨迹。',
 		cardBg: 'linear-gradient(160deg, #eef7ff 0%, #c9e7ff 100%)',
-		avatarBg: 'linear-gradient(180deg, #b7defe 0%, #72b8ff 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(223,241,255,0.78) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(95, 170, 235, 0.9) 0%, rgba(95, 170, 235, 0) 62%)',
+		avatarHead: '#efd2c4',
+		avatarBody: 'linear-gradient(180deg, #5d8ec7 0%, #1f5d96 100%)',
+		avatarTitle: '洞察者',
 		accent: '#1f5d96',
 		badgeBg: '#e8f5ff'
 	},
@@ -121,7 +156,11 @@ const personas = [
 		tagline: '感染力、包容、带领感',
 		note: '习惯照顾所有人的感受，也最懂得怎样让爱落地。',
 		cardBg: 'linear-gradient(160deg, #f5efff 0%, #dcc8ff 100%)',
-		avatarBg: 'linear-gradient(180deg, #d6c3ff 0%, #a27bff 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(235,224,255,0.8) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(150, 112, 228, 0.9) 0%, rgba(150, 112, 228, 0) 62%)',
+		avatarHead: '#f1d0c0',
+		avatarBody: 'linear-gradient(180deg, #8f6ae4 0%, #5b36ae 100%)',
+		avatarTitle: '引导者',
 		accent: '#5b36ae',
 		badgeBg: '#f1eaff'
 	},
@@ -131,7 +170,11 @@ const personas = [
 		tagline: '理性、好奇、反差魅力',
 		note: '不轻易开口，但一旦认真回应，句句都很有分量。',
 		cardBg: 'linear-gradient(160deg, #edfdf6 0%, #c4f2dd 100%)',
-		avatarBg: 'linear-gradient(180deg, #b2ebd0 0%, #5bc18e 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(220,247,234,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(77, 188, 143, 0.9) 0%, rgba(77, 188, 143, 0) 62%)',
+		avatarHead: '#efd3c4',
+		avatarBody: 'linear-gradient(180deg, #4daf8c 0%, #1e6a4a 100%)',
+		avatarTitle: '思辨派',
 		accent: '#1e6a4a',
 		badgeBg: '#e8fbf2'
 	},
@@ -141,7 +184,11 @@ const personas = [
 		tagline: '机敏、跳跃、玩心十足',
 		note: '擅长让关系保持新鲜感，总能提出意想不到的可能。',
 		cardBg: 'linear-gradient(160deg, #fff3f7 0%, #ffc7d8 100%)',
-		avatarBg: 'linear-gradient(180deg, #ffbfd1 0%, #ff729c 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,230,238,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(255, 122, 165, 0.9) 0%, rgba(255, 122, 165, 0) 62%)',
+		avatarHead: '#f2d2c3',
+		avatarBody: 'linear-gradient(180deg, #db5a88 0%, #9a2f54 100%)',
+		avatarTitle: '点子王',
 		accent: '#9a2f54',
 		badgeBg: '#ffe9f0'
 	},
@@ -151,7 +198,11 @@ const personas = [
 		tagline: '感受力、审美、慢热真心',
 		note: '不爱喧闹，却会用细节、眼神和陪伴表达偏爱。',
 		cardBg: 'linear-gradient(160deg, #f7f4ef 0%, #ead7c1 100%)',
-		avatarBg: 'linear-gradient(180deg, #e6d2b8 0%, #c79a66 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(243,233,221,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(182, 145, 101, 0.85) 0%, rgba(182, 145, 101, 0) 62%)',
+		avatarHead: '#efd4c7',
+		avatarBody: 'linear-gradient(180deg, #ac8b63 0%, #7a5528 100%)',
+		avatarTitle: '审美派',
 		accent: '#7a5528',
 		badgeBg: '#f9f0e5'
 	},
@@ -161,7 +212,11 @@ const personas = [
 		tagline: '活力、亲近、即时反馈',
 		note: '喜欢把喜欢说出来，也擅长把快乐分享给身边的人。',
 		cardBg: 'linear-gradient(160deg, #f2fff6 0%, #c8f7d4 100%)',
-		avatarBg: 'linear-gradient(180deg, #bff2c7 0%, #5dc576 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(225,255,233,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(99, 211, 122, 0.9) 0%, rgba(99, 211, 122, 0) 62%)',
+		avatarHead: '#f0d1c0',
+		avatarBody: 'linear-gradient(180deg, #58bf70 0%, #1f6b33 100%)',
+		avatarTitle: '气氛组',
 		accent: '#1f6b33',
 		badgeBg: '#e9ffef'
 	},
@@ -171,7 +226,11 @@ const personas = [
 		tagline: '稳定、可靠、慢慢兑现',
 		note: '爱不是惊天动地，而是把答应过的事一件件做到。',
 		cardBg: 'linear-gradient(160deg, #f3f5f8 0%, #d6dde8 100%)',
-		avatarBg: 'linear-gradient(180deg, #cfd7e5 0%, #8da0bf 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(232,237,244,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(115, 136, 164, 0.88) 0%, rgba(115, 136, 164, 0) 62%)',
+		avatarHead: '#ecd2c5',
+		avatarBody: 'linear-gradient(180deg, #70839d 0%, #44556f 100%)',
+		avatarTitle: '稳稳型',
 		accent: '#44556f',
 		badgeBg: '#eef2f7'
 	},
@@ -181,7 +240,11 @@ const personas = [
 		tagline: '直接、果断、掌控节奏',
 		note: '擅长推动关系向前，安全感来自明确和执行。',
 		cardBg: 'linear-gradient(160deg, #fff4ec 0%, #ffd3b3 100%)',
-		avatarBg: 'linear-gradient(180deg, #ffcaa1 0%, #f58a4b 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,233,216,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(232, 145, 86, 0.88) 0%, rgba(232, 145, 86, 0) 62%)',
+		avatarHead: '#f1d2c0',
+		avatarBody: 'linear-gradient(180deg, #cc7d45 0%, #8b451e 100%)',
+		avatarTitle: '行动派',
 		accent: '#8b451e',
 		badgeBg: '#fff0e4'
 	},
@@ -191,7 +254,11 @@ const personas = [
 		tagline: '远见、边界、极致认真',
 		note: '看起来克制，真正喜欢时会拿出少见的投入和专注。',
 		cardBg: 'linear-gradient(160deg, #eef1ff 0%, #c9d2ff 100%)',
-		avatarBg: 'linear-gradient(180deg, #c1cbff 0%, #7387ff 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(228,233,255,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(106, 127, 232, 0.9) 0%, rgba(106, 127, 232, 0) 62%)',
+		avatarHead: '#ecd0c0',
+		avatarBody: 'linear-gradient(180deg, #6578d8 0%, #3343a2 100%)',
+		avatarTitle: '规划者',
 		accent: '#3343a2',
 		badgeBg: '#ebeeff'
 	},
@@ -201,7 +268,11 @@ const personas = [
 		tagline: '关怀、体贴、关系维护',
 		note: '天然会照顾气氛，也会用很多小仪式认真经营感情。',
 		cardBg: 'linear-gradient(160deg, #fff8f3 0%, #ffe3d1 100%)',
-		avatarBg: 'linear-gradient(180deg, #ffdcca 0%, #ffab7d 100%)',
+		avatarPanelBg: 'linear-gradient(180deg, rgba(255,255,255,0.84) 0%, rgba(255,240,229,0.82) 100%)',
+		avatarAura: 'radial-gradient(circle at 50% 28%, rgba(242, 164, 120, 0.88) 0%, rgba(242, 164, 120, 0) 62%)',
+		avatarHead: '#f0d1bf',
+		avatarBody: 'linear-gradient(180deg, #d99063 0%, #9a5736 100%)',
+		avatarTitle: '照顾型',
 		accent: '#9a5736',
 		badgeBg: '#fff1e8'
 	}
@@ -584,41 +655,62 @@ export default {
 
 .avatar-shell {
 	position: relative;
-	width: 120rpx;
-	height: 136rpx;
-	border-radius: 34rpx;
+	width: 132rpx;
+	height: 148rpx;
+	border-radius: 28rpx;
 	overflow: hidden;
+	background: rgba(255, 255, 255, 0.56);
+	box-shadow: inset 0 0 0 2rpx rgba(255, 255, 255, 0.35);
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.avatar-face {
+.avatar-aura {
 	position: absolute;
-	left: 36rpx;
-	top: 20rpx;
-	width: 48rpx;
-	height: 48rpx;
-	background: rgba(255, 250, 242, 0.92);
+	left: 50%;
+	top: 14rpx;
+	width: 110rpx;
+	height: 110rpx;
+	margin-left: -55rpx;
 	border-radius: 50%;
 }
 
-.avatar-body {
+.avatar-figure {
 	position: absolute;
-	left: 22rpx;
-	bottom: -8rpx;
-	width: 76rpx;
-	height: 84rpx;
-	background: rgba(255, 250, 242, 0.92);
-	border-radius: 40rpx 40rpx 18rpx 18rpx;
+	left: 50%;
+	bottom: 22rpx;
+	width: 92rpx;
+	height: 100rpx;
+	margin-left: -46rpx;
 }
 
-.avatar-accent {
-	position: absolute;
-	right: -8rpx;
-	top: -8rpx;
-	width: 48rpx;
+.avatar-head {
+	width: 42rpx;
+	height: 42rpx;
+	margin: 0 auto;
+	border-radius: 50%;
+	box-shadow: 0 6rpx 10rpx rgba(93, 64, 55, 0.1);
+}
+
+.avatar-body {
+	width: 72rpx;
 	height: 48rpx;
-	border-radius: 18rpx;
-	transform: rotate(18deg);
-	opacity: 0.88;
+	margin: 8rpx auto 0;
+	border-radius: 28rpx 28rpx 18rpx 18rpx;
+	box-shadow: 0 10rpx 16rpx rgba(93, 64, 55, 0.12);
+}
+
+.avatar-caption {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 10rpx;
+	text-align: center;
+	font-size: 20rpx;
+	font-weight: 700;
+	letter-spacing: 2rpx;
+	color: rgba(76, 55, 47, 0.86);
 }
 
 .persona-badge {
