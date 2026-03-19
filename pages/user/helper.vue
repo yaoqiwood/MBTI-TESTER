@@ -170,7 +170,7 @@
 				loginOpenIds: [],
 				password: '',
 				showNameOptions: false,
-				accessFormReviewMode: false,
+				accessFormReviewMode: true,
 				showProfilePopup: false,
 				saving: false,
 				lastErrorMessage: '',
@@ -201,10 +201,12 @@
 						configCode: 'default'
 					})
 					const config = (result && result.config) || {}
-					this.accessFormReviewMode = !!config.helper_page_review_mode
+					if (Object.prototype.hasOwnProperty.call(config, 'helper_page_review_mode')) {
+						this.accessFormReviewMode = !!config.helper_page_review_mode
+					}
 				} catch (error) {
 					console.error('loadSystemConfig failed', error)
-					this.accessFormReviewMode = false
+					this.accessFormReviewMode = true
 				}
 			},
 			savePersonnelProfileToStorage(payload) {
