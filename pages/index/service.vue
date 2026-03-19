@@ -6,7 +6,7 @@
 			<view class="hero-copy">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">用一场浪漫的性格漫游，找到你爱的表达方式</text>
-				<text class="subhead">这是一张没有题目的首页。先感受 12 种人格形象，再进入原测试页开始作答。</text>
+				<text class="subhead">这是一张没有题目的首页。先感受 12 种人格形象，再进入原测试页开始作答�?/text>
 			</view>
 
 			<view class="hero-stage">
@@ -35,20 +35,20 @@
 
 		<view class="summary-panel">
 			<view class="summary-card">
-				<text class="summary-label">风格关键词</text>
+				<text class="summary-label">风格关键�?/text>
 				<text class="summary-value">直觉 / 热烈 / 共鸣 / 探索</text>
 			</view>
 			<view class="summary-card">
 				<text class="summary-label">适合场景</text>
-				<text class="summary-value">恋爱配对、自我认知、朋友破冰</text>
+				<text class="summary-value">恋爱配对、自我认知、朋友破�?/text>
 			</view>
 		</view>
 
 		<view class="gallery" id="gallery">
 			<view class="section-head">
 				<text class="section-kicker">12 PERSONAS</text>
-				<text class="section-title">十二种人格形象</text>
-				<text class="section-desc">不是题目页，而是你的第一眼印象墙。每一张卡，先告诉你一种气质。</text>
+				<text class="section-title">十二种人格形�?/text>
+				<text class="section-desc">不是题目页，而是你的第一眼印象墙。每一张卡，先告诉你一种气质�?/text>
 			</view>
 
 			<view class="card-grid">
@@ -76,8 +76,8 @@
 		</view>
 
 		<view class="footer-cta">
-			<text class="footer-title">准备好了就开始</text>
-			<text class="footer-text">原测试页已保留，当前先通过按钮切换过去。</text>
+			<text class="footer-title">准备好了就开�?/text>
+			<text class="footer-text">原测试页已保留，当前先通过按钮切换过去�?/text>
 			<button class="primary-btn wide-btn" @click="goTest">前往原测试页</button>
 		</view>
 	</view>
@@ -87,9 +87,9 @@
 const personas = [
 	{
 		code: 'INFP',
-		name: '月光理想家',
-		tagline: '温柔、想象力、情绪共鸣',
-		note: '擅长在关系里制造细腻氛围，喜欢被真正理解。',
+		name: '月光理想�?,
+		tagline: '温柔、想象力、情绪共�?,
+		note: '擅长在关系里制造细腻氛围，喜欢被真正理解�?,
 		cardBg: 'linear-gradient(160deg, #fff6f0 0%, #ffd7c2 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffcfb3 0%, #ff9e7a 100%)',
 		accent: '#8f4d32',
@@ -97,9 +97,9 @@ const personas = [
 	},
 	{
 		code: 'ENFP',
-		name: '烟火冒险家',
-		tagline: '热情、灵感、即时心动',
-		note: '能把一场普通对话，点燃成让人记住很久的夜晚。',
+		name: '烟火冒险�?,
+		tagline: '热情、灵感、即时心�?,
+		note: '能把一场普通对话，点燃成让人记住很久的夜晚�?,
 		cardBg: 'linear-gradient(160deg, #fff9e8 0%, #ffe29f 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffe48b 0%, #ffc44d 100%)',
 		accent: '#8d5a00',
@@ -107,9 +107,9 @@ const personas = [
 	},
 	{
 		code: 'INFJ',
-		name: '静谧预言家',
-		tagline: '洞察、克制、深度连接',
-		note: '表面平静，内心却早已看见关系的未来轨迹。',
+		name: '静谧预言�?,
+		tagline: '洞察、克制、深度连�?,
+		note: '表面平静，内心却早已看见关系的未来轨迹�?,
 		cardBg: 'linear-gradient(160deg, #eef7ff 0%, #c9e7ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #b7defe 0%, #72b8ff 100%)',
 		accent: '#1f5d96',
@@ -117,9 +117,9 @@ const personas = [
 	},
 	{
 		code: 'ENFJ',
-		name: '暖场指挥家',
+		name: '暖场指挥�?,
 		tagline: '感染力、包容、带领感',
-		note: '习惯照顾所有人的感受，也最懂得怎样让爱落地。',
+		note: '习惯照顾所有人的感受，也最懂得怎样让爱落地�?,
 		cardBg: 'linear-gradient(160deg, #f5efff 0%, #dcc8ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #d6c3ff 0%, #a27bff 100%)',
 		accent: '#5b36ae',
@@ -127,9 +127,9 @@ const personas = [
 	},
 	{
 		code: 'INTP',
-		name: '星图分析师',
-		tagline: '理性、好奇、反差魅力',
-		note: '不轻易开口，但一旦认真回应，句句都很有分量。',
+		name: '星图分析�?,
+		tagline: '理性、好奇、反差魅�?,
+		note: '不轻易开口，但一旦认真回应，句句都很有分量�?,
 		cardBg: 'linear-gradient(160deg, #edfdf6 0%, #c4f2dd 100%)',
 		avatarBg: 'linear-gradient(180deg, #b2ebd0 0%, #5bc18e 100%)',
 		accent: '#1e6a4a',
@@ -137,9 +137,9 @@ const personas = [
 	},
 	{
 		code: 'ENTP',
-		name: '灵感煽动者',
-		tagline: '机敏、跳跃、玩心十足',
-		note: '擅长让关系保持新鲜感，总能提出意想不到的可能。',
+		name: '灵感煽动�?,
+		tagline: '机敏、跳跃、玩心十�?,
+		note: '擅长让关系保持新鲜感，总能提出意想不到的可能�?,
 		cardBg: 'linear-gradient(160deg, #fff3f7 0%, #ffc7d8 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffbfd1 0%, #ff729c 100%)',
 		accent: '#9a2f54',
@@ -147,9 +147,9 @@ const personas = [
 	},
 	{
 		code: 'ISFP',
-		name: '雾色艺术家',
-		tagline: '感受力、审美、慢热真心',
-		note: '不喧闹，但会用细节、眼神和陪伴表达偏爱。',
+		name: '雾色艺术�?,
+		tagline: '感受力、审美、慢热真�?,
+		note: '不喧闹，但会用细节、眼神和陪伴表达偏爱�?,
 		cardBg: 'linear-gradient(160deg, #f7f4ef 0%, #ead7c1 100%)',
 		avatarBg: 'linear-gradient(180deg, #e6d2b8 0%, #c79a66 100%)',
 		accent: '#7a5528',
@@ -157,9 +157,9 @@ const personas = [
 	},
 	{
 		code: 'ESFP',
-		name: '心动现场派',
-		tagline: '活力、亲近、即时反馈',
-		note: '喜欢把喜欢说出来，也擅长把快乐分享给身边的人。',
+		name: '心动现场�?,
+		tagline: '活力、亲近、即时反�?,
+		note: '喜欢把喜欢说出来，也擅长把快乐分享给身边的人�?,
 		cardBg: 'linear-gradient(160deg, #f2fff6 0%, #c8f7d4 100%)',
 		avatarBg: 'linear-gradient(180deg, #bff2c7 0%, #5dc576 100%)',
 		accent: '#1f6b33',
@@ -167,9 +167,9 @@ const personas = [
 	},
 	{
 		code: 'ISTJ',
-		name: '秩序守护者',
-		tagline: '稳定、可靠、慢慢兑现',
-		note: '爱不是惊天动地，而是把答应过的事情一件件做到。',
+		name: '秩序守护�?,
+		tagline: '稳定、可靠、慢慢兑�?,
+		note: '爱不是惊天动地，而是把答应过的事情一件件做到�?,
 		cardBg: 'linear-gradient(160deg, #f3f5f8 0%, #d6dde8 100%)',
 		avatarBg: 'linear-gradient(180deg, #cfd7e5 0%, #8da0bf 100%)',
 		accent: '#44556f',
@@ -177,9 +177,9 @@ const personas = [
 	},
 	{
 		code: 'ESTJ',
-		name: '行动主理人',
-		tagline: '直接、果断、掌控节奏',
-		note: '擅长推动关系前进，安全感来自明确和执行。',
+		name: '行动主理�?,
+		tagline: '直接、果断、掌控节�?,
+		note: '擅长推动关系前进，安全感来自明确和执行�?,
 		cardBg: 'linear-gradient(160deg, #fff4ec 0%, #ffd3b3 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffcaa1 0%, #f58a4b 100%)',
 		accent: '#8b451e',
@@ -187,9 +187,9 @@ const personas = [
 	},
 	{
 		code: 'INTJ',
-		name: '冷焰策划者',
-		tagline: '远见、边界、极致认真',
-		note: '看起来克制，真正喜欢时会拿出少见的投入和专注。',
+		name: '冷焰策划�?,
+		tagline: '远见、边界、极致认�?,
+		note: '看起来克制，真正喜欢时会拿出少见的投入和专注�?,
 		cardBg: 'linear-gradient(160deg, #eef1ff 0%, #c9d2ff 100%)',
 		avatarBg: 'linear-gradient(180deg, #c1cbff 0%, #7387ff 100%)',
 		accent: '#3343a2',
@@ -197,9 +197,9 @@ const personas = [
 	},
 	{
 		code: 'ESFJ',
-		name: '甜度组织者',
-		tagline: '关怀、体贴、关系维护',
-		note: '天然会照顾气氛，也会用很多小仪式认真经营感情。',
+		name: '甜度组织�?,
+		tagline: '关怀、体贴、关系维�?,
+		note: '天然会照顾气氛，也会用很多小仪式认真经营感情�?,
 		cardBg: 'linear-gradient(160deg, #fff8f3 0%, #ffe3d1 100%)',
 		avatarBg: 'linear-gradient(180deg, #ffdcca 0%, #ffab7d 100%)',
 		accent: '#9a5736',
@@ -224,7 +224,7 @@ export default {
 		},
 		navigateToTest() {
 			uni.navigateTo({
-				url: '/pages/access-form/access-form'
+				url: '/pages/user/helper'
 			})
 		},
 		// #ifdef MP-WEIXIN
@@ -234,7 +234,7 @@ export default {
 			}
 
 			uni.showLoading({
-				title: '登录中',
+				title: '登录�?,
 				mask: true
 			})
 
@@ -293,7 +293,7 @@ export default {
 				const viewport = res && res[1]
 				if (!galleryRect || !viewport) {
 					uni.showToast({
-						title: '请向下滑动查看人格形象',
+						title: '请向下滑动查看人格形�?,
 						icon: 'none'
 					})
 					return

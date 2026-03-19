@@ -399,7 +399,7 @@ export default {
 				uni.navigateBack({ delta: 1 })
 				return
 			}
-			uni.reLaunch({ url: '/pages/adminHome/gameQueryManagement' })
+			uni.reLaunch({ url: '/pkg/guide/hub' })
 		},
 		showUnavailable() {
 			uni.showToast({ title: '云对象不可用', icon: 'none' })

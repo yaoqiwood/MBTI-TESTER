@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<view class="page">
 		<view class="hero">
 			<view class="hero-backdrop hero-backdrop-left"></view>
@@ -176,18 +176,18 @@ export default {
 		resolveTargetUrl(profile) {
 			const targetUrl =
 				profile && this.isAdminRole(profile.admin_role)
-					? '/pages/adminHome/gameQueryManagement'
+					? '/pkg/guide/hub'
 					: profile &&
 						  Number(profile.admin_role) === 0 &&
 						  this.hasMbtiResult(profile)
-						? '/pages/userHeartMessage/userHeartMessage'
-						: '/pages/mbti-home/home'
+						? '/pkg/guide/detail'
+						: '/pages/index/service'
 			return targetUrl
 		},
 		updateLoadingText(targetUrl) {
-			if (targetUrl === '/pages/adminHome/gameQueryManagement') {
+			if (targetUrl === '/pkg/guide/hub') {
 				this.loadingText = 'Admin detected, opening dashboard...'
-			} else if (targetUrl === '/pages/userHeartMessage/userHeartMessage') {
+			} else if (targetUrl === '/pkg/guide/detail') {
 				this.loadingText = 'User detected, opening contacts...'
 			} else {
 				this.loadingText = 'Opening MBTI home...'
@@ -200,10 +200,10 @@ export default {
 			const loggedIn = await this.ensureWeixinLogin()
 			if (!loggedIn) {
 				this.clearPersonnelProfileStorage()
-				this.updateLoadingText('/pages/mbti-home/home')
+				this.updateLoadingText('/pages/index/service')
 				setTimeout(() => {
 					uni.reLaunch({
-						url: '/pages/mbti-home/home'
+						url: '/pages/index/service'
 					})
 				}, 120)
 				return
@@ -241,7 +241,7 @@ export default {
 			}
 
 			uni.showLoading({
-				title: '登录中',
+				title: '登录中...',
 				mask: true
 			})
 
@@ -414,3 +414,4 @@ export default {
 	}
 }
 </style>
+

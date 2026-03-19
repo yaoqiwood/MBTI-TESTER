@@ -497,7 +497,7 @@ var PAIR_GROUP_CACHE_VERSION = 1
 					return
 				}
 				uni.reLaunch({
-					url: '/pages/adminHome/gameQueryManagement'
+					url: '/pkg/guide/hub'
 				})
 			},
 			normalizeMbti(value) {

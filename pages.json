@@ -9,69 +9,76 @@
 			}
 		},
 		{
-			"path": "pages/mbti-home/home",
+			"path": "pages/index/service",
 			"style": {
-				"navigationBarTitleText": "MBTI 首页",
+				"navigationBarTitleText": "服务页",
 				"enablePullDownRefresh": false,
 				"navigationStyle": "custom"
 			}
 		},
 		{
-			"path": "pages/test/test",
-			"style": {
-				"navigationBarTitleText": "MBTI测试",
-				"enablePullDownRefresh": false,
-				"navigationStyle": "custom"
-			}
-		},
-		{
-			"path": "pages/access-form/access-form",
+			"path": "pages/user/helper",
 			"style": {
 				"navigationBarTitleText": "信息确认",
 				"enablePullDownRefresh": false
 			}
 		},
 		{
-			"path": "pages/userHeartMessage/userHeartMessage",
+			"path": "pages/feed/entry",
 			"style": {
-				"navigationBarTitleText": "联系人",
-				"enablePullDownRefresh": false
+				"navigationBarTitleText": "内容详情",
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom"
 			}
-		},
+		}
+	],
+	"subPackages": [
 		{
-			"path": "pages/adminHome/gameQueryManagement",
-			"style": {
-				"navigationBarTitleText": "后台功能导航",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/adminHome/adminDashboard",
-			"style": {
-				"navigationBarTitleText": "管理员管理",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/adminHome/personnelManagement",
-			"style": {
-				"navigationBarTitleText": "人员管理",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/adminHome/mbti-pair-query",
-			"style": {
-				"navigationBarTitleText": "MBTI组合配对查询",
-				"enablePullDownRefresh": false
-			}
-		},
-		{
-			"path": "pages/adminHome/heartMessageManagement",
-			"style": {
-				"navigationBarTitleText": "心动私信管理",
-				"enablePullDownRefresh": false
-			}
+			"root": "pkg/guide",
+			"pages": [
+				{
+					"path": "hub",
+					"style": {
+						"navigationBarTitleText": "功能导航",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "panel",
+					"style": {
+						"navigationBarTitleText": "中心看板",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "roster",
+					"style": {
+						"navigationBarTitleText": "人员列表",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "insight",
+					"style": {
+						"navigationBarTitleText": "数据查询",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "relay",
+					"style": {
+						"navigationBarTitleText": "系统配置",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
+					"path": "detail",
+					"style": {
+						"navigationBarTitleText": "详情",
+						"enablePullDownRefresh": false
+					}
+				}
+			]
 		}
 	],
 	"globalStyle": {

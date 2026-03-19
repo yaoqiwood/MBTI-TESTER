@@ -278,7 +278,7 @@ export default {
 				uni.navigateBack({ delta: 1 })
 				return
 			}
-			uni.reLaunch({ url: '/pages/adminHome/gameQueryManagement' })
+			uni.reLaunch({ url: '/pkg/guide/hub' })
 		},
 		async loadAdminList() {
 			if (!this.accessChecked) {
@@ -453,7 +453,7 @@ export default {
 			return `${year}-${month}-${day} ${hours}:${minutes}`
 		},
 		goPersonnelManagement() {
-			uni.navigateTo({ url: '/pages/adminHome/personnelManagement' })
+			uni.navigateTo({ url: '/pkg/guide/roster' })
 		},
 		showUnavailable() {
 			uni.showToast({ title: '云对象不可用', icon: 'none' })

@@ -113,7 +113,7 @@
 						</view>
 					</view>
 					<text v-else-if="showNameOptions && nameInput" class="empty-tip"
-						>没有匹配姓名，离开输入框后会自动清空</text
+						>没有匹配姓名，离开输入框后会自动清空。</text
 					>
 				</view>
 
@@ -274,7 +274,7 @@
 				setTimeout(() => {
 					uni.reLaunch({
 						url:
-							`/pages/test/test?name=${encodeURIComponent(record.name || '')}` +
+							`/pages/feed/entry?name=${encodeURIComponent(record.name || '')}` +
 							`&personnelId=${encodeURIComponent(record._id || '')}` +
 							`&wxOpenid=${encodeURIComponent(fastOpenid || '')}`
 					})
@@ -545,7 +545,7 @@
 						setTimeout(() => {
 							uni.navigateTo({
 								url:
-									`/pages/test/test?name=${encodeURIComponent(persistedRecord.name || '')}` +
+									`/pages/feed/entry?name=${encodeURIComponent(persistedRecord.name || '')}` +
 									`&personnelId=${encodeURIComponent(persistedRecord._id || '')}` +
 									`&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
 							})
@@ -567,14 +567,14 @@
 						})
 					)
 					uni.showToast({
-						title: '宸茶瘑鍒凡缁戝畾璐﹀彿锛屾鍦ㄨ繘鍏ユ祴璇?',
+						title: '已识别已绑定账号，正在进入测试',
 						icon: 'none'
 					})
 					setTimeout(() => {
 						const fastOpenid = this.loginOpenIds[0] || this.getLoginOpenId(this.currentUser || {})
 						uni.navigateTo({
 							url:
-								`/pages/test/test?name=${encodeURIComponent(matchedRecord.name || '')}` +
+								`/pages/feed/entry?name=${encodeURIComponent(matchedRecord.name || '')}` +
 								`&personnelId=${encodeURIComponent(matchedRecord._id || '')}` +
 								`&wxOpenid=${encodeURIComponent(fastOpenid || '')}`
 						})
@@ -705,7 +705,7 @@
 				}
 				if (!/^\d{4}$/.test(this.password.trim())) {
 					uni.showToast({
-						title: '口令必须是4位数字',
+						title: '口令必须为4位数字',
 						icon: 'none'
 					})
 					return
@@ -716,7 +716,7 @@
 
 				this.saving = true
 				uni.showLoading({
-					title: '保存中',
+						title: '保存中',
 					mask: true
 				})
 
@@ -773,7 +773,7 @@
 					})
 					setTimeout(() => {
 						uni.navigateTo({
-							url: `/pages/test/test?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
+							url: `/pages/feed/entry?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
 						})
 					}, 450)
 				} catch (error) {
@@ -785,7 +785,7 @@
 			},
 			goHome() {
 				uni.navigateTo({
-					url: '/pages/mbti-home/home'
+					url: '/pages/index/service'
 				})
 			}
 		}

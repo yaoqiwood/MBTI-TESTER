@@ -40,7 +40,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						desc: '进入人员管理页面，维护参与者资料、审核状态与相关信息。',
 						available: true,
 						minAdminRole: 1,
-						url: '/pages/adminHome/personnelManagement'
+						url: '/pkg/guide/roster'
 					},
 					{
 						key: 'mbti-pair-query',
@@ -48,7 +48,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						desc: '用于配置 MBTI 组合配对规则与查询展示结果。',
 						available: true,
 						minAdminRole: 1,
-						url: '/pages/adminHome/mbti-pair-query'
+						url: '/pkg/guide/insight'
 					},
 					{
 						key: 'admin-user',
@@ -56,7 +56,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						desc: '进入管理员管理页面，维护管理员、超级管理员与候选人员。',
 						available: true,
 						minAdminRole: 3,
-						url: '/pages/adminHome/adminDashboard'
+						url: '/pkg/guide/panel'
 					},
 					{
 						key: 'heart-message-manage',
@@ -64,7 +64,7 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						desc: '用于管理心动私信内容、发送关系与审核策略。',
 						available: true,
 						minAdminRole: 1,
-						url: '/pages/adminHome/heartMessageManagement'
+						url: '/pkg/guide/relay'
 					}
 				]
 			}

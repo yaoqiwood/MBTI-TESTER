@@ -341,7 +341,7 @@ export default {
 				return false
 			}
 			if (adminRole !== 0) {
-				uni.reLaunch({ url: '/pages/adminHome/gameQueryManagement' })
+				uni.reLaunch({ url: '/pkg/guide/hub' })
 				return false
 			}
 			this.personnelId = profile.personnel_id || profile.id || ''

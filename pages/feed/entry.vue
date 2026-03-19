@@ -707,7 +707,7 @@
 
 	function goHome() {
 		uni.reLaunch({
-			url: '/pages/mbti-home/home'
+			url: '/pages/index/service'
 		})
 	}
 </script>
@@ -1142,3 +1142,4 @@
 		}
 	}
 </style>
+
