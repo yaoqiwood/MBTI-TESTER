@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view class="page-glow page-glow-left"></view>
 		<view class="page-glow page-glow-right"></view>

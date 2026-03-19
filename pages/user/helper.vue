@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="showProfilePopup" class="profile-mask" @click="closeProfilePopup">
 			<view class="profile-dialog" @click.stop>

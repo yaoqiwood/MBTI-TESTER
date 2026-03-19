@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view class="hero">
 			<view class="hero-backdrop hero-backdrop-left"></view>

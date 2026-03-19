@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="showCandidatePopup" class="candidate-popup-mask" @click="closeCandidatePopup">
 			<view class="candidate-popup" @click.stop>

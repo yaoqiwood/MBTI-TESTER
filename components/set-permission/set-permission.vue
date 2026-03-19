@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 <view class="root">
 	<view v-if="showGuide" class="guide"></view>
 	<view class="box" :style="{width:170*roles.length+'rpx'}">

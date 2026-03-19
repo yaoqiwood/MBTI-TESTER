@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view class="toolbar">
 			<button class="ghost-btn" @click="goBack">返回上一页</button>

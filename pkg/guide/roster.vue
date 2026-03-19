@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="showDetailPopup && detailRecord" class="detail-mask" @click="closeDetail">
 			<view class="detail-dialog" @click.stop>

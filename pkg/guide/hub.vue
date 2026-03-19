@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view class="panel-card">
 			<view class="card-head">

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
 	<view class="page">
 		<view v-if="!showFormOnly" class="hero-card">
 			<view class="hero-copy">
