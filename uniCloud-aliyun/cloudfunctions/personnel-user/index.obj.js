@@ -213,13 +213,13 @@ function normalizePayload(payload = {}, options = {}) {
 	}
 
 	if (!record.nickname) {
-		throw new Error('鏄电О涓嶈兘涓虹┖')
+		throw new Error('昵称不能为空')
 	}
 	if (!record.name) {
-		throw new Error('濮撳悕涓嶈兘涓虹┖')
+		throw new Error('姓名不能为空')
 	}
 	if (record.mobile && !/^1\d{10}$/.test(record.mobile)) {
-		throw new Error('鎵嬫満鍙锋牸寮忎笉姝ｇ‘')
+		throw new Error('手机号格式不正确')
 	}
 	if (record.id_card && !/(^\d{15}$)|(^\d{17}[\dXx]$)/.test(record.id_card)) {
 			throw new Error('操作失败')
@@ -345,14 +345,14 @@ function getCandidateOpenIdsFromWxOpenid(wxOpenid) {
 
 async function getWorkbookBuffer(fileID) {
 	if (!trimString(fileID)) {
-		throw new Error('缂哄皯瀵煎叆鏂囦欢')
+		throw new Error('缺少导入文件')
 	}
 	const tempRes = await uniCloud.getTempFileURL({
 		fileList: [fileID]
 	})
 	const fileInfo = tempRes.fileList && tempRes.fileList[0]
 	if (!fileInfo || !fileInfo.tempFileURL) {
-		throw new Error('鏈幏鍙栧埌瀵煎叆鏂囦欢鍦板潃')
+		throw new Error('未获取到导入文件地址')
 	}
 	const response = await uniCloud.httpclient.request(fileInfo.tempFileURL, {
 		method: 'GET',
@@ -651,7 +651,7 @@ async function getPersonnelById(id) {
 async function ensureHeartMessagePersonnel(senderId, receiverId) {
 	const sender = await getPersonnelById(senderId)
 	if (!sender) {
-		throw new Error('鍙戦€佹柟鍙備笌鑰呬笉瀛樺湪')
+		throw new Error('发送方参与者不存在')
 	}
 	const receiver = await getPersonnelById(receiverId)
 	if (!receiver) {
@@ -683,7 +683,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		currentRecord ? currentRecord.quota_cost : 1
 	)
 	if (type === 1 && quotaCost < 1) {
-		throw new Error('鎵ｅ噺娆℃暟鑷冲皯涓?1')
+		throw new Error('扣减次数至少为 1')
 	}
 
 	let deliveredAt = currentRecord ? currentRecord.delivered_at || null : null
@@ -718,12 +718,12 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 
 async function updatePersonnelRecord({ id, data } = {}) {
 	if (!trimString(id)) {
-		throw new Error('缂哄皯璁板綍ID')
+		throw new Error('缺少记录ID')
 	}
 	const { data: currentList = [] } = await personnelCollection.doc(id).get()
 	const current = currentList[0]
 	if (!current || isDeletedRecord(current.is_deleted)) {
-		throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+		throw new Error('记录不存在或已被删除')
 	}
 
 	const payload = normalizePayload({
@@ -1017,7 +1017,7 @@ module.exports = {
 	async getUserHeartMessageHome({ personnelId = '', keyword = '' } = {}) {
 		const self = await getPersonnelById(personnelId)
 		if (!self) {
-			throw new Error('褰撳墠鐢ㄦ埛璧勬枡涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('当前用户资料不存在或已被删除')
 		}
 
 		const normalizedKeyword = trimString(keyword).toLowerCase()
@@ -1102,7 +1102,7 @@ module.exports = {
 	async listUserHeartMessages({ personnelId = '', contactId = '', since = '' } = {}) {
 		const self = await getPersonnelById(personnelId)
 		if (!self) {
-			throw new Error('褰撳墠鐢ㄦ埛璧勬枡涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('当前用户资料不存在或已被删除')
 		}
 		const contact = await getPersonnelById(contactId)
 		if (!contact) {
@@ -1209,7 +1209,7 @@ module.exports = {
 					type: normalizeHeartMessageType(latestReceived.type, 0),
 					created_at: latestReceived.created_at_text || latestReceived.created_at || '',
 					can_reply: canReply,
-					can_reply_reason: canReply ? '' : '浣犲凡鍥炲杩囪鏉ヤ俊锛岄渶绛夊緟瀵规柟鍐嶆鏉ヤ俊'
+					can_reply_reason: canReply ? '' : '你已回复过该来信，需等待对方再次来信'
 				}
 			})
 			.filter((item) => {
@@ -1241,13 +1241,13 @@ module.exports = {
 
 	async updatePrivateMessageQuota({ id, quota, mode = 'set' } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯鍙備笌鑰呰褰旾D')
+			throw new Error('缺少参与者记录ID')
 		}
 
 		const { data = [] } = await personnelCollection.doc(id).get()
 		const current = data[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('鍙備笌鑰呬笉瀛樺湪鎴栧凡鍒犻櫎')
+			throw new Error('参与者不存在或已删除')
 		}
 
 		const currentQuota = normalizeNonNegativeInt(current.private_message_quota, 0)
@@ -1290,7 +1290,7 @@ module.exports = {
 		})
 		const senderQuota = normalizeNonNegativeInt(sender.private_message_quota, 0)
 		if (senderQuota < payload.quota_cost) {
-			throw new Error('鍙戦€佹柟鍙敤绉佷俊娆℃暟涓嶈冻')
+			throw new Error('发送方可用私信次数不足')
 		}
 
 		const transaction = await db.startTransaction()
@@ -1414,7 +1414,7 @@ module.exports = {
 
 	async updateHeartMessage({ id, data } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯绉佷俊璁板綍ID')
+			throw new Error('缺少私信记录ID')
 		}
 		const { data: heartMessageList = [] } = await heartMessageCollection.doc(id).get()
 		const currentRecord = heartMessageList[0]
@@ -1460,10 +1460,10 @@ module.exports = {
 			} else {
 				const previousSender = await getPersonnelById(previousSenderId)
 				if (!previousSender) {
-					throw new Error('鍘熷彂閫佹柟鍙備笌鑰呬笉瀛樺湪')
+					throw new Error('原发送方参与者不存在')
 				}
 				if (senderQuota < nextQuotaCost) {
-					throw new Error('鏂板彂閫佹柟鍙敤绉佷俊娆℃暟涓嶈冻')
+					throw new Error('新发送方可用私信次数不足')
 				}
 				const previousSenderQuota = normalizeNonNegativeInt(previousSender.private_message_quota, 0)
 				await transactionPersonnel.doc(previousSender._id).update({
@@ -1494,7 +1494,7 @@ module.exports = {
 
 	async removeHeartMessage({ id } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯绉佷俊璁板綍ID')
+			throw new Error('缺少私信记录ID')
 		}
 		const { data = [] } = await heartMessageCollection.doc(id).get()
 		const current = data[0]
@@ -1517,16 +1517,16 @@ module.exports = {
 
 	async updateUserRole({ id, userRole } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 		const nextUserRole = normalizeUserRole(userRole, -1)
 		if (![USER_ROLE.NORMAL, USER_ROLE.USER].includes(nextUserRole)) {
-			throw new Error('鍙敮鎸?0 鎴?1')
+			throw new Error('只支持 0 或 1')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 		const currentUserRole = normalizeUserRole(current.user_role, USER_ROLE.NORMAL)
 		if (currentUserRole === USER_ROLE.SUPER_USER) {
@@ -1610,12 +1610,12 @@ module.exports = {
 
 	async update({ id, data } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 
 		const payload = normalizePayload({
@@ -1666,12 +1666,12 @@ module.exports = {
 
 	async softDelete({ id } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 
 		await personnelCollection.doc(id).update({
@@ -1695,7 +1695,7 @@ module.exports = {
 		})
 		const firstSheetName = workbook.SheetNames[0]
 		if (!firstSheetName) {
-			throw new Error('Excel 鏂囦欢涓病鏈夊彲璇诲彇鐨勫伐浣滆〃')
+			throw new Error('Excel 文件中没有可读取的工作表')
 		}
 		const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], {
 			header: 1,
@@ -1791,11 +1791,11 @@ module.exports = {
 		const normalizedPersonnelId = trimString(personnelId)
 		const normalizedPasscode = trimString(data && data.passcode)
 		if (!normalizedPersonnelId || !/^\d{4}$/.test(normalizedPasscode)) {
-			return createBusinessError('鍙ｄ护閿欒锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'INVALID_PASSCODE')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		const normalizedUserId = trimString(userId)
 		if (!normalizedUserId) {
-			throw new Error('缂哄皯鐢ㄦ埛ID')
+			throw new Error('缺少用户ID')
 		}
 
 		const { data: currentList = [] } = await personnelCollection
@@ -1809,7 +1809,7 @@ module.exports = {
 
 		if (current && current._id) {
 			if (current.passcode !== normalizedPasscode) {
-				return createBusinessError('鍙ｄ护閿欒锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'INVALID_PASSCODE')
+				return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 			}
 			return await updatePersonnelRecord({
 				id: current._id,
@@ -1828,10 +1828,10 @@ module.exports = {
 			isDeletedRecord(matchedRecord.is_deleted) ||
 			matchedRecord.passcode !== normalizedPasscode
 		) {
-			return createBusinessError('鍙ｄ护閿欒锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'INVALID_PASSCODE')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
-			return createBusinessError('璇ョ敤鎴峰凡缁戝畾鍏朵粬璐﹀彿锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'ACCOUNT_BOUND')
+			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')
 		}
 
 		return await updatePersonnelRecord({
@@ -1849,7 +1849,7 @@ module.exports = {
 		const normalizedPasscode = trimString(passcode)
 		const normalizedUserId = trimString(userId)
 		if (!normalizedId || !/^\d{4}$/.test(normalizedPasscode)) {
-			return createBusinessError('鍙ｄ护閿欒锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'INVALID_PASSCODE')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedId).get()
@@ -1859,10 +1859,10 @@ module.exports = {
 			isDeletedRecord(matchedRecord.is_deleted) ||
 			matchedRecord.passcode !== normalizedPasscode
 		) {
-			return createBusinessError('鍙ｄ护閿欒锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'INVALID_PASSCODE')
+			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
 		}
 		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
-			return createBusinessError('璇ョ敤鎴峰凡缁戝畾鍏朵粬璐﹀彿锛屽鏈夌枒闂鑱旂郴鐩稿叧鍚屽伐', 'ACCOUNT_BOUND')
+			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')
 		}
 
 		return {
@@ -1875,7 +1875,7 @@ module.exports = {
 
 	async saveMbtiResult({ id, mbti } = {}) {
 		if (!trimString(id)) {
-			throw new Error('缂哄皯璁板綍ID')
+			throw new Error('缺少记录ID')
 		}
 
 		const normalizedMbti = trimString(mbti).toUpperCase()
@@ -1886,7 +1886,7 @@ module.exports = {
 		const { data: currentList = [] } = await personnelCollection.doc(id).get()
 		const current = currentList[0]
 		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('璁板綍涓嶅瓨鍦ㄦ垨宸茶鍒犻櫎')
+			throw new Error('记录不存在或已被删除')
 		}
 
 		await personnelCollection.doc(id).update({
