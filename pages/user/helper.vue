@@ -1,6 +1,6 @@
 <template>
 	<view class="page">
-		<view v-if="showProfilePopup" class="profile-mask" @click="closeProfilePopup">
+		<view v-if="shouldShowProfilePopup" class="profile-mask" @click="closeProfilePopup">
 			<view class="profile-dialog" @click.stop>
 				<text class="profile-close" @click="closeProfilePopup">×</text>
 				<text class="profile-title">请先完善资料</text>
@@ -193,6 +193,9 @@
 		computed: {
 			filteredNames() {
 				return this.nameOptions
+			},
+			shouldShowProfilePopup() {
+				return !this.accessFormReviewMode && this.showProfilePopup
 			}
 		},
 		methods: {
@@ -204,10 +207,14 @@
 					const config = (result && result.config) || {}
 					if (Object.prototype.hasOwnProperty.call(config, 'helper_page_review_mode')) {
 						this.accessFormReviewMode = !!config.helper_page_review_mode
+						if (this.accessFormReviewMode) {
+							this.showProfilePopup = false
+						}
 					}
 				} catch (error) {
 					console.error('loadSystemConfig failed', error)
 					this.accessFormReviewMode = true
+					this.showProfilePopup = false
 				}
 			},
 			savePersonnelProfileToStorage(payload) {
@@ -433,7 +440,9 @@
 							user_role: Number(record.user_role) || 0
 						}
 					}
-					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
+					this.showProfilePopup = this.accessFormReviewMode
+						? false
+						: !this.hasNicknameAndAvatar(record || {})
 					if (this.showProfilePopup) {
 						return
 					}
@@ -452,7 +461,9 @@
 				}
 			},
 			syncProfilePopupState() {
-				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
+				this.showProfilePopup = this.accessFormReviewMode
+					? false
+					: !(this.profileForm.nickname && this.profileForm.avatar)
 			},
 			async tryRestoreProfileByOpenid() {
 				try {
@@ -773,7 +784,7 @@
 				})
 			},
 			async submitForm() {
-				if (this.showProfilePopup) {
+				if (this.shouldShowProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',
 						icon: 'none'
@@ -887,7 +898,7 @@
 				}
 			},
 			enterTestDirectly() {
-				if (this.showProfilePopup) {
+				if (this.shouldShowProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',
 						icon: 'none'
