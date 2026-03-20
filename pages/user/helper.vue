@@ -270,7 +270,7 @@
 			},
 			hasNicknameAndAvatar(record = {}) {
 				const nickname = String(record.nickname || '').trim()
-				const avatar = String(record.personal_photo || '').trim()
+				const avatar = String(record.wx_avatar || record.personal_photo || '').trim()
 				return !!(nickname && avatar)
 			},
 			hasNameAndPasscode(record = {}) {
@@ -393,7 +393,7 @@
 			applyProfileFormBySources(record = null) {
 				const user = this.currentUser || {}
 				const recordNickname = String((record && record.nickname) || '').trim()
-				const recordAvatar = String((record && (record.personal_photo || record.wx_avatar)) || '').trim()
+				const recordAvatar = String((record && (record.wx_avatar || record.personal_photo)) || '').trim()
 				const userAvatar =
 					(user.avatar_file && user.avatar_file.url) || user.avatar_file || user.avatar || ''
 
@@ -433,6 +433,10 @@
 							user_role: Number(record.user_role) || 0
 						}
 					}
+					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
+					if (this.showProfilePopup) {
+						return
+					}
 					if (this.shouldAutoRouteToTest(record || {})) {
 						this.routeToTestByRecord(record)
 						return
@@ -441,7 +445,6 @@
 						this.promptRetestForBoundRecord(record)
 						return
 					}
-					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
 				} catch (error) {
 					console.error('initOpenidProfileState failed', error)
 					this.applyProfileFormBySources(null)
@@ -527,22 +530,18 @@
 						if (filePath) {
 							this.profileForm.avatar = filePath
 						}
-					}
+					} 
 				})
 			},
 			async confirmProfile() {
 				if (!this.profileForm.nickname.trim()) {
-					uni.showToast({
-						title: '请输入昵称',
-						icon: 'none'
-					})
+					this.showProfilePopup = true
+					this.showToastOnce('昵称不能为空')
 					return
 				}
 				if (!this.profileForm.avatar) {
-					uni.showToast({
-						title: '请上传头像',
-						icon: 'none'
-					})
+					this.showProfilePopup = true
+					this.showToastOnce('请上传头像')
 					return
 				}
 				let matchedRecord = this.matchedOpenidRecord
@@ -554,7 +553,7 @@
 				} catch (error) {
 					console.error('confirmProfile query by openid failed', error)
 				}
-				if (matchedRecord && matchedRecord._id && this.hasNameAndPasscode(matchedRecord)) {
+				if (matchedRecord && matchedRecord._id) {
 					if (this.saving) {
 						return
 					}
@@ -575,7 +574,6 @@
 							id: matchedRecord._id,
 							data: {
 								nickname: nickname,
-								personal_photo: avatarFileId,
 								wx_openid: loginOpenId,
 								wx_unionid: user.wx_unionid || matchedRecord.wx_unionid || '',
 								wx_nickname: nickname,
@@ -596,7 +594,7 @@
 							passcode:
 								(updateResult && updateResult.passcode) || matchedRecord.passcode || '',
 							nickname: nickname,
-							personal_photo: avatarFileId,
+							personal_photo: matchedRecord.personal_photo || '',
 							wx_openid: loginOpenId,
 							wx_unionid: user.wx_unionid || matchedRecord.wx_unionid || '',
 							wx_nickname: nickname,
@@ -604,6 +602,18 @@
 						}
 						this.matchedOpenidRecord = persistedRecord
 						this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(persistedRecord))
+						this.showProfilePopup = false
+						if (this.hasMbtiResult(persistedRecord)) {
+							this.promptRetestForBoundRecord(persistedRecord)
+							return
+						}
+						if (!this.hasNameAndPasscode(persistedRecord)) {
+							uni.showToast({
+								title: '资料已同步',
+								icon: 'none'
+							})
+							return
+						}
 						uni.showToast({
 							title: '资料已同步，正在进入测试',
 							icon: 'none'
@@ -617,6 +627,7 @@
 							})
 						}, 350)
 					} catch (error) {
+						this.showProfilePopup = true
 						this.showErrorModal((error && error.message) || '资料同步失败')
 					} finally {
 						this.saving = false
@@ -629,7 +640,7 @@
 						this.buildPersonnelProfilePayload({
 							...matchedRecord,
 							nickname: this.profileForm.nickname.trim(),
-							personal_photo: this.profileForm.avatar
+							wx_avatar: this.profileForm.avatar
 						})
 					)
 					uni.showToast({
@@ -728,29 +739,49 @@
 					.slice(0, 4)
 				this.password = value
 			},
-			showErrorModal(message) {
-				const content = message || '保存失败'
+			shouldSkipFeedback(message) {
+				const content = String(message || '').trim()
 				const now = Date.now()
-				if (this.lastErrorMessage === content && now - this.lastErrorAt < 3000) {
-					return
+				if (!content) {
+					return false
+				}
+				if (this.lastErrorMessage === content && now - this.lastErrorAt < 1500) {
+					return true
 				}
 				this.lastErrorMessage = content
 				this.lastErrorAt = now
+				return false
+			},
+			showToastOnce(message) {
+				const content = String(message || '').trim()
+				if (!content || this.shouldSkipFeedback(content)) {
+					return
+				}
+				uni.showToast({
+					title: content,
+					icon: 'none'
+				})
+			},
+			showErrorModal(message) {
+				const content = message || '保存失败'
+				if (this.shouldSkipFeedback(content)) {
+					return
+				}
 				uni.showModal({
 					content: content,
 					showCancel: false
 				})
 			},
 			async submitForm() {
-				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
-					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
-					return
-				}
 				if (this.showProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',
 						icon: 'none'
 					})
+					return
+				}
+				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
+					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
 					return
 				}
 
@@ -806,7 +837,8 @@
 							nickname: this.profileForm.nickname.trim(),
 							name: name,
 							passcode: this.password.trim(),
-							personal_photo: avatarFileId,
+							personal_photo:
+								(this.matchedOpenidRecord && this.matchedOpenidRecord.personal_photo) || '',
 							user_id: uid,
 							wx_openid: loginOpenId,
 							wx_unionid: user.wx_unionid || '',
@@ -830,7 +862,8 @@
 						name: name,
 						nickname: this.profileForm.nickname.trim(),
 						passcode: this.password.trim(),
-						personal_photo: avatarFileId,
+						personal_photo:
+							(this.matchedOpenidRecord && this.matchedOpenidRecord.personal_photo) || '',
 						user_id: uid,
 						wx_openid: loginOpenId,
 						wx_unionid: user.wx_unionid || '',
@@ -854,15 +887,15 @@
 				}
 			},
 			enterTestDirectly() {
-				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
-					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
-					return
-				}
 				if (this.showProfilePopup) {
 					uni.showToast({
 						title: '请先填写昵称和头像',
 						icon: 'none'
 					})
+					return
+				}
+				if (this.hasBoundMbtiRecord(this.matchedOpenidRecord || {})) {
+					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
 					return
 				}
 
