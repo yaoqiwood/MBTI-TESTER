@@ -93,6 +93,21 @@
 			],
 			"description": "0 normal, 1 heart"
 		},
+		"message_scene": {
+			"bsonType": "string",
+			"title": "消息场景",
+			"defaultValue": "contacts",
+			"enum": [
+				{
+					"text": "联系人",
+					"value": "contacts"
+				},
+				{
+					"text": "收信箱",
+					"value": "inbox"
+				}
+			]
+		},
 		"is_anonymous": {
 			"bsonType": "bool",
 			"title": "是否匿名",

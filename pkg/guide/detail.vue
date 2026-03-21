@@ -156,7 +156,7 @@
 					:scroll-into-view="scrollIntoView"
 					scroll-with-animation
 				>
-					<view v-if="chatLoading" class="empty-box small-empty">
+					<view v-if="chatLoading && !messages.length" class="empty-box small-empty">
 						<text>正在加载聊天记录...</text>
 					</view>
 					<view v-else-if="!messages.length" class="empty-box small-empty">
@@ -202,7 +202,7 @@
 						<text class="composer-tip">发送后需等待对方回复，你才能继续发送下一条</text>
 					</view>
 					<view class="composer-actions">
-						<button class="send-btn" :disabled="sending || !canSendToActive" @click="sendMessage">发送</button>
+						<button class="send-btn" :disabled="!canSubmitMessage" @click="sendMessage">发送</button>
 					</view>
 				</view>
 			</view>
@@ -232,7 +232,7 @@
 						<text class="composer-tip">回复后需要等待对方再次发送，你才能继续发下一条</text>
 					</view>
 					<view class="composer-actions">
-						<button class="send-btn" :disabled="inboxSending" @click="sendInboxReply">回复</button>
+						<button class="send-btn" :disabled="!canSubmitInboxReply" @click="sendInboxReply">回复</button>
 					</view>
 				</view>
 			</view>
@@ -244,11 +244,9 @@
 				:class="activeTab === 'contacts' ? 'bottom-tab-active' : ''"
 				@click="openContacts"
 			>
-				<text class="bottom-tab-icon">人</text>
 				<text class="bottom-tab-text">联系人</text>
 			</view>
 			<view class="bottom-tab" :class="activeTab === 'inbox' ? 'bottom-tab-active' : ''" @click="openInbox">
-				<text class="bottom-tab-icon">信</text>
 				<text class="bottom-tab-text">收信箱</text>
 			</view>
 		</view>
@@ -260,7 +258,9 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 let personnelUser = null
 
 try {
-	personnelUser = uniCloud.importObject('personnel-user')
+	personnelUser = uniCloud.importObject('personnel-user', {
+		customUI: true
+	})
 } catch (error) {
 	console.error('import personnel-user failed', error)
 }
@@ -299,30 +299,50 @@ export default {
 			cannotSendReason: '',
 			scrollIntoView: '',
 			realtimeTimer: null,
-			realtimeIdleMs: 7000,
-			realtimeWaitingReplyMs: 2600,
-			realtimeActiveTypingMs: 2200,
+			realtimeIdleMs: 12000,
+			realtimeWaitingReplyMs: 6000,
+			realtimeActiveTypingMs: 3000,
+			realtimeMaxBackoffMs: 30000,
 			realtimeErrorRetryMs: 5000,
-			realtimeFetching: false
+			realtimeFetching: false,
+			realtimeNoChangeCount: 0,
+			inboxRealtimeTimer: null,
+			inboxRealtimeMs: 8000,
+			inboxRealtimeFetching: false,
+			pushRefreshHandler: null
 		}
 	},
 	onLoad() {
 		if (!this.ensurePageAccess()) {
 			return
 		}
+		this.bindPushRefresh()
 		this.loadHome()
 		this.loadInbox()
+		this.startInboxRealtime()
 	},
 	onShow() {
 		if (this.showChatPopup && this.activeContact && this.activeContact._id) {
 			this.startRealtime()
 		}
+		this.startInboxRealtime()
 	},
 	onHide() {
 		this.stopRealtime()
+		this.stopInboxRealtime()
 	},
 	onUnload() {
 		this.stopRealtime()
+		this.stopInboxRealtime()
+		this.unbindPushRefresh()
+	},
+	computed: {
+		canSubmitMessage() {
+			return !!(this.draftMessage && this.draftMessage.trim() && !this.sending && this.canSendToActive)
+		},
+		canSubmitInboxReply() {
+			return !!(this.inboxReplyText && this.inboxReplyText.trim() && !this.inboxSending)
+		}
 	},
 	methods: {
 		getStoredProfile() {
@@ -386,11 +406,14 @@ export default {
 				this.loading = false
 			}
 		},
-		async loadInbox() {
+		async loadInbox(options = {}) {
 			if (!personnelUser || !this.personnelId) {
 				return
 			}
-			this.inboxLoading = true
+			const silent = !!(options && options.silent)
+			if (!silent) {
+				this.inboxLoading = true
+			}
 			try {
 				const res = await personnelUser.listUserInboxLetters({
 					personnelId: this.personnelId,
@@ -399,16 +422,99 @@ export default {
 				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
 				this.inboxList = Array.isArray(res && res.list) ? res.list : []
 			} catch (error) {
-				uni.showToast({
-					title: (error && error.message) || '收信箱加载失败',
-					icon: 'none'
-				})
+				if (!silent) {
+					uni.showToast({
+						title: (error && error.message) || '收信箱加载失败',
+						icon: 'none'
+					})
+				}
 			} finally {
-				this.inboxLoading = false
+				if (!silent) {
+					this.inboxLoading = false
+				}
 			}
+		},
+		bindPushRefresh() {
+			if (!uni.onPushMessage || this.pushRefreshHandler) {
+				return
+			}
+			this.pushRefreshHandler = (res) => {
+				this.handlePushRefresh(res)
+			}
+			uni.onPushMessage(this.pushRefreshHandler)
+		},
+		unbindPushRefresh() {
+			if (!uni.offPushMessage || !this.pushRefreshHandler) {
+				this.pushRefreshHandler = null
+				return
+			}
+			uni.offPushMessage(this.pushRefreshHandler)
+			this.pushRefreshHandler = null
+		},
+		async handlePushRefresh(res) {
+			const rawPayload = res && (res.data || res.payload)
+			let payload = rawPayload
+			if (typeof rawPayload === 'string') {
+				try {
+					payload = JSON.parse(rawPayload)
+				} catch (error) {
+					payload = null
+				}
+			}
+			if (!payload || payload.type !== 'heart-message-refresh') {
+				return
+			}
+			if (payload.receiverPersonnelId && payload.receiverPersonnelId !== this.personnelId) {
+				return
+			}
+			await Promise.all([this.loadHome(), this.loadInbox({ silent: true })])
+			if (
+				this.showChatPopup &&
+				this.activeContact &&
+				this.activeContact._id &&
+				payload.senderPersonnelId === this.activeContact._id
+			) {
+				await this.selectContact(this.activeContact, { silent: true })
+			}
+		},
+		startInboxRealtime() {
+			this.stopInboxRealtime()
+			this.scheduleInboxRealtime(this.inboxRealtimeMs)
+		},
+		scheduleInboxRealtime(delayMs) {
+			const nextDelay = Number(delayMs) > 0 ? Number(delayMs) : this.inboxRealtimeMs
+			this.inboxRealtimeTimer = setTimeout(() => {
+				this.inboxRealtimeTick()
+			}, nextDelay)
+		},
+		stopInboxRealtime() {
+			if (this.inboxRealtimeTimer) {
+				clearTimeout(this.inboxRealtimeTimer)
+				this.inboxRealtimeTimer = null
+			}
+			this.inboxRealtimeFetching = false
+		},
+		async inboxRealtimeTick() {
+			if (!personnelUser || !this.personnelId) {
+				return
+			}
+			if (this.inboxRealtimeFetching || this.inboxSending) {
+				this.scheduleInboxRealtime(this.inboxRealtimeMs)
+				return
+			}
+			this.inboxRealtimeFetching = true
+			try {
+				await this.loadInbox({ silent: true })
+			} catch (error) {
+				// loadInbox already handles user-facing errors
+			} finally {
+				this.inboxRealtimeFetching = false
+			}
+			this.scheduleInboxRealtime(this.inboxRealtimeMs)
 		},
 		startRealtime() {
 			this.stopRealtime()
+			this.resetRealtimeBackoff()
 			this.scheduleRealtime(300)
 		},
 		scheduleRealtime(delayMs) {
@@ -423,18 +529,18 @@ export default {
 				this.realtimeTimer = null
 			}
 			this.realtimeFetching = false
+			this.resetRealtimeBackoff()
+		},
+		resetRealtimeBackoff() {
+			this.realtimeNoChangeCount = 0
 		},
 		getRealtimeDelay(hasNewMessage) {
 			if (hasNewMessage) {
 				return this.realtimeActiveTypingMs
 			}
-			if (this.draftMessage) {
-				return this.realtimeActiveTypingMs
-			}
-			if (!this.canSendToActive) {
-				return this.realtimeWaitingReplyMs
-			}
-			return this.realtimeIdleMs
+			const baseDelay = !this.canSendToActive ? this.realtimeWaitingReplyMs : this.realtimeIdleMs
+			const backoffLevel = Math.min(this.realtimeNoChangeCount, 3)
+			return Math.min(baseDelay * Math.pow(2, backoffLevel), this.realtimeMaxBackoffMs)
 		},
 		mergeMessageList(incoming = []) {
 			if (!Array.isArray(incoming) || !incoming.length) {
@@ -500,12 +606,14 @@ export default {
 				this.messages = nextMessages
 				this.canSendToActive = !!(res && res.can_send !== false)
 				this.cannotSendReason = (res && res.can_send_reason) || '请等待对方回复后再发送下一条'
+				this.realtimeNoChangeCount = hasNewMessage ? 0 : this.realtimeNoChangeCount + 1
 				if (hasNewMessage) {
 					this.$nextTick(() => {
 						this.scrollIntoView = 'msg-' + nextLast
 					})
 				}
 			} catch (error) {
+				this.realtimeNoChangeCount = 0
 				this.scheduleRealtime(this.realtimeErrorRetryMs)
 				return
 			} finally {
@@ -513,13 +621,20 @@ export default {
 			}
 			this.scheduleRealtime(this.getRealtimeDelay(hasNewMessage))
 		},
-		async selectContact(item) {
+		async selectContact(item, options = {}) {
 			if (!item || !item._id || !personnelUser) {
 				return
 			}
+			const silent = !!(options && options.silent)
+			const isSameContact =
+				this.showChatPopup && this.activeContact && this.activeContact._id === item._id
 			this.showChatPopup = true
 			this.activeContact = item
-			this.chatLoading = true
+			if (!isSameContact && !silent) {
+				this.messages = []
+				this.scrollIntoView = ''
+			}
+			this.chatLoading = !silent && (!isSameContact || !this.messages.length)
 			try {
 				const res = await personnelUser.listUserHeartMessages({
 					personnelId: this.personnelId,
@@ -572,6 +687,7 @@ export default {
 		openInbox() {
 			this.activeTab = 'inbox'
 			this.loadInbox()
+			this.startInboxRealtime()
 		},
 		openInboxReply(item) {
 			if (!item || !item.contact_id) {
@@ -613,7 +729,8 @@ export default {
 					personnelId: this.personnelId,
 					contactId: this.activeInboxItem.contact_id,
 					content: this.inboxReplyText,
-					type: 0
+					type: 0,
+					scene: 'inbox'
 				})
 				this.closeInboxReplyPopup()
 				await Promise.all([this.loadHome(), this.loadInbox()])
@@ -657,14 +774,15 @@ export default {
 					personnelId: this.personnelId,
 					contactId: this.activeContact._id,
 					content: this.draftMessage,
-					type: 0
+					type: 0,
+					scene: 'contacts'
 				})
 				const currentContactId = this.activeContact._id
 				this.draftMessage = ''
 				await Promise.all([this.loadHome(), this.loadInbox()])
 				const nextActive = this.contacts.find((item) => item._id === currentContactId)
 				if (nextActive) {
-					await this.selectContact(nextActive)
+					await this.selectContact(nextActive, { silent: true })
 				}
 				uni.showToast({
 					title: '发送成功',
@@ -1235,6 +1353,14 @@ export default {
 	flex-direction: column;
 }
 
+.message-row.other {
+	align-items: flex-start;
+}
+
+.message-row.mine {
+	align-items: flex-end;
+}
+
 .bubble-wrap {
 	align-items: flex-start;
 	gap: 14rpx;
@@ -1250,13 +1376,23 @@ export default {
 }
 
 .bubble-box {
+	display: flex;
 	max-width: 78%;
+	min-width: 0;
 }
 
 .message-row.mine .bubble-box {
-	display: flex;
 	flex-direction: column;
 	align-items: flex-end;
+}
+
+.message-row.mine .bubble-time {
+	text-align: right;
+}
+
+.message-row.mine .bubble-box,
+.message-row.mine .bubble {
+	max-width: 100%;
 }
 
 .message-row.mine .bubble {
@@ -1296,10 +1432,12 @@ export default {
 }
 
 .bubble-text {
+	display: block;
 	font-size: 28rpx;
 	line-height: 1.6;
 	color: #353a30;
 	word-break: break-word;
+	white-space: pre-wrap;
 }
 
 .composer {
@@ -1355,7 +1493,7 @@ export default {
 
 .composer-actions {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: stretch;
 	margin-top: 14rpx;
 }
 
@@ -1365,7 +1503,7 @@ export default {
 }
 
 .send-btn {
-	width: 152rpx;
+	width: 100%;
 	height: 72rpx;
 	line-height: 72rpx;
 	margin: 0;
@@ -1377,7 +1515,10 @@ export default {
 }
 
 .send-btn[disabled] {
-	opacity: 0.6;
+	background: linear-gradient(135deg, #cfd7ca 0%, #ddd6c5 100%);
+	color: #f8f7f3;
+	box-shadow: none;
+	opacity: 1;
 }
 
 .inbox-letter-box {
@@ -1454,7 +1595,6 @@ export default {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 10rpx;
 	height: 84rpx;
 	border-radius: 22rpx;
 	color: #6b7265;
@@ -1464,16 +1604,6 @@ export default {
 .bottom-tab-active {
 	background: linear-gradient(135deg, #e7f0e0 0%, #f2ead0 100%);
 	color: #4f654a;
-}
-
-.bottom-tab-icon {
-	width: 36rpx;
-	height: 36rpx;
-	line-height: 36rpx;
-	border-radius: 50%;
-	text-align: center;
-	font-size: 22rpx;
-	background: rgba(255, 255, 255, 0.72);
 }
 
 .bottom-tab-text {

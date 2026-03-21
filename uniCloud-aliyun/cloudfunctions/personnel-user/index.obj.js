@@ -13,6 +13,7 @@ const MAX_PAGE_SIZE = 50
 const PERSONNEL_CACHE_TTL_MS = 15 * 1000
 const HEART_MESSAGE_CACHE_TTL_MS = 10 * 1000
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
+const PUSH_APP_ID = '__UNI__AD079BD'
 const USER_ROLE = {
 	NORMAL: 0,
 	COLLABORATOR: 1,
@@ -246,6 +247,7 @@ function withFormattedHeartMessage(record = {}) {
 	return {
 		...record,
 		type: normalizeHeartMessageType(record.type, 1),
+		message_scene: normalizeHeartMessageScene(record.message_scene),
 		created_at_text: record.created_at ? new Date(record.created_at).toISOString() : '',
 		updated_at_text: record.updated_at ? new Date(record.updated_at).toISOString() : '',
 		delivered_at_text: record.delivered_at ? new Date(record.delivered_at).toISOString() : ''
@@ -611,6 +613,44 @@ function getMessageTimestamp(record = {}) {
 	return Number.isNaN(time) ? 0 : time
 }
 
+async function pushHeartMessageRefresh({ sender = {}, receiver = {}, scene = 'contacts' } = {}) {
+	const receiverUserId = trimString(receiver && receiver.user_id)
+	if (!receiverUserId || !uniCloud.getPushManager) {
+		return
+	}
+	try {
+		const pushManager = uniCloud.getPushManager({
+			appId: PUSH_APP_ID
+		})
+		await pushManager.sendMessage({
+			user_id: receiverUserId,
+			title: '新消息提醒',
+			content: trimString(sender.nickname || sender.name) || '你收到一条新消息',
+			payload: {
+				type: 'heart-message-refresh',
+				senderPersonnelId: trimString(sender._id),
+				receiverPersonnelId: trimString(receiver._id),
+				scene: normalizeHeartMessageScene(scene),
+				createdAt: new Date().toISOString()
+			},
+			force_notification: false
+		})
+	} catch (error) {
+		console.error('pushHeartMessageRefresh failed', error)
+	}
+}
+
+function normalizeHeartMessageScene(value, fallback = 'contacts') {
+	const normalized = trimString(String(value || '')).toLowerCase()
+	if (normalized === 'inbox') {
+		return 'inbox'
+	}
+	if (normalized === 'contacts') {
+		return 'contacts'
+	}
+	return fallback
+}
+
 function getLatestMessageBetween(list = [], leftId = '', rightId = '') {
 	const normalizedLeftId = trimString(leftId)
 	const normalizedRightId = trimString(rightId)
@@ -634,6 +674,65 @@ function getLatestMessageBetween(list = [], leftId = '', rightId = '') {
 		}
 	}
 	return latest
+}
+
+function getPairHeartMessageState(list = [], selfId = '', contactId = '') {
+	const normalizedLeftId = trimString(selfId)
+	const normalizedRightId = trimString(contactId)
+	if (!normalizedLeftId || !normalizedRightId) {
+		return {
+			latestMessage: null,
+			selfSentContacts: false,
+			contactSentContacts: false,
+			isEstablished: false,
+			canViewInContacts: false,
+			canSendInContacts: true
+		}
+	}
+
+	let latestMessage = null
+	let selfSentContacts = false
+	let contactSentContacts = false
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i]
+		const senderId = trimString(item && item.sender_record_id)
+		const receiverId = trimString(item && item.receiver_record_id)
+		const isPair =
+			(senderId === normalizedLeftId && receiverId === normalizedRightId) ||
+			(senderId === normalizedRightId && receiverId === normalizedLeftId)
+		if (!isPair) {
+			continue
+		}
+		if (!latestMessage || getMessageTimestamp(item) > getMessageTimestamp(latestMessage)) {
+			latestMessage = item
+		}
+		const scene = normalizeHeartMessageScene(item && item.message_scene)
+		if (scene !== 'contacts') {
+			continue
+		}
+		if (senderId === normalizedLeftId && receiverId === normalizedRightId) {
+			selfSentContacts = true
+		}
+		if (senderId === normalizedRightId && receiverId === normalizedLeftId) {
+			contactSentContacts = true
+		}
+	}
+	const isEstablished = selfSentContacts && contactSentContacts
+	const canViewInContacts = isEstablished || selfSentContacts
+	const latestSenderId = trimString(latestMessage && latestMessage.sender_record_id)
+	const canSendInContacts =
+		!latestMessage ||
+		latestSenderId !== normalizedLeftId ||
+		(!isEstablished && !selfSentContacts)
+
+	return {
+		latestMessage,
+		selfSentContacts,
+		contactSentContacts,
+		isEstablished,
+		canViewInContacts,
+		canSendInContacts
+	}
 }
 
 async function getPersonnelById(id) {
@@ -707,6 +806,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 		receiver_mbti: trimString(receiver.mbti).toUpperCase(),
 		content,
 		type,
+		message_scene: normalizeHeartMessageScene(payload.message_scene),
 		is_anonymous: payload.is_anonymous === false ? false : true,
 		quota_cost: quotaCost,
 		status,
@@ -1025,24 +1125,6 @@ module.exports = {
 		const allMessages = (await getCachedHeartMessages())
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedHeartMessage)
-		const messageMap = {}
-
-		allMessages.forEach((item) => {
-			const senderId = trimString(item.sender_record_id)
-			const receiverId = trimString(item.receiver_record_id)
-			let contactId = ''
-			if (senderId === self._id) {
-				contactId = receiverId
-			} else if (receiverId === self._id) {
-				contactId = senderId
-			}
-			if (!contactId) {
-				return
-			}
-			if (!messageMap[contactId] || new Date(item.created_at).getTime() > new Date(messageMap[contactId].created_at).getTime()) {
-				messageMap[contactId] = item
-			}
-		})
 
 		const contacts = personnelList
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
@@ -1050,8 +1132,9 @@ module.exports = {
 			.filter((item) => item.review_status === 'approved')
 			.filter((item) => isOppositeGender(self.gender, item.gender))
 			.map((item) => {
-				const latestMessage = messageMap[item._id] || null
-				const canSend = !latestMessage || trimString(latestMessage.sender_record_id) !== self._id
+				const pairState = getPairHeartMessageState(allMessages, self._id, item._id)
+				const latestMessage = pairState.canViewInContacts ? pairState.latestMessage : null
+				const canSend = pairState.canSendInContacts
 				return {
 					_id: item._id,
 					person_id: item.person_id,
@@ -1068,6 +1151,8 @@ module.exports = {
 							? latestMessage.created_at_text || latestMessage.created_at
 							: '',
 					latest_message_status: latestMessage ? latestMessage.status || 'delivered' : '',
+					is_established_contact: pairState.isEstablished,
+					can_view_messages: pairState.canViewInContacts,
 					can_send: canSend,
 					can_send_reason: canSend ? '' : '请等待对方回复后再发送下一条',
 					heart_message_quota: normalizeNonNegativeInt(item.heart_message_quota, 0),
@@ -1121,11 +1206,12 @@ module.exports = {
 			})
 			.map(withFormattedHeartMessage)
 			.sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
-		const latestMessage = allList[allList.length - 1] || null
-		const canSend = !latestMessage || trimString(latestMessage.sender_record_id) !== self._id
-		let list = allList
+		const pairState = getPairHeartMessageState(allList, self._id, contact._id)
+		const latestMessage = pairState.latestMessage
+		const canSend = pairState.canSendInContacts
+		let list = pairState.canViewInContacts ? allList : []
 		const sinceTime = getMessageTimestamp({ created_at: since })
-		if (sinceTime > 0) {
+		if (sinceTime > 0 && pairState.canViewInContacts) {
 			list = allList.filter((item) => getMessageTimestamp(item) > sinceTime)
 		}
 
@@ -1147,7 +1233,9 @@ module.exports = {
 				nickname: contact.nickname || '',
 				gender: contact.gender || '',
 				mbti: contact.mbti || '',
-				personal_photo: contact.personal_photo || ''
+				personal_photo: contact.personal_photo || '',
+				is_established_contact: pairState.isEstablished,
+				can_view_messages: pairState.canViewInContacts
 			},
 			list,
 			latest_created_at:
@@ -1199,6 +1287,7 @@ module.exports = {
 				const latestReceived = receivedLatestMap[senderId]
 				const sender = personnelMap[senderId] || {}
 				const latestPairMessage = getLatestMessageBetween(allMessages, self._id, senderId)
+				const pairState = getPairHeartMessageState(allMessages, self._id, senderId)
 				const canReply =
 					!!latestPairMessage && trimString(latestPairMessage.sender_record_id) !== self._id
 				return {
@@ -1208,10 +1297,12 @@ module.exports = {
 					content: latestReceived.content || '',
 					type: normalizeHeartMessageType(latestReceived.type, 0),
 					created_at: latestReceived.created_at_text || latestReceived.created_at || '',
+					is_established_contact: pairState.isEstablished,
 					can_reply: canReply,
 					can_reply_reason: canReply ? '' : '你已回复过该来信，需等待对方再次来信'
 				}
 			})
+			.filter((item) => !item.is_established_contact)
 			.filter((item) => {
 				if (!normalizedKeyword) {
 					return true
@@ -1327,16 +1418,33 @@ module.exports = {
 		}
 	},
 
-	async sendUserHeartMessage({ personnelId = '', contactId = '', content = '', type = 0 } = {}) {
+	async sendUserHeartMessage({
+		personnelId = '',
+		contactId = '',
+		content = '',
+		type = 0,
+		scene = 'contacts'
+	} = {}) {
 		const { sender, receiver } = await ensureHeartMessagePersonnel(personnelId, contactId)
-		const latestPairMessage = getLatestMessageBetween(
-			(await getCachedHeartMessages({ forceRefresh: true })).filter(
-				(item) => !isDeletedRecord(item && item.is_deleted)
-			),
-			sender._id,
-			receiver._id
-		)
-		if (latestPairMessage && trimString(latestPairMessage.sender_record_id) === sender._id) {
+		const messageScene = normalizeHeartMessageScene(scene)
+		const pairMessages = (await getCachedHeartMessages({ forceRefresh: true }))
+			.filter((item) => !isDeletedRecord(item && item.is_deleted))
+			.map(withFormattedHeartMessage)
+			.filter((item) => {
+				const senderId = trimString(item.sender_record_id)
+				const receiverId = trimString(item.receiver_record_id)
+				return (
+					(senderId === sender._id && receiverId === receiver._id) ||
+					(senderId === receiver._id && receiverId === sender._id)
+				)
+			})
+		const pairState = getPairHeartMessageState(pairMessages, sender._id, receiver._id)
+		const latestPairMessage = pairState.latestMessage
+		const canSend =
+			messageScene === 'contacts'
+				? pairState.canSendInContacts
+				: !latestPairMessage || trimString(latestPairMessage.sender_record_id) !== sender._id
+		if (!canSend) {
 				throw new Error('操作失败')
 		}
 
@@ -1347,6 +1455,7 @@ module.exports = {
 			payload: {
 				content,
 				type: messageType,
+				message_scene: messageScene,
 				status: 'delivered',
 				quota_cost: messageType === 1 ? 1 : 0,
 				is_anonymous: false,
@@ -1367,6 +1476,11 @@ module.exports = {
 			})
 			invalidateRuntimeCache({
 				heartMessages: true
+			})
+			await pushHeartMessageRefresh({
+				sender,
+				receiver,
+				scene: messageScene
 			})
 			return {
 				id: createRes.id,
@@ -1398,6 +1512,11 @@ module.exports = {
 			invalidateRuntimeCache({
 				personnel: true,
 				heartMessages: true
+			})
+			await pushHeartMessageRefresh({
+				sender,
+				receiver,
+				scene: messageScene
 			})
 
 			return {
