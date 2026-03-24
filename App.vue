@@ -20,6 +20,7 @@
     },
     onShow: function() {
       console.log('App Show')
+      this.syncPushClientId()
     },
     onHide: function() {
       console.log('App Hide')
@@ -27,21 +28,32 @@
     methods: {
       syncPushClientId() {
         if (!uni.getPushClientId || !uniIdCo || !uniCloud.getCurrentUserInfo) {
+          console.log('[push] sync skipped: api unavailable')
           return
         }
         const currentUserInfo = uniCloud.getCurrentUserInfo() || {}
         if (!currentUserInfo.uid) {
+          console.log('[push] sync skipped: no uid yet')
           return
         }
         uni.getPushClientId({
           success: async (res) => {
             const pushClientId = res && res.cid
             if (!pushClientId) {
+              console.log('[push] getPushClientId success but cid empty', res)
               return
             }
             try {
+              console.log('[push] syncing cid', {
+                uid: currentUserInfo.uid,
+                cid: pushClientId
+              })
               await uniIdCo.setPushCid({
                 pushClientId
+              })
+              console.log('[push] sync cid success', {
+                uid: currentUserInfo.uid,
+                cid: pushClientId
               })
             } catch (error) {
               console.error('syncPushClientId failed', error)

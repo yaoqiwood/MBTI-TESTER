@@ -1,7 +1,9 @@
 const XLSX = require('xlsx')
 const db = uniCloud.database()
+const dbCmd = db.command
 const personnelCollection = db.collection('mbti-personnel')
 const heartMessageCollection = db.collection('mbti-heart-message')
+const heartMessageStateCollection = db.collection('mbti-heart-message-state')
 const attachmentCollection = db.collection('mbti-personnel-attachment')
 const userCollection = db.collection('uni-id-users')
 const systemCollection = db.collection('system')
@@ -21,6 +23,7 @@ const USER_ROLE = {
 	SUPER_USER: 3
 }
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
+const HEART_MESSAGE_STATE_DOC_PREFIX = 'personnel'
 const runtimeCache = {
 	personnel: {
 		data: null,
@@ -613,16 +616,236 @@ function getMessageTimestamp(record = {}) {
 	return Number.isNaN(time) ? 0 : time
 }
 
+function toIsoString(value) {
+	if (!value) {
+		return ''
+	}
+	const date = new Date(value)
+	return Number.isNaN(date.getTime()) ? '' : date.toISOString()
+}
+
+function buildHeartMessagePairKey(leftId = '', rightId = '') {
+	const normalizedLeftId = trimString(leftId)
+	const normalizedRightId = trimString(rightId)
+	if (!normalizedLeftId || !normalizedRightId) {
+		return ''
+	}
+	return [normalizedLeftId, normalizedRightId].sort().join('::')
+}
+
+function getHeartMessageStateDocId(personnelId = '') {
+	const normalizedPersonnelId = trimString(personnelId)
+	if (!normalizedPersonnelId) {
+		return ''
+	}
+	return `${HEART_MESSAGE_STATE_DOC_PREFIX}:${normalizedPersonnelId}`
+}
+
+function withFormattedHeartMessageState(record = {}, personnelId = '') {
+	return {
+		personnel_id: trimString(record.personnel_id) || trimString(personnelId),
+		contacts_version: normalizeNonNegativeInt(record.contacts_version, 0),
+		inbox_version: normalizeNonNegativeInt(record.inbox_version, 0),
+		latest_message_at_text: toIsoString(record.latest_message_at),
+		updated_at_text: toIsoString(record.updated_at)
+	}
+}
+
+async function getHeartMessageStateRecord(personnelId = '') {
+	const docId = getHeartMessageStateDocId(personnelId)
+	if (!docId) {
+		return null
+	}
+	const { data = [] } = await heartMessageStateCollection.doc(docId).get()
+	return data[0] || null
+}
+
+async function bumpHeartMessageState({
+	personnelId = '',
+	contactsChanged = false,
+	inboxChanged = false,
+	latestMessageAt = new Date()
+} = {}) {
+	const normalizedPersonnelId = trimString(personnelId)
+	if (!normalizedPersonnelId || (!contactsChanged && !inboxChanged)) {
+		return null
+	}
+
+	const docId = getHeartMessageStateDocId(normalizedPersonnelId)
+	const current = await getHeartMessageStateRecord(normalizedPersonnelId)
+	const now = new Date()
+	const nextLatestMessageAt = normalizeTimestamp(latestMessageAt, now)
+	const payload = {
+		personnel_id: normalizedPersonnelId,
+		contacts_version: normalizeNonNegativeInt(current && current.contacts_version, 0) + (contactsChanged ? 1 : 0),
+		inbox_version: normalizeNonNegativeInt(current && current.inbox_version, 0) + (inboxChanged ? 1 : 0),
+		latest_message_at: nextLatestMessageAt,
+		updated_at: now
+	}
+
+	if (current && current._id) {
+		await heartMessageStateCollection.doc(docId).update(payload)
+		return {
+			...current,
+			...payload
+		}
+	}
+
+	await heartMessageStateCollection.add({
+		_id: docId,
+		...payload,
+		created_at: now
+	})
+	return {
+		_id: docId,
+		...payload,
+		created_at: now
+	}
+}
+
+async function syncHeartMessageStateForPair({ sender = {}, receiver = {}, latestMessageAt = new Date() } = {}) {
+	const personnelIds = Array.from(
+		new Set([trimString(sender && sender._id), trimString(receiver && receiver._id)].filter(Boolean))
+	)
+	if (!personnelIds.length) {
+		return
+	}
+	try {
+		await Promise.all(
+			personnelIds.map((personnelId) =>
+				bumpHeartMessageState({
+					personnelId,
+					contactsChanged: true,
+					inboxChanged: true,
+					latestMessageAt
+				})
+			)
+		)
+	} catch (error) {
+		console.error('syncHeartMessageStateForPair failed', error)
+	}
+}
+
+async function backfillHeartMessagePairKey(list = [], pairKey = '') {
+	const normalizedPairKey = trimString(pairKey)
+	if (!normalizedPairKey || !Array.isArray(list) || !list.length) {
+		return
+	}
+	const pendingIds = list
+		.filter((item) => item && item._id && trimString(item.pair_key) !== normalizedPairKey)
+		.map((item) => item._id)
+	if (!pendingIds.length) {
+		return
+	}
+	try {
+		await Promise.all(
+			pendingIds.map((id) =>
+				heartMessageCollection.doc(id).update({
+					pair_key: normalizedPairKey,
+					updated_at: new Date()
+				})
+			)
+		)
+		invalidateRuntimeCache({
+			heartMessages: true
+		})
+	} catch (error) {
+		console.error('backfillHeartMessagePairKey failed', error)
+	}
+}
+
+async function fetchHeartMessagesByPairKey({ pairKey = '', since = '' } = {}) {
+	const normalizedPairKey = trimString(pairKey)
+	if (!normalizedPairKey) {
+		return []
+	}
+
+	const batchSize = 200
+	const sinceTime = getMessageTimestamp({ created_at: since })
+	let skip = 0
+	let list = []
+
+	while (true) {
+		let query = heartMessageCollection.where({
+			pair_key: normalizedPairKey,
+			is_deleted: false
+		})
+		if (sinceTime > 0 && dbCmd && typeof dbCmd.gt === 'function') {
+			query = heartMessageCollection.where({
+				pair_key: normalizedPairKey,
+				is_deleted: false,
+				created_at: dbCmd.gt(new Date(sinceTime))
+			})
+		}
+		const { data = [] } = await query
+			.orderBy('created_at', 'asc')
+			.skip(skip)
+			.limit(batchSize)
+			.get()
+		const mapped = data.map(withFormattedHeartMessage)
+		list = list.concat(mapped)
+		if (data.length < batchSize) {
+			break
+		}
+		skip += data.length
+	}
+
+	if (sinceTime > 0 && !(dbCmd && typeof dbCmd.gt === 'function')) {
+		return list.filter((item) => getMessageTimestamp(item) > sinceTime)
+	}
+
+	return list
+}
+
+async function fetchLegacyHeartMessagesForPair(selfId = '', contactId = '') {
+	return (await getCachedHeartMessages({ forceRefresh: true }))
+		.filter((item) => !isDeletedRecord(item && item.is_deleted))
+		.filter((item) => {
+			const senderId = trimString(item && item.sender_record_id)
+			const receiverId = trimString(item && item.receiver_record_id)
+			return (
+				(senderId === selfId && receiverId === contactId) ||
+				(senderId === contactId && receiverId === selfId)
+			)
+		})
+		.map(withFormattedHeartMessage)
+		.sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+}
+
+async function listHeartMessagesForPair({ selfId = '', contactId = '', since = '' } = {}) {
+	const pairKey = buildHeartMessagePairKey(selfId, contactId)
+	let pairMessages = await fetchHeartMessagesByPairKey({
+		pairKey,
+		since
+	})
+
+	if (!pairMessages.length && !trimString(since)) {
+		const legacyMessages = await fetchLegacyHeartMessagesForPair(selfId, contactId)
+		if (legacyMessages.length) {
+			pairMessages = legacyMessages
+			await backfillHeartMessagePairKey(legacyMessages, pairKey)
+		}
+	}
+
+	return pairMessages
+}
+
 async function pushHeartMessageRefresh({ sender = {}, receiver = {}, scene = 'contacts' } = {}) {
 	const receiverUserId = trimString(receiver && receiver.user_id)
 	if (!receiverUserId || !uniCloud.getPushManager) {
+		console.log('[push] skip refresh push', {
+			reason: !receiverUserId ? 'receiver_user_id_empty' : 'push_manager_unavailable',
+			senderPersonnelId: trimString(sender && sender._id),
+			receiverPersonnelId: trimString(receiver && receiver._id),
+			receiverUserId
+		})
 		return
 	}
 	try {
 		const pushManager = uniCloud.getPushManager({
 			appId: PUSH_APP_ID
 		})
-		await pushManager.sendMessage({
+		const messagePayload = {
 			user_id: receiverUserId,
 			title: '新消息提醒',
 			content: trimString(sender.nickname || sender.name) || '你收到一条新消息',
@@ -634,6 +857,12 @@ async function pushHeartMessageRefresh({ sender = {}, receiver = {}, scene = 'co
 				createdAt: new Date().toISOString()
 			},
 			force_notification: false
+		}
+		console.log('[push] sendMessage start', messagePayload)
+		const pushRes = await pushManager.sendMessage(messagePayload)
+		console.log('[push] sendMessage success', {
+			receiverUserId,
+			pushRes
 		})
 	} catch (error) {
 		console.error('pushHeartMessageRefresh failed', error)
@@ -735,6 +964,48 @@ function getPairHeartMessageState(list = [], selfId = '', contactId = '') {
 	}
 }
 
+function buildEstablishedContactIdSet(list = [], selfId = '') {
+	const normalizedSelfId = trimString(selfId)
+	if (!normalizedSelfId || !Array.isArray(list) || !list.length) {
+		return new Set()
+	}
+
+	const pairDirectionMap = {}
+	for (let i = 0; i < list.length; i++) {
+		const item = list[i]
+		const senderId = trimString(item && item.sender_record_id)
+		const receiverId = trimString(item && item.receiver_record_id)
+		if (!senderId || !receiverId || (senderId !== normalizedSelfId && receiverId !== normalizedSelfId)) {
+			continue
+		}
+		const otherId = senderId === normalizedSelfId ? receiverId : senderId
+		if (!otherId) {
+			continue
+		}
+		if (!pairDirectionMap[otherId]) {
+			pairDirectionMap[otherId] = {
+				selfSentContacts: false,
+				contactSentContacts: false
+			}
+		}
+		if (senderId === normalizedSelfId && receiverId === otherId) {
+			pairDirectionMap[otherId].selfSentContacts = true
+		}
+		if (senderId === otherId && receiverId === normalizedSelfId) {
+			pairDirectionMap[otherId].contactSentContacts = true
+		}
+	}
+
+	const establishedIdSet = new Set()
+	Object.keys(pairDirectionMap).forEach((otherId) => {
+		const pairState = pairDirectionMap[otherId]
+		if (pairState.selfSentContacts && pairState.contactSentContacts) {
+			establishedIdSet.add(otherId)
+		}
+	})
+	return establishedIdSet
+}
+
 async function getPersonnelById(id) {
 	if (!trimString(id)) {
 		return null
@@ -795,6 +1066,7 @@ function buildHeartMessagePayload({ sender, receiver, payload = {}, currentRecor
 
 	return {
 		sender_record_id: sender._id,
+		pair_key: buildHeartMessagePairKey(sender._id, receiver._id),
 		sender_person_id: Number(sender.person_id || 0),
 		sender_name: trimString(sender.name),
 		sender_nickname: trimString(sender.nickname),
@@ -960,6 +1232,27 @@ module.exports = {
 		}
 	},
 
+	async getUserHeartMessageState({ personnelId = '' } = {}) {
+		const self = await getPersonnelById(personnelId)
+		if (!self) {
+			throw new Error('当前用户资料不存在或已被删除')
+		}
+		const stateRecord = await getHeartMessageStateRecord(self._id)
+		return {
+			self: {
+				_id: self._id,
+				person_id: self.person_id,
+				name: self.name || '',
+				nickname: self.nickname || '',
+				mbti: self.mbti || '',
+				personal_photo: self.personal_photo || '',
+				heart_message_quota: normalizeNonNegativeInt(self.heart_message_quota, 0),
+				remaining_heart_value: getRemainingHeartValue(self, 1)
+			},
+			state: withFormattedHeartMessageState(stateRecord, self._id)
+		}
+	},
+
 	async getSystemConfig({ configCode = 'default' } = {}) {
 		const normalizedConfigCode = trimString(configCode) || 'default'
 		const { data: configList = [] } = await systemCollection
@@ -1122,7 +1415,7 @@ module.exports = {
 
 		const normalizedKeyword = trimString(keyword).toLowerCase()
 		const personnelList = await getCachedPersonnelRecords()
-		const allMessages = (await getCachedHeartMessages())
+		const allMessages = (await getCachedHeartMessages({ forceRefresh: true }))
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedHeartMessage)
 
@@ -1194,25 +1487,27 @@ module.exports = {
 				throw new Error('操作失败')
 		}
 
-		const allList = (await getCachedHeartMessages())
-			.filter((item) => !isDeletedRecord(item && item.is_deleted))
-			.filter((item) => {
-				const senderId = trimString(item.sender_record_id)
-				const receiverId = trimString(item.receiver_record_id)
-				return (
-					(senderId === self._id && receiverId === contact._id) ||
-					(senderId === contact._id && receiverId === self._id)
-				)
-			})
-			.map(withFormattedHeartMessage)
-			.sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+		const fullPairList = await listHeartMessagesForPair({
+			selfId: self._id,
+			contactId: contact._id
+		})
+		const allList = fullPairList.length
+			? fullPairList
+			: await fetchLegacyHeartMessagesForPair(self._id, contact._id)
 		const pairState = getPairHeartMessageState(allList, self._id, contact._id)
 		const latestMessage = pairState.latestMessage
 		const canSend = pairState.canSendInContacts
 		let list = pairState.canViewInContacts ? allList : []
 		const sinceTime = getMessageTimestamp({ created_at: since })
 		if (sinceTime > 0 && pairState.canViewInContacts) {
-			list = allList.filter((item) => getMessageTimestamp(item) > sinceTime)
+			const incrementalList = await listHeartMessagesForPair({
+				selfId: self._id,
+				contactId: contact._id,
+				since
+			})
+			list = incrementalList.length
+				? incrementalList
+				: allList.filter((item) => getMessageTimestamp(item) > sinceTime)
 		}
 
 		return {
@@ -1266,6 +1561,7 @@ module.exports = {
 		const allMessages = (await getCachedHeartMessages({ forceRefresh: true }))
 			.filter((item) => !isDeletedRecord(item && item.is_deleted))
 			.map(withFormattedHeartMessage)
+		const establishedContactIdSet = buildEstablishedContactIdSet(allMessages, self._id)
 
 		const receivedLatestMap = {}
 		allMessages.forEach((item) => {
@@ -1283,6 +1579,7 @@ module.exports = {
 		})
 
 		const list = Object.keys(receivedLatestMap)
+			.filter((senderId) => !establishedContactIdSet.has(senderId))
 			.map((senderId) => {
 				const latestReceived = receivedLatestMap[senderId]
 				const sender = personnelMap[senderId] || {}
@@ -1302,7 +1599,6 @@ module.exports = {
 					can_reply_reason: canReply ? '' : '你已回复过该来信，需等待对方再次来信'
 				}
 			})
-			.filter((item) => !item.is_established_contact)
 			.filter((item) => {
 				if (!normalizedKeyword) {
 					return true
@@ -1405,6 +1701,11 @@ module.exports = {
 				personnel: true,
 				heartMessages: true
 			})
+			await syncHeartMessageStateForPair({
+				sender,
+				receiver,
+				latestMessageAt: new Date()
+			})
 
 			return {
 				id: createRes.id,
@@ -1469,13 +1770,19 @@ module.exports = {
 		}
 
 		if (messageType !== 1) {
+			const createdAt = new Date()
 			const createRes = await heartMessageCollection.add({
 				...payload,
-				created_at: new Date(),
+				created_at: createdAt,
 				is_deleted: false
 			})
 			invalidateRuntimeCache({
 				heartMessages: true
+			})
+			await syncHeartMessageStateForPair({
+				sender,
+				receiver,
+				latestMessageAt: createdAt
 			})
 			await pushHeartMessageRefresh({
 				sender,
@@ -1493,6 +1800,7 @@ module.exports = {
 		try {
 			const transactionPersonnel = transaction.collection('mbti-personnel')
 			const transactionHeartMessage = transaction.collection('mbti-heart-message')
+			const createdAt = new Date()
 
 			if (messageType === 1) {
 				await transactionPersonnel.doc(sender._id).update({
@@ -1504,7 +1812,7 @@ module.exports = {
 
 			const createRes = await transactionHeartMessage.add({
 				...payload,
-				created_at: new Date(),
+				created_at: createdAt,
 				is_deleted: false
 			})
 
@@ -1512,6 +1820,11 @@ module.exports = {
 			invalidateRuntimeCache({
 				personnel: true,
 				heartMessages: true
+			})
+			await syncHeartMessageStateForPair({
+				sender,
+				receiver,
+				latestMessageAt: createdAt
 			})
 			await pushHeartMessageRefresh({
 				sender,

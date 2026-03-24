@@ -299,41 +299,49 @@ export default {
 			cannotSendReason: '',
 			scrollIntoView: '',
 			realtimeTimer: null,
-			realtimeIdleMs: 12000,
-			realtimeWaitingReplyMs: 6000,
+			realtimeIdleMs: 18000,
+			realtimeWaitingReplyMs: 9000,
 			realtimeActiveTypingMs: 3000,
-			realtimeMaxBackoffMs: 30000,
+			realtimeMaxBackoffMs: 45000,
 			realtimeErrorRetryMs: 5000,
 			realtimeFetching: false,
 			realtimeNoChangeCount: 0,
-			inboxRealtimeTimer: null,
-			inboxRealtimeMs: 8000,
-			inboxRealtimeFetching: false,
+			messageStateTimer: null,
+			messageStateMs: 60000,
+			messageStateFetching: false,
+			messageStateReady: false,
+			messageState: {
+				contactsVersion: 0,
+				inboxVersion: 0,
+				latestMessageAtText: '',
+				updatedAtText: ''
+			},
 			pushRefreshHandler: null
 		}
 	},
-	onLoad() {
+	async onLoad() {
 		if (!this.ensurePageAccess()) {
 			return
 		}
 		this.bindPushRefresh()
-		this.loadHome()
-		this.loadInbox()
-		this.startInboxRealtime()
+		await Promise.all([this.loadHome(), this.loadInbox()])
+		await this.syncMessageState({ refreshOnChange: false, silent: true })
+		this.startMessageStatePolling()
 	},
-	onShow() {
+	async onShow() {
 		if (this.showChatPopup && this.activeContact && this.activeContact._id) {
 			this.startRealtime()
 		}
-		this.startInboxRealtime()
+		await this.syncMessageState({ refreshOnChange: false, silent: true })
+		this.startMessageStatePolling()
 	},
 	onHide() {
 		this.stopRealtime()
-		this.stopInboxRealtime()
+		this.stopMessageStatePolling()
 	},
 	onUnload() {
 		this.stopRealtime()
-		this.stopInboxRealtime()
+		this.stopMessageStatePolling()
 		this.unbindPushRefresh()
 	},
 	computed: {
@@ -366,6 +374,22 @@ export default {
 			}
 			this.personnelId = profile.personnel_id || profile.id || ''
 			return !!this.personnelId
+		},
+		getDefaultMessageState() {
+			return {
+				contactsVersion: 0,
+				inboxVersion: 0,
+				latestMessageAtText: '',
+				updatedAtText: ''
+			}
+		},
+		normalizeMessageState(state = {}) {
+			return {
+				contactsVersion: Number(state.contacts_version) || 0,
+				inboxVersion: Number(state.inbox_version) || 0,
+				latestMessageAtText: state.latest_message_at_text || '',
+				updatedAtText: state.updated_at_text || ''
+			}
 		},
 		async loadHome() {
 			if (!personnelUser || !this.personnelId) {
@@ -411,6 +435,7 @@ export default {
 				return
 			}
 			const silent = !!(options && options.silent)
+			const previousInboxSize = Array.isArray(this.inboxList) ? this.inboxList.length : 0
 			if (!silent) {
 				this.inboxLoading = true
 			}
@@ -421,6 +446,17 @@ export default {
 				})
 				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
 				this.inboxList = Array.isArray(res && res.list) ? res.list : []
+				if (silent) {
+					const nextInboxSize = this.inboxList.length
+					if (nextInboxSize !== previousInboxSize) {
+						console.log('[heart-message][polling][inbox]', {
+							personnelId: this.personnelId,
+							previousInboxSize,
+							nextInboxSize,
+							updatedAt: new Date().toISOString()
+						})
+					}
+				}
 			} catch (error) {
 				if (!silent) {
 					uni.showToast({
@@ -432,6 +468,50 @@ export default {
 				if (!silent) {
 					this.inboxLoading = false
 				}
+			}
+		},
+		async syncMessageState(options = {}) {
+			if (!personnelUser || !this.personnelId || this.messageStateFetching) {
+				return false
+			}
+			const refreshOnChange = !!(options && options.refreshOnChange)
+			const silent = !!(options && options.silent)
+			this.messageStateFetching = true
+			try {
+				const res = await personnelUser.getUserHeartMessageState({
+					personnelId: this.personnelId
+				})
+				this.selfProfile = Object.assign({}, this.selfProfile, res && res.self ? res.self : {})
+				const nextState = this.normalizeMessageState(res && res.state ? res.state : {})
+				const previousState = this.messageStateReady
+					? this.messageState
+					: this.getDefaultMessageState()
+				const hasContactsChanged =
+					this.messageStateReady && nextState.contactsVersion !== previousState.contactsVersion
+				const hasInboxChanged =
+					this.messageStateReady && nextState.inboxVersion !== previousState.inboxVersion
+				this.messageState = nextState
+				this.messageStateReady = true
+				if (refreshOnChange && (hasContactsChanged || hasInboxChanged)) {
+					console.log('[heart-message][state-change]', {
+						personnelId: this.personnelId,
+						previousState,
+						nextState,
+						checkedAt: new Date().toISOString()
+					})
+					await Promise.all([
+						this.loadHome(),
+						this.loadInbox({ silent: this.activeTab !== 'inbox' })
+					])
+				}
+				return hasContactsChanged || hasInboxChanged
+			} catch (error) {
+				if (!silent) {
+					console.error('syncMessageState failed', error)
+				}
+				return false
+			} finally {
+				this.messageStateFetching = false
 			}
 		},
 		bindPushRefresh() {
@@ -467,7 +547,13 @@ export default {
 			if (payload.receiverPersonnelId && payload.receiverPersonnelId !== this.personnelId) {
 				return
 			}
+			console.log('[heart-message][push]', {
+				personnelId: this.personnelId,
+				payload,
+				receivedAt: new Date().toISOString()
+			})
 			await Promise.all([this.loadHome(), this.loadInbox({ silent: true })])
+			await this.syncMessageState({ refreshOnChange: false, silent: true })
 			if (
 				this.showChatPopup &&
 				this.activeContact &&
@@ -477,40 +563,45 @@ export default {
 				await this.selectContact(this.activeContact, { silent: true })
 			}
 		},
-		startInboxRealtime() {
-			this.stopInboxRealtime()
-			this.scheduleInboxRealtime(this.inboxRealtimeMs)
+		startMessageStatePolling() {
+			this.stopMessageStatePolling()
+			this.scheduleMessageStatePolling(this.messageStateMs)
 		},
-		scheduleInboxRealtime(delayMs) {
-			const nextDelay = Number(delayMs) > 0 ? Number(delayMs) : this.inboxRealtimeMs
-			this.inboxRealtimeTimer = setTimeout(() => {
-				this.inboxRealtimeTick()
+		scheduleMessageStatePolling(delayMs) {
+			const nextDelay = Number(delayMs) > 0 ? Number(delayMs) : this.messageStateMs
+			this.messageStateTimer = setTimeout(() => {
+				this.messageStateTick()
 			}, nextDelay)
 		},
-		stopInboxRealtime() {
-			if (this.inboxRealtimeTimer) {
-				clearTimeout(this.inboxRealtimeTimer)
-				this.inboxRealtimeTimer = null
+		stopMessageStatePolling() {
+			if (this.messageStateTimer) {
+				clearTimeout(this.messageStateTimer)
+				this.messageStateTimer = null
 			}
-			this.inboxRealtimeFetching = false
+			this.messageStateFetching = false
 		},
-		async inboxRealtimeTick() {
+		async messageStateTick() {
 			if (!personnelUser || !this.personnelId) {
 				return
 			}
-			if (this.inboxRealtimeFetching || this.inboxSending) {
-				this.scheduleInboxRealtime(this.inboxRealtimeMs)
+			if (this.messageStateFetching || this.inboxSending || this.sending) {
+				this.scheduleMessageStatePolling(this.messageStateMs)
 				return
 			}
-			this.inboxRealtimeFetching = true
 			try {
-				await this.loadInbox({ silent: true })
+				console.log('[heart-message][polling][state-check]', {
+					personnelId: this.personnelId,
+					intervalMs: this.messageStateMs,
+					checkedAt: new Date().toISOString()
+				})
+				await this.syncMessageState({
+					refreshOnChange: true,
+					silent: true
+				})
 			} catch (error) {
-				// loadInbox already handles user-facing errors
-			} finally {
-				this.inboxRealtimeFetching = false
+				console.error('messageStateTick failed', error)
 			}
-			this.scheduleInboxRealtime(this.inboxRealtimeMs)
+			this.scheduleMessageStatePolling(this.messageStateMs)
 		},
 		startRealtime() {
 			this.stopRealtime()
@@ -608,6 +699,13 @@ export default {
 				this.cannotSendReason = (res && res.can_send_reason) || '请等待对方回复后再发送下一条'
 				this.realtimeNoChangeCount = hasNewMessage ? 0 : this.realtimeNoChangeCount + 1
 				if (hasNewMessage) {
+					console.log('[heart-message][polling][chat]', {
+						personnelId: this.personnelId,
+						contactId,
+						incomingCount: incoming.length,
+						latestMessageId: nextLast,
+						receivedAt: new Date().toISOString()
+					})
 					this.$nextTick(() => {
 						this.scrollIntoView = 'msg-' + nextLast
 					})
@@ -687,7 +785,7 @@ export default {
 		openInbox() {
 			this.activeTab = 'inbox'
 			this.loadInbox()
-			this.startInboxRealtime()
+			this.startMessageStatePolling()
 		},
 		openInboxReply(item) {
 			if (!item || !item.contact_id) {
@@ -734,6 +832,7 @@ export default {
 				})
 				this.closeInboxReplyPopup()
 				await Promise.all([this.loadHome(), this.loadInbox()])
+				await this.syncMessageState({ refreshOnChange: false, silent: true })
 				uni.showToast({
 					title: '回复成功',
 					icon: 'success'
@@ -784,6 +883,7 @@ export default {
 				if (nextActive) {
 					await this.selectContact(nextActive, { silent: true })
 				}
+				await this.syncMessageState({ refreshOnChange: false, silent: true })
 				uni.showToast({
 					title: '发送成功',
 					icon: 'success'
