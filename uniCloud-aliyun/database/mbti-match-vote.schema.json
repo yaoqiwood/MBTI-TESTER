@@ -1,0 +1,214 @@
+{
+	"bsonType": "object",
+	"required": [
+		"activity_id",
+		"creator_record_id",
+		"creator_person_id",
+		"creator_name",
+		"picks",
+		"pick_count",
+		"total_score",
+		"submit_status",
+		"deadline_at",
+		"created_at",
+		"updated_at"
+	],
+	"permission": {
+		"read": true,
+		"create": true,
+		"update": true,
+		"delete": true
+	},
+	"properties": {
+		"_id": {
+			"description": "文档 ID，系统自动生成"
+		},
+		"activity_id": {
+			"bsonType": "string",
+			"title": "活动ID",
+			"description": "同一活动内每位用户仅允许提交一次最终志愿",
+			"trim": "both"
+		},
+		"creator_record_id": {
+			"bsonType": "string",
+			"title": "提交人档案ID",
+			"description": "关联 mbti-personnel._id",
+			"foreignKey": "mbti-personnel._id",
+			"trim": "both"
+		},
+		"creator_person_id": {
+			"bsonType": "int",
+			"title": "提交人编号",
+			"description": "mbti-personnel.person_id 快照"
+		},
+		"creator_user_id": {
+			"bsonType": "string",
+			"title": "提交人用户ID",
+			"description": "关联 uni-id-users._id",
+			"foreignKey": "uni-id-users._id",
+			"trim": "both"
+		},
+		"creator_wx_openid": {
+			"bsonType": "string",
+			"title": "提交人微信OpenID",
+			"description": "微信小程序用户唯一标识快照",
+			"trim": "both"
+		},
+		"creator_name": {
+			"bsonType": "string",
+			"title": "提交人姓名",
+			"trim": "both"
+		},
+		"creator_nickname": {
+			"bsonType": "string",
+			"title": "提交人昵称",
+			"trim": "both"
+		},
+		"picks": {
+			"bsonType": "array",
+			"title": "心动名单",
+			"description": "最多10个对象，rank 为 1-10；score 通常为 11-rank（第1名10分）",
+			"items": {
+				"bsonType": "object",
+				"required": [
+					"target_record_id",
+					"target_person_id",
+					"target_name",
+					"rank",
+					"score"
+				],
+				"properties": {
+					"target_record_id": {
+						"bsonType": "string",
+						"title": "被选中档案ID",
+						"description": "关联 mbti-personnel._id",
+						"foreignKey": "mbti-personnel._id",
+						"trim": "both"
+					},
+					"target_person_id": {
+						"bsonType": "int",
+						"title": "被选中编号"
+					},
+					"target_user_id": {
+						"bsonType": "string",
+						"title": "被选中用户ID",
+						"description": "关联 uni-id-users._id",
+						"foreignKey": "uni-id-users._id",
+						"trim": "both"
+					},
+					"target_wx_openid": {
+						"bsonType": "string",
+						"title": "被选中微信OpenID",
+						"trim": "both"
+					},
+					"target_name": {
+						"bsonType": "string",
+						"title": "被选中姓名",
+						"trim": "both"
+					},
+					"target_nickname": {
+						"bsonType": "string",
+						"title": "被选中昵称",
+						"trim": "both"
+					},
+					"target_mbti": {
+						"bsonType": "string",
+						"title": "被选中MBTI快照",
+						"trim": "both"
+					},
+					"rank": {
+						"bsonType": "int",
+						"title": "优先级排名",
+						"description": "1 表示最喜欢，10 表示第十志愿"
+					},
+					"score": {
+						"bsonType": "int",
+						"title": "本对象分数",
+						"description": "建议按 11-rank 计算；未被选中不入数组，默认为0分"
+					},
+					"remark": {
+						"bsonType": "string",
+						"title": "对象备注",
+						"trim": "both"
+					}
+				}
+			}
+		},
+		"pick_count": {
+			"bsonType": "int",
+			"title": "已选人数",
+			"defaultValue": 0,
+			"description": "已选择对象数量，建议范围 0-10"
+		},
+		"total_score": {
+			"bsonType": "int",
+			"title": "总分",
+			"defaultValue": 0,
+			"description": "picks 内 score 合计"
+		},
+		"submit_status": {
+			"bsonType": "string",
+			"title": "提交状态",
+			"defaultValue": "draft",
+			"enum": [
+				{
+					"text": "草稿",
+					"value": "draft"
+				},
+				{
+					"text": "已提交",
+					"value": "submitted"
+				},
+				{
+					"text": "已锁定",
+					"value": "locked"
+				}
+			],
+			"description": "截止后可由后端统一转 locked，禁止继续修改"
+		},
+		"submitted_at": {
+			"bsonType": "timestamp",
+			"title": "最终提交时间"
+		},
+		"deadline_at": {
+			"bsonType": "timestamp",
+			"title": "活动截止时间",
+			"description": "后端写入活动的官方截止时间快照"
+		},
+		"is_overdue": {
+			"bsonType": "bool",
+			"title": "是否超时提交",
+			"defaultValue": false
+		},
+		"remark": {
+			"bsonType": "string",
+			"title": "备注",
+			"trim": "both"
+		},
+		"is_deleted": {
+			"bsonType": "bool",
+			"title": "是否删除",
+			"defaultValue": false
+		},
+		"created_by": {
+			"bsonType": "string",
+			"title": "创建人",
+			"description": "通常写入当前操作用户ID或系统标识",
+			"trim": "both"
+		},
+		"created_at": {
+			"bsonType": "timestamp",
+			"title": "创建时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		},
+		"updated_at": {
+			"bsonType": "timestamp",
+			"title": "修改时间",
+			"forceDefaultValue": {
+				"$env": "now"
+			}
+		}
+	}
+}

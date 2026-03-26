@@ -8,7 +8,7 @@
 
 			<view class="feature-grid">
 				<view
-					v-for="(item, index) in visibleFeatureList"
+					v-for="item in visibleFeatureList"
 					:key="item.key"
 					class="feature-card"
 					@click="handleFeatureTap(item)"
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
+	const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 
 	export default {
 		data() {
@@ -65,6 +65,13 @@ const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
 						available: true,
 						minUserRole: 1,
 						url: '/pkg/guide/relay'
+					},
+					{
+						key: 'match-vote-manage',
+						title: '相亲匹配查看管理',
+						desc: '用于查看和管理用户在活动截止前提交的心动排名与分数记录。',
+						available: false,
+						minUserRole: 1
 					}
 				]
 			}

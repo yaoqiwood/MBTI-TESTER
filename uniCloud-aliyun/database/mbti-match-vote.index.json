@@ -1,0 +1,33 @@
+[
+	{
+		"MgoKeySchema": {
+			"activity_id": 1,
+			"creator_record_id": 1
+		},
+		"MgoName": "activity_creator_unique_index",
+		"MgoUnique": true
+	},
+	{
+		"MgoKeySchema": {
+			"activity_id": 1,
+			"submit_status": 1,
+			"updated_at": -1
+		},
+		"MgoName": "activity_status_updated_at_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"creator_person_id": 1
+		},
+		"MgoName": "creator_person_id_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"picks.target_record_id": 1
+		},
+		"MgoName": "target_record_id_index",
+		"MgoUnique": false
+	}
+]
