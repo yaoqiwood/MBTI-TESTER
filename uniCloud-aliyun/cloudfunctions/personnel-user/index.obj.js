@@ -101,7 +101,12 @@ function normalizeReviewStatus(value) {
 }
 
 function generateRandomPasscode() {
-	return String(Math.floor(Math.random() * 10000)).padStart(4, '0')
+	const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+	let code = ''
+	for (let i = 0; i < 8; i++) {
+		code += alphabet.charAt(Math.floor(Math.random() * alphabet.length))
+	}
+	return code
 }
 
 function normalizePasscode(value, { autoGenerate = false } = {}) {
@@ -109,8 +114,8 @@ function normalizePasscode(value, { autoGenerate = false } = {}) {
 	if (!normalized) {
 		return autoGenerate ? generateRandomPasscode() : ''
 	}
-	if (!/^\d{4}$/.test(normalized)) {
-			throw new Error('操作失败')
+	if (normalized.length > 32) {
+		throw new Error('邀请码长度不能超过32位')
 	}
 	return normalized
 }
@@ -231,10 +236,6 @@ function normalizePayload(payload = {}, options = {}) {
 	if (record.mbti && !/^(E|I)(N|S)(T|F)(J|P)$/.test(record.mbti)) {
 			throw new Error('操作失败')
 	}
-	if (record.passcode && !/^\d{4}$/.test(record.passcode)) {
-			throw new Error('操作失败')
-	}
-
 	return record
 }
 
@@ -324,6 +325,62 @@ async function findActiveRecordByWxOpenid(wxOpenid) {
 		.limit(20)
 		.get()
 	return list.find((item) => !isDeletedRecord(item && item.is_deleted)) || null
+}
+
+async function findActiveRecordsByPasscode(passcode, limit = 2) {
+	const normalizedPasscode = trimString(passcode)
+	if (!normalizedPasscode) {
+		return []
+	}
+	const maxLimit = Math.min(Math.max(Number(limit) || 2, 1), 20)
+	const { data: list = [] } = await personnelCollection
+		.where({
+			passcode: normalizedPasscode
+		})
+		.limit(maxLimit)
+		.get()
+	return list.filter((item) => !isDeletedRecord(item && item.is_deleted))
+}
+
+async function resolveUniquePasscode({
+	passcode = '',
+	excludeId = '',
+	autoGenerate = false,
+	reservedSet = null
+} = {}) {
+	const normalizedExcludeId = trimString(excludeId)
+	let candidate = normalizePasscode(passcode, {
+		autoGenerate
+	})
+	if (!candidate) {
+		return ''
+	}
+	for (let i = 0; i < 30; i++) {
+		if (i > 0) {
+			candidate = generateRandomPasscode()
+		}
+		if (reservedSet && reservedSet.has(candidate)) {
+			if (!autoGenerate && i === 0) {
+				throw new Error('邀请码已存在，请更换后重试')
+			}
+			continue
+		}
+		const conflictList = await findActiveRecordsByPasscode(candidate, 20)
+		const hasConflict = conflictList.some(
+			(item) => item && trimString(item._id) && trimString(item._id) !== normalizedExcludeId
+		)
+		if (hasConflict) {
+			if (!autoGenerate && i === 0) {
+				throw new Error('邀请码已存在，请更换后重试')
+			}
+			continue
+		}
+		if (reservedSet) {
+			reservedSet.add(candidate)
+		}
+		return candidate
+	}
+	throw new Error('邀请码生成失败，请稍后重试')
 }
 
 function getCandidateOpenIdsFromWxOpenid(wxOpenid) {
@@ -1103,6 +1160,10 @@ async function updatePersonnelRecord({ id, data } = {}) {
 		...data,
 		submitted_at: current.submitted_at
 	})
+	payload.passcode = await resolveUniquePasscode({
+		passcode: payload.passcode,
+		excludeId: id
+	})
 
 	await personnelCollection.doc(id).update({
 		...payload,
@@ -1121,7 +1182,16 @@ async function updatePersonnelRecord({ id, data } = {}) {
 		id,
 		person_id: current.person_id,
 		passcode: payload.passcode,
-		user_role: payload.user_role
+		user_role: payload.user_role,
+		name: payload.name,
+		nickname: payload.nickname,
+		mbti: payload.mbti,
+		personal_photo: payload.personal_photo,
+		user_id: payload.user_id,
+		wx_openid: payload.wx_openid,
+		wx_unionid: payload.wx_unionid,
+		wx_nickname: payload.wx_nickname,
+		wx_avatar: payload.wx_avatar
 	}
 }
 
@@ -1991,6 +2061,10 @@ module.exports = {
 		const record = normalizePayload(data, {
 			autoGenerate: true
 		})
+		record.passcode = await resolveUniquePasscode({
+			passcode: record.passcode,
+			autoGenerate: true
+		})
 		const transaction = await db.startTransaction()
 
 		try {
@@ -2041,39 +2115,10 @@ module.exports = {
 	},
 
 	async update({ id, data } = {}) {
-		if (!trimString(id)) {
-			throw new Error('缺少记录ID')
-		}
-		const { data: currentList = [] } = await personnelCollection.doc(id).get()
-		const current = currentList[0]
-		if (!current || isDeletedRecord(current.is_deleted)) {
-			throw new Error('记录不存在或已被删除')
-		}
-
-		const payload = normalizePayload({
-			...current,
-			...data,
-			submitted_at: current.submitted_at
-		})
-
-		await personnelCollection.doc(id).update({
-			...payload,
-			person_id: current.person_id
-		})
-		await syncPersonalPhotoAttachment({
-			personnelRecordId: id,
-			personId: current.person_id,
-			fileID: payload.personal_photo
-		})
-		invalidateRuntimeCache({
-			personnel: true
-		})
-
-		return {
+		return await updatePersonnelRecord({
 			id,
-			person_id: current.person_id,
-			passcode: payload.passcode
-		}
+			data
+		})
 	},
 
 	/*
@@ -2156,6 +2201,7 @@ module.exports = {
 			const counterDoc = counterRes.data && counterRes.data[0]
 			let nextId = counterDoc ? counterDoc.seq : 0
 			const docsToAdd = []
+			const reservedPasscodes = new Set()
 
 			for (let i = 0; i < dataRows.length; i++) {
 				const excelRow = dataRows[i]
@@ -2166,6 +2212,11 @@ module.exports = {
 				try {
 					const record = normalizePayload(payload, {
 						autoGenerate: true
+					})
+					record.passcode = await resolveUniquePasscode({
+						passcode: record.passcode,
+						autoGenerate: true,
+						reservedSet: reservedPasscodes
 					})
 					nextId += 1
 					docsToAdd.push({
@@ -2219,54 +2270,45 @@ module.exports = {
 		}
 	},
 
-	async upsertByUser({ userId, personnelId, data } = {}) {
-		const normalizedPersonnelId = trimString(personnelId)
-		const normalizedPasscode = trimString(data && data.passcode)
-		if (!normalizedPersonnelId || !/^\d{4}$/.test(normalizedPasscode)) {
-			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
-		}
+	async upsertByUser({ userId, data } = {}) {
 		const normalizedUserId = trimString(userId)
 		if (!normalizedUserId) {
 			throw new Error('缺少用户ID')
 		}
-
-		const { data: currentList = [] } = await personnelCollection
-			.where({
-				user_id: normalizedUserId,
-				is_deleted: false
-			})
-			.limit(1)
-			.get()
-		const current = currentList[0]
-
-		if (current && current._id) {
-			if (current.passcode !== normalizedPasscode) {
-				return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
+		const normalizedPasscode = normalizePasscode(data && data.passcode)
+		console.log('[personnel-user] upsertByUser start', {
+			userId: normalizedUserId,
+			passcode: normalizedPasscode
+		})
+		if (!normalizedPasscode) {
+			return {
+				ok: true,
+				skipped: true
 			}
-			return await updatePersonnelRecord({
-				id: current._id,
-				data: {
-					...data,
-					user_id: normalizedUserId,
-					passcode: current.passcode
-				}
-			})
 		}
 
-		const { data: matchedList = [] } = await personnelCollection.doc(normalizedPersonnelId).get()
-		const matchedRecord = matchedList[0]
-		if (
-			!matchedRecord ||
-			isDeletedRecord(matchedRecord.is_deleted) ||
-			matchedRecord.passcode !== normalizedPasscode
-		) {
-			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
+		const matchedList = await findActiveRecordsByPasscode(normalizedPasscode, 3)
+		console.log('[personnel-user] upsertByUser matchedList', {
+			passcode: normalizedPasscode,
+			count: matchedList.length,
+			ids: matchedList.map((item) => item && item._id)
+		})
+		if (!matchedList.length) {
+			return {
+				ok: true,
+				skipped: true,
+				matched: false
+			}
 		}
+		if (matchedList.length > 1) {
+			return createBusinessError('邀请码重复，请联系同工处理', 'INVITE_CODE_CONFLICT')
+		}
+		const matchedRecord = matchedList[0]
 		if (matchedRecord.user_id && matchedRecord.user_id !== normalizedUserId) {
 			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')
 		}
 
-		return await updatePersonnelRecord({
+		const updateResult = await updatePersonnelRecord({
 			id: matchedRecord._id,
 			data: {
 				...data,
@@ -2274,14 +2316,20 @@ module.exports = {
 				passcode: matchedRecord.passcode
 			}
 		})
+		return {
+			ok: true,
+			matched: true,
+			updated: true,
+			...updateResult
+		}
 	},
 
 	async verifyAccess({ id, passcode, userId = '' } = {}) {
 		const normalizedId = trimString(id)
-		const normalizedPasscode = trimString(passcode)
+		const normalizedPasscode = normalizePasscode(passcode)
 		const normalizedUserId = trimString(userId)
-		if (!normalizedId || !/^\d{4}$/.test(normalizedPasscode)) {
-			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
+		if (!normalizedId || !normalizedPasscode) {
+			return createBusinessError('邀请码无效，如有疑问请联系同工', 'INVALID_INVITE_CODE')
 		}
 
 		const { data: matchedList = [] } = await personnelCollection.doc(normalizedId).get()
@@ -2291,7 +2339,7 @@ module.exports = {
 			isDeletedRecord(matchedRecord.is_deleted) ||
 			matchedRecord.passcode !== normalizedPasscode
 		) {
-			return createBusinessError('口令错误，如有疑问请联系相关同工', 'INVALID_PASSCODE')
+			return createBusinessError('邀请码无效，如有疑问请联系同工', 'INVALID_INVITE_CODE')
 		}
 		if (matchedRecord.user_id && normalizedUserId && matchedRecord.user_id !== normalizedUserId) {
 			return createBusinessError('该用户已绑定其他账号，如有疑问请联系相关同工', 'ACCOUNT_BOUND')

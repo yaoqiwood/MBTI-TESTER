@@ -72,6 +72,13 @@
 					}
 				},
 				{
+					"path": "intent",
+					"style": {
+						"navigationBarTitleText": "意向记录",
+						"enablePullDownRefresh": false
+					}
+				},
+				{
 					"path": "detail",
 					"style": {
 						"navigationBarTitleText": "详情",

@@ -78,73 +78,30 @@
 		<view class="hero">
 			<view class="hero-backdrop hero-backdrop-left"></view>
 			<view class="hero-backdrop hero-backdrop-right"></view>
-			<view class="hero-copy">
+			<view class="hero-copy" @click="handleHeroCopyTap">
 				<text class="eyebrow">LOVE MBTI LAB</text>
 				<text class="headline">信息确认</text>
-				<text class="subhead"
-					>{{
-						accessFormReviewMode
-							? '当前为快捷进入模式，可直接进入测试。'
-							: '填写姓名与口令后提交。姓名支持输入搜索，若与候选名单不匹配会自动清空。'
-					}}</text
-				>
 			</view>
 
 			<view class="form-card">
-				<template v-if="!accessFormReviewMode">
-					<view class="field-block">
-						<text class="field-label">姓名</text>
-						<view class="input-shell" :class="{ active: showNameOptions }">
-							<input
-								v-model="nameInput"
-								class="text-input"
-								type="text"
-								placeholder="输入姓名进行搜索"
-								@focus="handleNameFocus"
-								@input="handleNameInput"
-								@blur="handleNameBlur"
-								confirm-type="done"
-							/>
-						</view>
-						<view v-if="showNameOptions && filteredNames.length" class="options-panel">
-							<view
-								v-for="item in filteredNames"
-								:key="item._id"
-								class="option-item"
-								@touchstart="selectName(item)"
-								@mousedown="selectName(item)"
-							>
-								<text>{{ item.name }}</text>
-							</view>
-						</view>
-						<text v-else-if="showNameOptions && nameInput" class="empty-tip"
-							>没有匹配姓名，离开输入框后会自动清空。</text
-						>
+				<view v-if="shouldShowInviteCodeField" class="field-block">
+					<text class="field-label">邀请码</text>
+					<view class="input-shell">
+						<input
+							v-model="password"
+							class="text-input"
+							type="text"
+							maxlength="32"
+							@input="handlePasswordInput"
+							placeholder="请输入邀请码（如没有可不填）"
+							confirm-type="done"
+						/>
 					</view>
+				</view>
 
-					<view class="field-block">
-						<text class="field-label">口令</text>
-						<view class="input-shell">
-							<input
-								v-model="password"
-								class="text-input"
-								type="text"
-								password
-								maxlength="4"
-								@input="handlePasswordInput"
-								placeholder="请输入口令"
-								confirm-type="done"
-							/>
-						</view>
-					</view>
-				</template>
-
-				<view class="action-row">
-					<view
-						class="action-btn primary-btn"
-						@click="accessFormReviewMode ? enterTestDirectly() : submitForm()"
-					>
-						<text>{{ accessFormReviewMode ? '进入测试' : '确认' }}</text>
+				<view :class="['action-row', { 'action-row-stacked': !shouldShowInviteCodeField }]">
+					<view class="action-btn primary-btn" @click="handlePrimaryAction">
+						<text>{{ shouldShowInviteCodeField ? '确认' : '进入测试' }}</text>
 					</view>
 					<view class="action-btn ghost-btn" @click="goHome">
 						<text>返回首页</text>
@@ -170,7 +127,6 @@
 				loginOpenIds: [],
 				password: '',
 				showNameOptions: false,
-				accessFormReviewMode: true,
 				showProfilePopup: false,
 				saving: false,
 				lastErrorMessage: '',
@@ -179,6 +135,10 @@
 				hasPromptedRetest: false,
 				currentUser: null,
 				restoredByOpenid: false,
+				helperPageReviewMode: true,
+				inviteCodeTapCount: 0,
+				lastInviteCodeTapAt: 0,
+				inviteCodeUnlocked: false,
 				profileForm: {
 					nickname: '',
 					avatar: ''
@@ -195,7 +155,10 @@
 				return this.nameOptions
 			},
 			shouldShowProfilePopup() {
-				return !this.accessFormReviewMode && this.showProfilePopup
+				return this.showProfilePopup
+			},
+			shouldShowInviteCodeField() {
+				return !this.helperPageReviewMode && this.inviteCodeUnlocked
 			}
 		},
 		methods: {
@@ -205,17 +168,41 @@
 						configCode: 'default'
 					})
 					const config = (result && result.config) || {}
-					if (Object.prototype.hasOwnProperty.call(config, 'helper_page_review_mode')) {
-						this.accessFormReviewMode = !!config.helper_page_review_mode
-						if (this.accessFormReviewMode) {
-							this.showProfilePopup = false
-						}
+					this.helperPageReviewMode = !!config.helper_page_review_mode
+					if (this.helperPageReviewMode) {
+						this.inviteCodeUnlocked = false
+						this.password = ''
 					}
 				} catch (error) {
 					console.error('loadSystemConfig failed', error)
-					this.accessFormReviewMode = true
-					this.showProfilePopup = false
+					this.helperPageReviewMode = true
+					this.inviteCodeUnlocked = false
+					this.password = ''
 				}
+			},
+			handleHeroCopyTap() {
+				const now = Date.now()
+				if (now - this.lastInviteCodeTapAt > 1200) {
+					this.inviteCodeTapCount = 0
+				}
+				this.lastInviteCodeTapAt = now
+				this.inviteCodeTapCount += 1
+				if (this.inviteCodeTapCount < 5) {
+					return
+				}
+				this.inviteCodeTapCount = 0
+				if (this.helperPageReviewMode) {
+					return
+				}
+				this.inviteCodeUnlocked = true
+			},
+			handlePrimaryAction() {
+				if (!this.shouldShowInviteCodeField) {
+					this.password = ''
+					this.enterTestDirectly()
+					return
+				}
+				this.submitForm()
 			},
 			savePersonnelProfileToStorage(payload) {
 				try {
@@ -283,7 +270,7 @@
 			hasNameAndPasscode(record = {}) {
 				const name = String(record.name || '').trim()
 				const passcode = String(record.passcode || '').trim()
-				return !!(name && /^\d{4}$/.test(passcode))
+				return !!(name && passcode)
 			},
 			shouldAutoRouteToTest(record = {}) {
 				return (
@@ -440,9 +427,7 @@
 							user_role: Number(record.user_role) || 0
 						}
 					}
-					this.showProfilePopup = this.accessFormReviewMode
-						? false
-						: !this.hasNicknameAndAvatar(record || {})
+					this.showProfilePopup = !this.hasNicknameAndAvatar(record || {})
 					if (this.showProfilePopup) {
 						return
 					}
@@ -461,9 +446,7 @@
 				}
 			},
 			syncProfilePopupState() {
-				this.showProfilePopup = this.accessFormReviewMode
-					? false
-					: !(this.profileForm.nickname && this.profileForm.avatar)
+				this.showProfilePopup = !(this.profileForm.nickname && this.profileForm.avatar)
 			},
 			async tryRestoreProfileByOpenid() {
 				try {
@@ -745,9 +728,9 @@
 				this.nameOptions = []
 			},
 			handlePasswordInput(event) {
-				const value = ((event && event.detail && event.detail.value) || '')
-					.replace(/\D/g, '')
-					.slice(0, 4)
+				const value = String((event && event.detail && event.detail.value) || '')
+					.trim()
+					.slice(0, 32)
 				this.password = value
 			},
 			shouldSkipFeedback(message) {
@@ -783,6 +766,25 @@
 					showCancel: false
 				})
 			},
+			isInviteCodeInvalidFeedback(payload = {}) {
+				const code = String(payload.code || payload.errCode || '')
+					.trim()
+					.toUpperCase()
+				const message = String(payload.message || payload.errMsg || '')
+					.trim()
+					.toLowerCase()
+				if (code === 'INVALID_INVITE_CODE' || code === 'INVALID_PASSCODE') {
+					return true
+				}
+				return (
+					message.includes('邀请码无效') ||
+					message.includes('邀请码错误') ||
+					message.includes('口令无效') ||
+					message.includes('口令错误') ||
+					message.includes('invalid invite code') ||
+					message.includes('invalid passcode')
+				)
+			},
 			async submitForm() {
 				if (this.shouldShowProfilePopup) {
 					uni.showToast({
@@ -795,31 +797,9 @@
 					this.promptRetestForBoundRecord(this.matchedOpenidRecord || {})
 					return
 				}
-
-				const name = this.selectedName || this.nameInput.trim()
-				const personnelId = this.selectedRecord && this.selectedRecord._id
-				if (!this.selectedName || this.selectedName !== name || !personnelId) {
-					this.nameInput = ''
-					this.selectedName = ''
-					this.selectedRecord = null
-					uni.showToast({
-						title: '请选择有效姓名',
-						icon: 'none'
-					})
-					return
-				}
-				if (!this.password.trim()) {
-					uni.showToast({
-						title: '请输入口令',
-						icon: 'none'
-					})
-					return
-				}
-				if (!/^\d{4}$/.test(this.password.trim())) {
-					uni.showToast({
-						title: '口令必须为4位数字',
-						icon: 'none'
-					})
+				const inviteCode = this.password.trim()
+				if (!inviteCode) {
+					this.enterTestDirectly()
 					return
 				}
 				if (this.saving) {
@@ -828,7 +808,7 @@
 
 				this.saving = true
 				uni.showLoading({
-						title: '保存中',
+					title: '保存中',
 					mask: true
 				})
 
@@ -843,13 +823,9 @@
 					const loginOpenId = this.loginOpenIds[0] || this.getLoginOpenId(user)
 					const result = await personnelUser.upsertByUser({
 						userId: uid,
-						personnelId: personnelId,
 						data: {
 							nickname: this.profileForm.nickname.trim(),
-							name: name,
-							passcode: this.password.trim(),
-							personal_photo:
-								(this.matchedOpenidRecord && this.matchedOpenidRecord.personal_photo) || '',
+							passcode: inviteCode,
 							user_id: uid,
 							wx_openid: loginOpenId,
 							wx_unionid: user.wx_unionid || '',
@@ -858,39 +834,71 @@
 						}
 					})
 					if (result && result.ok === false) {
+						if (this.isInviteCodeInvalidFeedback(result || {})) {
+							this.showErrorModal('邀请码填写错误，请联系相关人员')
+							return
+						}
 						this.showErrorModal(result.message || '保存失败')
 						return
 					}
-
-					this.savePersonnelProfileToStorage({
-						id: result && result.id ? result.id : personnelId,
-						personnel_id: personnelId,
+					if (
+						!result ||
+						result.matched === false ||
+						result.updated === false ||
+						(result.skipped === true && !result.id)
+					) {
+						this.showErrorModal('邀请码填写错误，请联系相关人员')
+						return
+					}
+					const persistedRecord = {
+						...(this.matchedOpenidRecord || {}),
+						_id: (result && result.id) || '',
 						person_id: result && typeof result.person_id !== 'undefined' ? result.person_id : '',
 						user_role:
 							result && typeof result.user_role !== 'undefined'
 								? Number(result.user_role) || 0
-								: Number(this.selectedRecord && this.selectedRecord.user_role) || 0,
-						name: name,
+								: Number(
+										(this.matchedOpenidRecord && this.matchedOpenidRecord.user_role) || 0
+								  ) || 0,
+						name:
+							(result && result.name) ||
+							(this.matchedOpenidRecord && this.matchedOpenidRecord.name) ||
+							'',
 						nickname: this.profileForm.nickname.trim(),
-						passcode: this.password.trim(),
+						passcode: (result && result.passcode) || inviteCode,
+						mbti:
+							(result && result.mbti) ||
+							(this.matchedOpenidRecord && this.matchedOpenidRecord.mbti) ||
+							'',
 						personal_photo:
-							(this.matchedOpenidRecord && this.matchedOpenidRecord.personal_photo) || '',
+							(result && result.personal_photo) ||
+							(this.matchedOpenidRecord && this.matchedOpenidRecord.personal_photo) ||
+							'',
 						user_id: uid,
-						wx_openid: loginOpenId,
+						wx_openid: (result && result.wx_openid) || loginOpenId || '',
 						wx_unionid: user.wx_unionid || '',
 						wx_nickname: this.profileForm.nickname.trim(),
-						wx_avatar: avatarFileId
-					})
+						wx_avatar: (result && result.wx_avatar) || avatarFileId || ''
+					}
+
+					this.matchedOpenidRecord = persistedRecord
+					this.savePersonnelProfileToStorage(this.buildPersonnelProfilePayload(persistedRecord))
+					if (this.hasMbtiResult(persistedRecord)) {
+						this.promptRetestForBoundRecord(persistedRecord)
+						return
+					}
 					uni.showToast({
-						title: '提交成功',
-						icon: 'success'
+						title: '绑定成功，正在进入测试',
+						icon: 'none'
 					})
 					setTimeout(() => {
-						uni.navigateTo({
-							url: `/pages/feed/entry?name=${encodeURIComponent(name)}&personnelId=${encodeURIComponent(result.id)}&wxOpenid=${encodeURIComponent(loginOpenId || '')}`
-						})
-					}, 450)
+						this.enterTestDirectly()
+					}, 350)
 				} catch (error) {
+					if (this.isInviteCodeInvalidFeedback(error || {})) {
+						this.showErrorModal('邀请码填写错误，请联系相关人员')
+						return
+					}
 					this.showErrorModal((error && error.message) || '保存失败')
 				} finally {
 					this.saving = false
@@ -1225,6 +1233,10 @@
 		margin-top: 26rpx;
 		min-height: 120rpx;
 		align-items: stretch;
+	}
+
+	.action-row-stacked {
+		flex-direction: column;
 	}
 
 	.action-btn {

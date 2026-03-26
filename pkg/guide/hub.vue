@@ -68,10 +68,11 @@
 					},
 					{
 						key: 'match-vote-manage',
-						title: '相亲匹配查看管理',
-						desc: '用于查看和管理用户在活动截止前提交的心动排名与分数记录。',
-						available: false,
-						minUserRole: 1
+						title: '意向记录总览',
+						desc: '用于查看活动内提交的排序记录与双向汇总结果。',
+						available: true,
+						minUserRole: 1,
+						url: '/pkg/guide/intent'
 					}
 				]
 			}

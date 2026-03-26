@@ -1,6 +1,6 @@
-﻿{
+{
 	"bsonType": "object",
-	"required": ["person_id", "nickname", "name", "review_status", "submitted_at", "updated_at"],
+	"required": ["person_id", "nickname", "name", "passcode", "review_status", "submitted_at", "updated_at"],
 	"permission": {
 		"read": true,
 		"create": true,
@@ -125,6 +125,7 @@
 			"bsonType": "string",
 			"title": "口令",
 			"description": "进入测试时用于验证的口令",
+			"unique": true,
 			"trim": "both"
 		},
 		"id_card": {

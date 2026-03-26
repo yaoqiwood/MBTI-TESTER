@@ -804,7 +804,7 @@
 
 	function goHome() {
 		uni.reLaunch({
-			url: '/pages/index/service'
+			url: '/pages/index/index'
 		})
 	}
 </script>
