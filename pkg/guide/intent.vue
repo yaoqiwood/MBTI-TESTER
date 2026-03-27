@@ -9,13 +9,13 @@
 			<view class="card-head">
 				<text class="card-title">意向记录总览</text>
 				<text class="card-tip">
-					进入页面时会把提交记录一次性从云端拉回本地，之后的分页、互选匹配与合计分计算都在当前设备完成。
+					进入页面时会把所有单条意向记录一次性从云端拉回本地，再按活动与提交人分组，后续的分页、互选匹配与合计分计算都在当前设备完成。
 				</text>
 			</view>
 
 			<view class="stats-wrap">
 				<view class="stat-card">
-					<text class="stat-label">总记录数</text>
+					<text class="stat-label">提交组数</text>
 					<text class="stat-value">{{ summaryStats.totalRecords }}</text>
 				</view>
 				<view class="stat-card">
@@ -63,7 +63,7 @@
 			<view class="card-head">
 				<text class="card-title">记录列表</text>
 				<text class="card-tip">
-					主表显示提交人关键信息；每条记录下方会展开意向明细，并展示本次分、对向分与合计分。
+					主表显示按提交人聚合后的结果；明细区域展示拆平后的单条意向，并计算对向分与合计分。
 				</text>
 			</view>
 
@@ -93,10 +93,7 @@
 						<text>当前筛选条件下没有匹配结果</text>
 					</view>
 
-					<block
-						v-for="item in pagedRecordList"
-						:key="item._id || item.creator_record_id || `${item.activity_id}-${item.creator_wx_openid}`"
-					>
+					<block v-for="item in pagedRecordList" :key="item.group_key">
 						<view class="table-row body-row">
 							<text class="col col-activity">{{ item.activity_id || '-' }}</text>
 							<view class="col col-person person-cell">
@@ -248,6 +245,16 @@ function resolveTimeMs(value) {
 	return 0
 }
 
+function statusOrder(status) {
+	if (status === 'locked') {
+		return 3
+	}
+	if (status === 'submitted') {
+		return 2
+	}
+	return 1
+}
+
 export default {
 	data() {
 		return {
@@ -378,120 +385,173 @@ export default {
 			var current = Number(event && event.current)
 			this.pagination.page = current > 0 ? current : 1
 		},
-		buildRecordKey(activityId, openid) {
-			return [normalizeText(activityId), normalizeOpenid(openid)].join('::')
+		buildIdentityKey(recordId, openid, personId) {
+			var normalizedRecordId = normalizeText(recordId)
+			if (normalizedRecordId) {
+				return `record:${normalizedRecordId}`
+			}
+			var normalizedOpenid = normalizeOpenid(openid)
+			if (normalizedOpenid) {
+				return `openid:${normalizedOpenid}`
+			}
+			var normalizedPersonId = toNumber(personId)
+			return normalizedPersonId ? `person:${normalizedPersonId}` : ''
 		},
-		normalizePickList(list) {
-			var sourceList = Array.isArray(list) ? list.slice() : []
-			return sourceList
-				.map(function (item, index) {
-					return {
-						key: normalizeText(item && item.target_record_id) || `pick-${index}`,
-						target_record_id: normalizeText(item && item.target_record_id),
-						target_person_id: toNumber(item && item.target_person_id),
-						target_user_id: normalizeText(item && item.target_user_id),
-						target_wx_openid: normalizeOpenid(item && item.target_wx_openid),
-						target_name: normalizeText(item && item.target_name),
-						target_nickname: normalizeText(item && item.target_nickname),
-						target_mbti: normalizeText(item && item.target_mbti).toUpperCase(),
-						rank: toNumber(item && item.rank),
-						score: toNumber(item && item.score),
-						remark: normalizeText(item && item.remark)
-					}
-				})
-				.sort(function (a, b) {
-					if (a.rank && b.rank && a.rank !== b.rank) {
-						return a.rank - b.rank
-					}
-					if (a.rank && !b.rank) {
-						return -1
-					}
-					if (!a.rank && b.rank) {
-						return 1
-					}
-					return a.target_person_id - b.target_person_id
-				})
+		buildGroupKey(activityId, creatorKey) {
+			return [normalizeText(activityId), normalizeText(creatorKey)].join('::')
+		},
+		buildPairKey(activityId, creatorKey, targetKey) {
+			return [normalizeText(activityId), normalizeText(creatorKey), normalizeText(targetKey)].join('::')
+		},
+		normalizeRow(item) {
+			var creatorKey = this.buildIdentityKey(
+				item && item.creator_record_id,
+				item && item.creator_wx_openid,
+				item && item.creator_person_id
+			)
+			var targetKey = this.buildIdentityKey(
+				item && item.target_record_id,
+				item && item.target_wx_openid,
+				item && item.target_person_id
+			)
+			return {
+				_id: normalizeText(item && item._id),
+				activity_id: normalizeText(item && item.activity_id),
+				creator_record_id: normalizeText(item && item.creator_record_id),
+				creator_person_id: toNumber(item && item.creator_person_id),
+				creator_user_id: normalizeText(item && item.creator_user_id),
+				creator_wx_openid: normalizeOpenid(item && item.creator_wx_openid),
+				creator_name: normalizeText(item && item.creator_name),
+				creator_nickname: normalizeText(item && item.creator_nickname),
+				target_record_id: normalizeText(item && item.target_record_id),
+				target_person_id: toNumber(item && item.target_person_id),
+				target_user_id: normalizeText(item && item.target_user_id),
+				target_wx_openid: normalizeOpenid(item && item.target_wx_openid),
+				target_name: normalizeText(item && item.target_name),
+				target_nickname: normalizeText(item && item.target_nickname),
+				target_mbti: normalizeText(item && item.target_mbti).toUpperCase(),
+				rank: toNumber(item && item.rank),
+				score: toNumber(item && item.score),
+				submit_status: normalizeText(item && item.submit_status) || 'draft',
+				submitted_at: (item && item.submitted_at) || '',
+				deadline_at: (item && item.deadline_at) || '',
+				created_at: (item && item.created_at) || '',
+				updated_at: (item && item.updated_at) || '',
+				remark: normalizeText(item && item.remark),
+				creator_key: creatorKey,
+				target_key: targetKey
+			}
 		},
 		buildRecordViewList(rawList) {
-			var activeList = (Array.isArray(rawList) ? rawList : []).filter(function (item) {
-				return !isDeletedRecord(item && item.is_deleted)
-			})
-
-			var normalizedList = activeList.map(
-				function (item) {
-					return {
-						_id: normalizeText(item && item._id),
-						activity_id: normalizeText(item && item.activity_id),
-						creator_record_id: normalizeText(item && item.creator_record_id),
-						creator_person_id: toNumber(item && item.creator_person_id),
-						creator_user_id: normalizeText(item && item.creator_user_id),
-						creator_wx_openid: normalizeOpenid(item && item.creator_wx_openid),
-						creator_name: normalizeText(item && item.creator_name),
-						creator_nickname: normalizeText(item && item.creator_nickname),
-						pick_count: toNumber(item && item.pick_count),
-						total_score: toNumber(item && item.total_score),
-						submit_status: normalizeText(item && item.submit_status) || 'draft',
-						submitted_at: (item && item.submitted_at) || '',
-						deadline_at: (item && item.deadline_at) || '',
-						created_at: (item && item.created_at) || '',
-						updated_at: (item && item.updated_at) || '',
-						picks: this.normalizePickList(item && item.picks)
-					}
-				}.bind(this)
-			)
-
-			var recordMap = {}
-			normalizedList.forEach(
-				function (item) {
-					if (!item.creator_wx_openid) {
-						return
-					}
-					recordMap[this.buildRecordKey(item.activity_id, item.creator_wx_openid)] = item
-				}.bind(this)
-			)
-
-			return normalizedList
+			var rowList = (Array.isArray(rawList) ? rawList : [])
+				.filter(function (item) {
+					return !isDeletedRecord(item && item.is_deleted)
+				})
 				.map(
 					function (item) {
-						var linkedScoreTotal = 0
+						return this.normalizeRow(item)
+					}.bind(this)
+				)
+				.filter(function (item) {
+					return !!(item.activity_id && item.creator_key && item.target_key)
+				})
+
+			var pairMap = {}
+			var groupMap = {}
+
+			rowList.forEach(
+				function (item) {
+					pairMap[this.buildPairKey(item.activity_id, item.creator_key, item.target_key)] = item
+
+					var groupKey = this.buildGroupKey(item.activity_id, item.creator_key)
+					if (!groupMap[groupKey]) {
+						groupMap[groupKey] = {
+							group_key: groupKey,
+							activity_id: item.activity_id,
+							creator_record_id: item.creator_record_id,
+							creator_person_id: item.creator_person_id,
+							creator_user_id: item.creator_user_id,
+							creator_wx_openid: item.creator_wx_openid,
+							creator_name: item.creator_name,
+							creator_nickname: item.creator_nickname,
+							submit_status: item.submit_status,
+							submitted_at: item.submitted_at,
+							deadline_at: item.deadline_at,
+							created_at: item.created_at,
+							updated_at: item.updated_at,
+							rawRows: []
+						}
+					}
+
+					var group = groupMap[groupKey]
+					group.rawRows.push(item)
+
+					if (statusOrder(item.submit_status) > statusOrder(group.submit_status)) {
+						group.submit_status = item.submit_status
+					}
+					if (resolveTimeMs(item.submitted_at) > resolveTimeMs(group.submitted_at)) {
+						group.submitted_at = item.submitted_at
+					}
+					if (resolveTimeMs(item.deadline_at) > resolveTimeMs(group.deadline_at)) {
+						group.deadline_at = item.deadline_at
+					}
+					if (resolveTimeMs(item.updated_at) > resolveTimeMs(group.updated_at)) {
+						group.updated_at = item.updated_at
+					}
+					if (resolveTimeMs(item.created_at) < resolveTimeMs(group.created_at) || !group.created_at) {
+						group.created_at = item.created_at
+					}
+				}.bind(this)
+			)
+
+			return Object.keys(groupMap)
+				.map(
+					function (groupKey) {
+						var group = groupMap[groupKey]
+						var totalScore = 0
 						var mutualPickCount = 0
-						var pickViews = item.picks.map(
-							function (pick, index) {
-								var reciprocalRecord = pick.target_wx_openid
-									? recordMap[this.buildRecordKey(item.activity_id, pick.target_wx_openid)]
-									: null
-								var reciprocalPick = null
-								if (reciprocalRecord && Array.isArray(reciprocalRecord.picks)) {
-									reciprocalPick =
-										reciprocalRecord.picks.find(function (targetPick) {
-											return (
-												normalizeOpenid(targetPick && targetPick.target_wx_openid) ===
-												item.creator_wx_openid
-											)
-										}) || null
-								}
-								var reciprocalScore = reciprocalPick ? toNumber(reciprocalPick.score) : 0
-								var combinedScore = toNumber(pick.score) + reciprocalScore
-								if (reciprocalPick) {
+						var linkedScoreTotal = 0
+						var sortedRows = (group.rawRows || []).slice().sort(function (a, b) {
+							if (a.rank && b.rank && a.rank !== b.rank) {
+								return a.rank - b.rank
+							}
+							if (a.rank && !b.rank) {
+								return -1
+							}
+							if (!a.rank && b.rank) {
+								return 1
+							}
+							return resolveTimeMs(b.updated_at) - resolveTimeMs(a.updated_at)
+						})
+
+						var pickViews = sortedRows.map(
+							function (row, index) {
+								var reciprocalRecord =
+									pairMap[this.buildPairKey(group.activity_id, row.target_key, row.creator_key)] || null
+								var reciprocalScore = reciprocalRecord ? toNumber(reciprocalRecord.score) : 0
+								var combinedScore = toNumber(row.score) + reciprocalScore
+								totalScore += toNumber(row.score)
+								linkedScoreTotal += combinedScore
+								if (reciprocalRecord) {
 									mutualPickCount += 1
 								}
-								linkedScoreTotal += combinedScore
+
 								return {
-									key: `${item._id || item.creator_record_id || 'record'}-${index}`,
-									target_record_id: pick.target_record_id,
-									target_person_id: pick.target_person_id,
-									target_wx_openid: pick.target_wx_openid,
-									target_name: pick.target_name,
-									target_nickname: pick.target_nickname,
-									target_mbti: pick.target_mbti,
-									rank: pick.rank,
-									score: pick.score,
-									is_mutual: !!reciprocalPick,
+									key: row._id || `${group.group_key}-${index}`,
+									target_record_id: row.target_record_id,
+									target_person_id: row.target_person_id,
+									target_wx_openid: row.target_wx_openid,
+									target_name: row.target_name,
+									target_nickname: row.target_nickname,
+									target_mbti: row.target_mbti,
+									rank: row.rank,
+									score: row.score,
+									is_mutual: !!reciprocalRecord,
 									reciprocal_score: reciprocalScore,
-									reciprocal_rank: reciprocalPick ? toNumber(reciprocalPick.rank) : 0,
+									reciprocal_rank: reciprocalRecord ? toNumber(reciprocalRecord.rank) : 0,
 									reciprocal_rank_text:
-										reciprocalPick && toNumber(reciprocalPick.rank)
-											? ` · 对向排名 #${toNumber(reciprocalPick.rank)}`
+										reciprocalRecord && toNumber(reciprocalRecord.rank)
+											? ` · 对向排名 #${toNumber(reciprocalRecord.rank)}`
 											: '',
 									reciprocal_record_name: reciprocalRecord
 										? reciprocalRecord.creator_name || reciprocalRecord.creator_nickname || '已找到对向记录'
@@ -502,7 +562,21 @@ export default {
 						)
 
 						return {
-							...item,
+							group_key: group.group_key,
+							activity_id: group.activity_id,
+							creator_record_id: group.creator_record_id,
+							creator_person_id: group.creator_person_id,
+							creator_user_id: group.creator_user_id,
+							creator_wx_openid: group.creator_wx_openid,
+							creator_name: group.creator_name,
+							creator_nickname: group.creator_nickname,
+							submit_status: group.submit_status,
+							submitted_at: group.submitted_at,
+							deadline_at: group.deadline_at,
+							created_at: group.created_at,
+							updated_at: group.updated_at,
+							pick_count: pickViews.length,
+							total_score: totalScore,
 							mutual_pick_count: mutualPickCount,
 							linked_score_total: linkedScoreTotal,
 							pickViews: pickViews
@@ -529,7 +603,7 @@ export default {
 				var res = await db
 					.collection(MATCH_VOTE_COLLECTION)
 					.field(
-						'_id,activity_id,creator_record_id,creator_person_id,creator_user_id,creator_wx_openid,creator_name,creator_nickname,picks,pick_count,total_score,submit_status,submitted_at,deadline_at,is_deleted,created_at,updated_at'
+						'_id,activity_id,creator_record_id,creator_person_id,creator_user_id,creator_wx_openid,creator_name,creator_nickname,target_record_id,target_person_id,target_user_id,target_wx_openid,target_name,target_nickname,target_mbti,rank,score,submit_status,submitted_at,deadline_at,is_overdue,remark,is_deleted,created_at,updated_at'
 					)
 					.orderBy('updated_at', 'desc')
 					.skip(page * pageSize)

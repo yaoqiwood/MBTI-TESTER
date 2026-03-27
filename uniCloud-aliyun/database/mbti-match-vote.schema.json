@@ -5,9 +5,11 @@
 		"creator_record_id",
 		"creator_person_id",
 		"creator_name",
-		"picks",
-		"pick_count",
-		"total_score",
+		"target_record_id",
+		"target_person_id",
+		"target_name",
+		"rank",
+		"score",
 		"submit_status",
 		"deadline_at",
 		"created_at",
@@ -26,7 +28,7 @@
 		"activity_id": {
 			"bsonType": "string",
 			"title": "活动ID",
-			"description": "同一活动内每位用户仅允许提交一次最终志愿",
+			"description": "同一活动内的每条意向拆成一行，提交人的多条记录可按 activity_id + creator_record_id 聚合回一次提交",
 			"trim": "both"
 		},
 		"creator_record_id": {
@@ -64,87 +66,53 @@
 			"title": "提交人昵称",
 			"trim": "both"
 		},
-		"picks": {
-			"bsonType": "array",
-			"title": "心动名单",
-			"description": "最多10个对象，rank 为 1-10；score 通常为 11-rank（第1名10分）",
-			"items": {
-				"bsonType": "object",
-				"required": [
-					"target_record_id",
-					"target_person_id",
-					"target_name",
-					"rank",
-					"score"
-				],
-				"properties": {
-					"target_record_id": {
-						"bsonType": "string",
-						"title": "被选中档案ID",
-						"description": "关联 mbti-personnel._id",
-						"foreignKey": "mbti-personnel._id",
-						"trim": "both"
-					},
-					"target_person_id": {
-						"bsonType": "int",
-						"title": "被选中编号"
-					},
-					"target_user_id": {
-						"bsonType": "string",
-						"title": "被选中用户ID",
-						"description": "关联 uni-id-users._id",
-						"foreignKey": "uni-id-users._id",
-						"trim": "both"
-					},
-					"target_wx_openid": {
-						"bsonType": "string",
-						"title": "被选中微信OpenID",
-						"trim": "both"
-					},
-					"target_name": {
-						"bsonType": "string",
-						"title": "被选中姓名",
-						"trim": "both"
-					},
-					"target_nickname": {
-						"bsonType": "string",
-						"title": "被选中昵称",
-						"trim": "both"
-					},
-					"target_mbti": {
-						"bsonType": "string",
-						"title": "被选中MBTI快照",
-						"trim": "both"
-					},
-					"rank": {
-						"bsonType": "int",
-						"title": "优先级排名",
-						"description": "1 表示最喜欢，10 表示第十志愿"
-					},
-					"score": {
-						"bsonType": "int",
-						"title": "本对象分数",
-						"description": "建议按 11-rank 计算；未被选中不入数组，默认为0分"
-					},
-					"remark": {
-						"bsonType": "string",
-						"title": "对象备注",
-						"trim": "both"
-					}
-				}
-			}
+		"target_record_id": {
+			"bsonType": "string",
+			"title": "被选中档案ID",
+			"description": "关联 mbti-personnel._id",
+			"foreignKey": "mbti-personnel._id",
+			"trim": "both"
 		},
-		"pick_count": {
+		"target_person_id": {
 			"bsonType": "int",
-			"title": "已选人数",
-			"defaultValue": 0,
-			"description": "已选择对象数量，建议范围 0-10"
+			"title": "被选中编号"
 		},
-		"total_score": {
+		"target_user_id": {
+			"bsonType": "string",
+			"title": "被选中用户ID",
+			"description": "关联 uni-id-users._id",
+			"foreignKey": "uni-id-users._id",
+			"trim": "both"
+		},
+		"target_wx_openid": {
+			"bsonType": "string",
+			"title": "被选中微信OpenID",
+			"trim": "both"
+		},
+		"target_name": {
+			"bsonType": "string",
+			"title": "被选中姓名",
+			"trim": "both"
+		},
+		"target_nickname": {
+			"bsonType": "string",
+			"title": "被选中昵称",
+			"trim": "both"
+		},
+		"target_mbti": {
+			"bsonType": "string",
+			"title": "被选中MBTI快照",
+			"trim": "both"
+		},
+		"rank": {
 			"bsonType": "int",
-			"title": "总分",
-			"defaultValue": 0,
-			"description": "picks 内 score 合计"
+			"title": "优先级排名",
+			"description": "1 表示最喜欢。建议同一 activity_id + creator_record_id 内唯一"
+		},
+		"score": {
+			"bsonType": "int",
+			"title": "本条分数",
+			"description": "建议按 11-rank 计算，每一行对应一个对象分数"
 		},
 		"submit_status": {
 			"bsonType": "string",
@@ -164,7 +132,7 @@
 					"value": "locked"
 				}
 			],
-			"description": "截止后可由后端统一转 locked，禁止继续修改"
+			"description": "同一提交人的多条记录应保持一致，截止后可由后端统一转 locked"
 		},
 		"submitted_at": {
 			"bsonType": "timestamp",
@@ -183,6 +151,7 @@
 		"remark": {
 			"bsonType": "string",
 			"title": "备注",
+			"description": "当前这条意向记录的备注",
 			"trim": "both"
 		},
 		"is_deleted": {

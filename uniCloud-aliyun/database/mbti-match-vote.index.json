@@ -2,9 +2,19 @@
 	{
 		"MgoKeySchema": {
 			"activity_id": 1,
-			"creator_record_id": 1
+			"creator_record_id": 1,
+			"rank": 1
 		},
-		"MgoName": "activity_creator_unique_index",
+		"MgoName": "activity_creator_rank_unique_index",
+		"MgoUnique": true
+	},
+	{
+		"MgoKeySchema": {
+			"activity_id": 1,
+			"creator_record_id": 1,
+			"target_record_id": 1
+		},
+		"MgoName": "activity_creator_target_unique_index",
 		"MgoUnique": true
 	},
 	{
@@ -18,6 +28,24 @@
 	},
 	{
 		"MgoKeySchema": {
+			"activity_id": 1,
+			"creator_wx_openid": 1,
+			"updated_at": -1
+		},
+		"MgoName": "activity_creator_openid_updated_at_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
+			"activity_id": 1,
+			"target_wx_openid": 1,
+			"updated_at": -1
+		},
+		"MgoName": "activity_target_openid_updated_at_index",
+		"MgoUnique": false
+	},
+	{
+		"MgoKeySchema": {
 			"creator_person_id": 1
 		},
 		"MgoName": "creator_person_id_index",
@@ -25,9 +53,9 @@
 	},
 	{
 		"MgoKeySchema": {
-			"picks.target_record_id": 1
+			"target_person_id": 1
 		},
-		"MgoName": "target_record_id_index",
+		"MgoName": "target_person_id_index",
 		"MgoUnique": false
 	}
 ]

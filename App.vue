@@ -9,8 +9,10 @@
 		// #ifdef MP-WEIXIN
 		uniCloud.initSecureNetworkByWeixin()
 		// #endif
+      // #ifdef APP-PLUS
       this.syncPushClientId()
       checkUpdate() //更新升级
+      // #endif
     },
     mounted() {
       // #ifdef H5
@@ -20,13 +22,18 @@
     },
     onShow: function() {
       console.log('App Show')
+      // #ifdef APP-PLUS
       this.syncPushClientId()
+      // #endif
     },
     onHide: function() {
       console.log('App Hide')
     },
     methods: {
       syncPushClientId() {
+        // #ifndef APP-PLUS
+        return
+        // #endif
         if (!uni.getPushClientId || !uniIdCo || !uniCloud.getCurrentUserInfo) {
           console.log('[push] sync skipped: api unavailable')
           return

@@ -1,0 +1,521 @@
+[
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-001",
+		"creator_person_id": 1,
+		"creator_user_id": "mock-user-001",
+		"creator_wx_openid": "mock-openid-001",
+		"creator_name": "林晓晴",
+		"creator_nickname": "晨光",
+		"target_record_id": "mock-personnel-003",
+		"target_person_id": 3,
+		"target_user_id": "mock-user-003",
+		"target_wx_openid": "mock-openid-003",
+		"target_name": "许安然",
+		"target_nickname": "小满",
+		"target_mbti": "INFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1773883800000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 林晓晴 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773814800000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-001",
+		"creator_person_id": 1,
+		"creator_user_id": "mock-user-001",
+		"creator_wx_openid": "mock-openid-001",
+		"creator_name": "林晓晴",
+		"creator_nickname": "晨光",
+		"target_record_id": "mock-personnel-007",
+		"target_person_id": 7,
+		"target_user_id": "mock-user-007",
+		"target_wx_openid": "mock-openid-007",
+		"target_name": "唐知行",
+		"target_nickname": "牧歌",
+		"target_mbti": "INTP",
+		"rank": 2,
+		"score": 9,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1773883800000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 林晓晴 第2志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773814800000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-001",
+		"creator_person_id": 1,
+		"creator_user_id": "mock-user-001",
+		"creator_wx_openid": "mock-openid-001",
+		"creator_name": "林晓晴",
+		"creator_nickname": "晨光",
+		"target_record_id": "mock-personnel-008",
+		"target_person_id": 8,
+		"target_user_id": "mock-user-008",
+		"target_wx_openid": "mock-openid-008",
+		"target_name": "顾心禾",
+		"target_nickname": "一禾",
+		"target_mbti": "INFP",
+		"rank": 3,
+		"score": 8,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1773883800000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 林晓晴 第3志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773814800000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-003",
+		"creator_person_id": 3,
+		"creator_user_id": "mock-user-003",
+		"creator_wx_openid": "mock-openid-003",
+		"creator_name": "许安然",
+		"creator_nickname": "小满",
+		"target_record_id": "mock-personnel-001",
+		"target_person_id": 1,
+		"target_user_id": "mock-user-001",
+		"target_wx_openid": "mock-openid-001",
+		"target_name": "林晓晴",
+		"target_nickname": "晨光",
+		"target_mbti": "ENFP",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1774001400000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 许安然 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773885600000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-003",
+		"creator_person_id": 3,
+		"creator_user_id": "mock-user-003",
+		"creator_wx_openid": "mock-openid-003",
+		"creator_name": "许安然",
+		"creator_nickname": "小满",
+		"target_record_id": "mock-personnel-004",
+		"target_person_id": 4,
+		"target_user_id": "mock-user-004",
+		"target_wx_openid": "mock-openid-004",
+		"target_name": "沈牧之",
+		"target_nickname": "远山",
+		"target_mbti": "ENTJ",
+		"rank": 2,
+		"score": 9,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1774001400000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 许安然 第2志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773885600000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-004",
+		"creator_person_id": 4,
+		"creator_user_id": "mock-user-004",
+		"creator_wx_openid": "mock-openid-004",
+		"creator_name": "沈牧之",
+		"creator_nickname": "远山",
+		"target_record_id": "mock-personnel-003",
+		"target_person_id": 3,
+		"target_user_id": "mock-user-003",
+		"target_wx_openid": "mock-openid-003",
+		"target_name": "许安然",
+		"target_nickname": "小满",
+		"target_mbti": "INFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1774001400000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 沈牧之 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773885600000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-002",
+		"creator_person_id": 2,
+		"creator_user_id": "mock-user-002",
+		"creator_wx_openid": "mock-openid-002",
+		"creator_name": "周以恒",
+		"creator_nickname": "北岸",
+		"target_record_id": "mock-personnel-006",
+		"target_person_id": 6,
+		"target_user_id": "mock-user-006",
+		"target_wx_openid": "mock-openid-006",
+		"target_name": "何书颖",
+		"target_nickname": "夏栀",
+		"target_mbti": "ESFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1774001400000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 周以恒 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773885600000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_a",
+		"creator_record_id": "mock-personnel-006",
+		"creator_person_id": 6,
+		"creator_user_id": "mock-user-006",
+		"creator_wx_openid": "mock-openid-006",
+		"creator_name": "何书颖",
+		"creator_nickname": "夏栀",
+		"target_record_id": "mock-personnel-002",
+		"target_person_id": 2,
+		"target_user_id": "mock-user-002",
+		"target_wx_openid": "mock-openid-002",
+		"target_name": "周以恒",
+		"target_nickname": "北岸",
+		"target_mbti": "ISTJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "locked",
+		"submitted_at": {
+			"$date": 1774001400000
+		},
+		"deadline_at": {
+			"$date": 1774008000000
+		},
+		"is_overdue": false,
+		"remark": "批次A 何书颖 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1773883800000
+		},
+		"updated_at": {
+			"$date": 1774054800000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-003",
+		"creator_person_id": 3,
+		"creator_user_id": "mock-user-003",
+		"creator_wx_openid": "mock-openid-003",
+		"creator_name": "许安然",
+		"creator_nickname": "小满",
+		"target_record_id": "mock-personnel-010",
+		"target_person_id": 10,
+		"target_user_id": "mock-user-010",
+		"target_wx_openid": "mock-openid-010",
+		"target_name": "白念初",
+		"target_nickname": "念初",
+		"target_mbti": "ENFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "submitted",
+		"submitted_at": {
+			"$date": 1774408800000
+		},
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 许安然 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774252800000
+		},
+		"updated_at": {
+			"$date": 1774489200000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-003",
+		"creator_person_id": 3,
+		"creator_user_id": "mock-user-003",
+		"creator_wx_openid": "mock-openid-003",
+		"creator_name": "许安然",
+		"creator_nickname": "小满",
+		"target_record_id": "mock-personnel-011",
+		"target_person_id": 11,
+		"target_user_id": "mock-user-011",
+		"target_wx_openid": "mock-openid-011",
+		"target_name": "姜向阳",
+		"target_nickname": "向阳",
+		"target_mbti": "ENFP",
+		"rank": 2,
+		"score": 9,
+		"submit_status": "submitted",
+		"submitted_at": {
+			"$date": 1774408800000
+		},
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 许安然 第2志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774252800000
+		},
+		"updated_at": {
+			"$date": 1774489200000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-010",
+		"creator_person_id": 10,
+		"creator_user_id": "mock-user-010",
+		"creator_wx_openid": "mock-openid-010",
+		"creator_name": "白念初",
+		"creator_nickname": "念初",
+		"target_record_id": "mock-personnel-003",
+		"target_person_id": 3,
+		"target_user_id": "mock-user-003",
+		"target_wx_openid": "mock-openid-003",
+		"target_name": "许安然",
+		"target_nickname": "小满",
+		"target_mbti": "INFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "submitted",
+		"submitted_at": {
+			"$date": 1774521000000
+		},
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 白念初 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774351800000
+		},
+		"updated_at": {
+			"$date": 1774521000000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-010",
+		"creator_person_id": 10,
+		"creator_user_id": "mock-user-010",
+		"creator_wx_openid": "mock-openid-010",
+		"creator_name": "白念初",
+		"creator_nickname": "念初",
+		"target_record_id": "mock-personnel-011",
+		"target_person_id": 11,
+		"target_user_id": "mock-user-011",
+		"target_wx_openid": "mock-openid-011",
+		"target_name": "姜向阳",
+		"target_nickname": "向阳",
+		"target_mbti": "ENFP",
+		"rank": 2,
+		"score": 9,
+		"submit_status": "submitted",
+		"submitted_at": {
+			"$date": 1774521000000
+		},
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 白念初 第2志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774351800000
+		},
+		"updated_at": {
+			"$date": 1774521000000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-011",
+		"creator_person_id": 11,
+		"creator_user_id": "mock-user-011",
+		"creator_wx_openid": "mock-openid-011",
+		"creator_name": "姜向阳",
+		"creator_nickname": "向阳",
+		"target_record_id": "mock-personnel-010",
+		"target_person_id": 10,
+		"target_user_id": "mock-user-010",
+		"target_wx_openid": "mock-openid-010",
+		"target_name": "白念初",
+		"target_nickname": "念初",
+		"target_mbti": "ENFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "submitted",
+		"submitted_at": {
+			"$date": 1774357800000
+		},
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 姜向阳 第1志愿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774252800000
+		},
+		"updated_at": {
+			"$date": 1774489200000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-005",
+		"creator_person_id": 5,
+		"creator_user_id": "mock-user-005",
+		"creator_wx_openid": "mock-openid-005",
+		"creator_name": "陆嘉澄",
+		"creator_nickname": "阿澄",
+		"target_record_id": "mock-personnel-010",
+		"target_person_id": 10,
+		"target_user_id": "mock-user-010",
+		"target_wx_openid": "mock-openid-010",
+		"target_name": "白念初",
+		"target_nickname": "念初",
+		"target_mbti": "ENFJ",
+		"rank": 1,
+		"score": 10,
+		"submit_status": "draft",
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 陆嘉澄 第1志愿草稿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774351800000
+		},
+		"updated_at": {
+			"$date": 1774521000000
+		}
+	},
+	{
+		"activity_id": "intent_round_202603_b",
+		"creator_record_id": "mock-personnel-005",
+		"creator_person_id": 5,
+		"creator_user_id": "mock-user-005",
+		"creator_wx_openid": "mock-openid-005",
+		"creator_name": "陆嘉澄",
+		"creator_nickname": "阿澄",
+		"target_record_id": "mock-personnel-006",
+		"target_person_id": 6,
+		"target_user_id": "mock-user-006",
+		"target_wx_openid": "mock-openid-006",
+		"target_name": "何书颖",
+		"target_nickname": "夏栀",
+		"target_mbti": "ESFJ",
+		"rank": 2,
+		"score": 9,
+		"submit_status": "draft",
+		"deadline_at": {
+			"$date": 1774699200000
+		},
+		"is_overdue": false,
+		"remark": "批次B 陆嘉澄 第2志愿草稿",
+		"is_deleted": false,
+		"created_by": "mock-seed",
+		"created_at": {
+			"$date": 1774351800000
+		},
+		"updated_at": {
+			"$date": 1774521000000
+		}
+	}
+]
