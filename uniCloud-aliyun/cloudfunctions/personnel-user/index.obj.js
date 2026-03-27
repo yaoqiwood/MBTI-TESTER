@@ -1,10 +1,12 @@
 const XLSX = require('xlsx')
 const db = uniCloud.database()
 const dbCmd = db.command
+const dbAggr = db.command.aggregate
 const personnelCollection = db.collection('mbti-personnel')
 const heartMessageCollection = db.collection('mbti-heart-message')
 const heartMessageStateCollection = db.collection('mbti-heart-message-state')
 const attachmentCollection = db.collection('mbti-personnel-attachment')
+const matchVoteCollection = db.collection('mbti-match-vote')
 const userCollection = db.collection('uni-id-users')
 const systemCollection = db.collection('system')
 const COUNTER_COLLECTION = 'mbti-personnel-counter'
@@ -24,6 +26,7 @@ const USER_ROLE = {
 }
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
 const HEART_MESSAGE_STATE_DOC_PREFIX = 'personnel'
+const INTENT_MATCH_K_FACTOR = 1.2
 const runtimeCache = {
 	personnel: {
 		data: null,
@@ -167,6 +170,375 @@ function normalizePositiveInt(value, fallback) {
 function normalizeNonNegativeInt(value, fallback = 0) {
 	const parsed = parseInt(value, 10)
 	return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
+}
+
+function normalizeIntentText(value) {
+	return trimString(String(value || ''))
+}
+
+function normalizeIntentOpenid(value) {
+	return normalizeIntentText(value)
+}
+
+function normalizeIntentMbti(value) {
+	return normalizeIntentText(value).toUpperCase()
+}
+
+function normalizeIntentScore(value) {
+	const score = Number(value)
+	return Number.isFinite(score) ? score : 0
+}
+
+function normalizeIntentRank(value) {
+	const rank = parseInt(value, 10)
+	return Number.isFinite(rank) && rank > 0 ? rank : 0
+}
+
+function normalizeIntentRankSortValue(value) {
+	const rank = normalizeIntentRank(value)
+	return rank > 0 ? rank : 999
+}
+
+function resolveIntentTimeMs(value) {
+	if (!value) {
+		return 0
+	}
+	if (value instanceof Date) {
+		return value.getTime()
+	}
+	if (typeof value === 'number') {
+		return value > 1000000000000 ? value : value * 1000
+	}
+	if (typeof value === 'string') {
+		const parsed = Date.parse(value)
+		return Number.isNaN(parsed) ? 0 : parsed
+	}
+	if (typeof value === 'object') {
+		if (typeof value.getTime === 'function') {
+			return value.getTime()
+		}
+		if (typeof value.toDate === 'function') {
+			const converted = value.toDate()
+			return converted instanceof Date ? converted.getTime() : 0
+		}
+		if (typeof value.$date === 'number') {
+			return value.$date
+		}
+		if (typeof value.value === 'number') {
+			return value.value
+		}
+		if (typeof value.timestamp === 'number') {
+			return value.timestamp
+		}
+		if (typeof value.seconds === 'number') {
+			return value.seconds * 1000
+		}
+	}
+	return 0
+}
+
+function normalizeIntentStatus(value) {
+	const normalized = normalizeIntentText(value).toLowerCase()
+	if (normalized === 'locked') {
+		return 'locked'
+	}
+	if (normalized === 'submitted') {
+		return 'submitted'
+	}
+	return 'draft'
+}
+
+function intentStatusOrder(status) {
+	if (status === 'locked') {
+		return 3
+	}
+	if (status === 'submitted') {
+		return 2
+	}
+	return 1
+}
+
+function resolveIntentPairStatus(leftStatus, rightStatus) {
+	const normalizedLeftStatus = normalizeIntentStatus(leftStatus)
+	const normalizedRightStatus = normalizeIntentStatus(rightStatus)
+	return intentStatusOrder(normalizedLeftStatus) <= intentStatusOrder(normalizedRightStatus)
+		? normalizedLeftStatus
+		: normalizedRightStatus
+}
+
+function buildIntentIdentityKey(recordId, openid, personId) {
+	const normalizedRecordId = normalizeIntentText(recordId)
+	if (normalizedRecordId) {
+		return `record:${normalizedRecordId}`
+	}
+	const normalizedOpenid = normalizeIntentOpenid(openid)
+	if (normalizedOpenid) {
+		return `openid:${normalizedOpenid}`
+	}
+	const normalizedPersonId = normalizePositiveInt(personId, 0)
+	return normalizedPersonId ? `person:${normalizedPersonId}` : ''
+}
+
+function buildIntentCanonicalPairKey(activityId, leftKey, rightKey) {
+	const keyList = [normalizeIntentText(leftKey), normalizeIntentText(rightKey)].sort()
+	return [normalizeIntentText(activityId), keyList[0], keyList[1]].join('::')
+}
+
+function mergeIntentPersonProfile(profileMap, personKey, payload) {
+	const normalizedPersonKey = normalizeIntentText(personKey)
+	if (!normalizedPersonKey) {
+		return
+	}
+	if (!profileMap[normalizedPersonKey]) {
+		profileMap[normalizedPersonKey] = {
+			person_key: normalizedPersonKey,
+			record_id: '',
+			person_id: 0,
+			user_id: '',
+			wx_openid: '',
+			name: '',
+			nickname: '',
+			mbti: ''
+		}
+	}
+
+	const profile = profileMap[normalizedPersonKey]
+	const recordId = normalizeIntentText(payload && payload.record_id)
+	const personId = normalizePositiveInt(payload && payload.person_id, 0)
+	const userId = normalizeIntentText(payload && payload.user_id)
+	const wxOpenid = normalizeIntentOpenid(payload && payload.wx_openid)
+	const name = normalizeIntentText(payload && payload.name)
+	const nickname = normalizeIntentText(payload && payload.nickname)
+	const mbti = normalizeIntentMbti(payload && payload.mbti)
+
+	if (!profile.record_id && recordId) {
+		profile.record_id = recordId
+	}
+	if (!profile.person_id && personId) {
+		profile.person_id = personId
+	}
+	if (!profile.user_id && userId) {
+		profile.user_id = userId
+	}
+	if (!profile.wx_openid && wxOpenid) {
+		profile.wx_openid = wxOpenid
+	}
+	if (!profile.name && name) {
+		profile.name = name
+	}
+	if (!profile.nickname && nickname) {
+		profile.nickname = nickname
+	}
+	if (!profile.mbti && mbti) {
+		profile.mbti = mbti
+	}
+}
+
+function buildIntentPersonView(profileMap, personKey) {
+	const normalizedPersonKey = normalizeIntentText(personKey)
+	const profile = profileMap[normalizedPersonKey] || {}
+	return {
+		person_key: normalizedPersonKey,
+		record_id: normalizeIntentText(profile.record_id),
+		person_id: normalizePositiveInt(profile.person_id, 0),
+		user_id: normalizeIntentText(profile.user_id),
+		wx_openid: normalizeIntentOpenid(profile.wx_openid),
+		name: normalizeIntentText(profile.name),
+		nickname: normalizeIntentText(profile.nickname),
+		mbti: normalizeIntentMbti(profile.mbti)
+	}
+}
+
+function compareIntentPersonView(leftPerson, rightPerson) {
+	const leftPersonId = normalizePositiveInt(leftPerson && leftPerson.person_id, 0)
+	const rightPersonId = normalizePositiveInt(rightPerson && rightPerson.person_id, 0)
+	if (leftPersonId && rightPersonId && leftPersonId !== rightPersonId) {
+		return leftPersonId - rightPersonId
+	}
+	const leftName = normalizeIntentText(leftPerson && leftPerson.name)
+	const rightName = normalizeIntentText(rightPerson && rightPerson.name)
+	if (leftName !== rightName) {
+		return leftName.localeCompare(rightName)
+	}
+	return normalizeIntentText(leftPerson && leftPerson.person_key).localeCompare(
+		normalizeIntentText(rightPerson && rightPerson.person_key)
+	)
+}
+
+function normalizeIntentVoteRow(item) {
+	const creatorKey = buildIntentIdentityKey(
+		item && item.creator_record_id,
+		item && item.creator_wx_openid,
+		item && item.creator_person_id
+	)
+	const targetKey = buildIntentIdentityKey(
+		item && item.target_record_id,
+		item && item.target_wx_openid,
+		item && item.target_person_id
+	)
+
+	return {
+		_id: normalizeIntentText(item && item._id),
+		activity_id: normalizeIntentText(item && item.activity_id),
+		creator_record_id: normalizeIntentText(item && item.creator_record_id),
+		creator_person_id: normalizePositiveInt(item && item.creator_person_id, 0),
+		creator_user_id: normalizeIntentText(item && item.creator_user_id),
+		creator_wx_openid: normalizeIntentOpenid(item && item.creator_wx_openid),
+		creator_name: normalizeIntentText(item && item.creator_name),
+		creator_nickname: normalizeIntentText(item && item.creator_nickname),
+		target_record_id: normalizeIntentText(item && item.target_record_id),
+		target_person_id: normalizePositiveInt(item && item.target_person_id, 0),
+		target_user_id: normalizeIntentText(item && item.target_user_id),
+		target_wx_openid: normalizeIntentOpenid(item && item.target_wx_openid),
+		target_name: normalizeIntentText(item && item.target_name),
+		target_nickname: normalizeIntentText(item && item.target_nickname),
+		target_mbti: normalizeIntentMbti(item && item.target_mbti),
+		rank: normalizeIntentRank(item && item.rank),
+		score: normalizeIntentScore(item && item.score),
+		submit_status: normalizeIntentStatus(item && item.submit_status),
+		submitted_at: (item && item.submitted_at) || '',
+		deadline_at: (item && item.deadline_at) || '',
+		created_at: (item && item.created_at) || '',
+		updated_at: (item && item.updated_at) || '',
+		remark: normalizeIntentText(item && item.remark),
+		creator_key: creatorKey,
+		target_key: targetKey
+	}
+}
+
+function buildIntentPairRankingList(rawList) {
+	const rowList = Array.isArray(rawList)
+		? rawList
+				.map((item) => normalizeIntentVoteRow(item))
+				.filter((item) => !!(item.activity_id && item.creator_key && item.target_key))
+		: []
+
+	const pairMap = {}
+	const personProfileMap = {}
+
+	rowList.forEach((item) => {
+		const directionKey = [item.activity_id, item.creator_key, item.target_key].join('::')
+		pairMap[directionKey] = item
+
+		mergeIntentPersonProfile(personProfileMap, item.creator_key, {
+			record_id: item.creator_record_id,
+			person_id: item.creator_person_id,
+			user_id: item.creator_user_id,
+			wx_openid: item.creator_wx_openid,
+			name: item.creator_name,
+			nickname: item.creator_nickname
+		})
+		mergeIntentPersonProfile(personProfileMap, item.target_key, {
+			record_id: item.target_record_id,
+			person_id: item.target_person_id,
+			user_id: item.target_user_id,
+			wx_openid: item.target_wx_openid,
+			name: item.target_name,
+			nickname: item.target_nickname,
+			mbti: item.target_mbti
+		})
+	})
+
+	const pairVisitedMap = {}
+	const pairList = []
+
+	rowList.forEach((row) => {
+		if (!row || row.creator_key === row.target_key) {
+			return
+		}
+
+		const reciprocalKey = [row.activity_id, row.target_key, row.creator_key].join('::')
+		const reciprocalRow = pairMap[reciprocalKey]
+		if (!reciprocalRow) {
+			return
+		}
+
+		const canonicalPairKey = buildIntentCanonicalPairKey(row.activity_id, row.creator_key, row.target_key)
+		if (pairVisitedMap[canonicalPairKey]) {
+			return
+		}
+		pairVisitedMap[canonicalPairKey] = true
+
+		let leftRow = row
+		let rightRow = reciprocalRow
+		let leftPerson = buildIntentPersonView(personProfileMap, leftRow.creator_key)
+		let rightPerson = buildIntentPersonView(personProfileMap, leftRow.target_key)
+
+		if (compareIntentPersonView(leftPerson, rightPerson) > 0) {
+			leftRow = reciprocalRow
+			rightRow = row
+			leftPerson = buildIntentPersonView(personProfileMap, leftRow.creator_key)
+			rightPerson = buildIntentPersonView(personProfileMap, leftRow.target_key)
+		}
+
+		const scoreLeftToRight = normalizeIntentScore(leftRow.score)
+		const scoreRightToLeft = normalizeIntentScore(rightRow.score)
+		const mutualBonus = INTENT_MATCH_K_FACTOR * Math.min(scoreLeftToRight, scoreRightToLeft)
+		const matchScoreTotal = scoreLeftToRight + scoreRightToLeft + mutualBonus
+
+		pairList.push({
+			pair_key: canonicalPairKey,
+			activity_id: leftRow.activity_id,
+			left_person: leftPerson,
+			right_person: rightPerson,
+			pair_status: resolveIntentPairStatus(leftRow.submit_status, rightRow.submit_status),
+			left_status: leftRow.submit_status,
+			right_status: rightRow.submit_status,
+			score_left_to_right: scoreLeftToRight,
+			score_right_to_left: scoreRightToLeft,
+			mutual_bonus_score: mutualBonus,
+			match_score_total: Number(matchScoreTotal.toFixed(2)),
+			best_single_score: Math.max(scoreLeftToRight, scoreRightToLeft),
+			rank_left_to_right: normalizeIntentRank(leftRow.rank),
+			rank_right_to_left: normalizeIntentRank(rightRow.rank),
+			left_submitted_at: leftRow.submitted_at,
+			right_submitted_at: rightRow.submitted_at,
+			left_updated_at: leftRow.updated_at,
+			right_updated_at: rightRow.updated_at,
+			submitted_at:
+				resolveIntentTimeMs(leftRow.submitted_at) > resolveIntentTimeMs(rightRow.submitted_at)
+					? leftRow.submitted_at
+					: rightRow.submitted_at,
+			deadline_at:
+				resolveIntentTimeMs(leftRow.deadline_at) > resolveIntentTimeMs(rightRow.deadline_at)
+					? leftRow.deadline_at
+					: rightRow.deadline_at,
+			updated_at:
+				resolveIntentTimeMs(leftRow.updated_at) > resolveIntentTimeMs(rightRow.updated_at)
+					? leftRow.updated_at
+					: rightRow.updated_at
+		})
+	})
+
+	return pairList
+		.sort((a, b) => {
+			const scoreDiff = normalizeIntentScore(b.match_score_total) - normalizeIntentScore(a.match_score_total)
+			if (scoreDiff !== 0) {
+				return scoreDiff
+			}
+			const bestSingleScoreDiff =
+				normalizeIntentScore(b.best_single_score) - normalizeIntentScore(a.best_single_score)
+			if (bestSingleScoreDiff !== 0) {
+				return bestSingleScoreDiff
+			}
+			const rankDiff =
+				normalizeIntentRankSortValue(a.rank_left_to_right) +
+				normalizeIntentRankSortValue(a.rank_right_to_left) -
+				normalizeIntentRankSortValue(b.rank_left_to_right) -
+				normalizeIntentRankSortValue(b.rank_right_to_left)
+			if (rankDiff !== 0) {
+				return rankDiff
+			}
+			const timeDiff = resolveIntentTimeMs(b.updated_at) - resolveIntentTimeMs(a.updated_at)
+			if (timeDiff !== 0) {
+				return timeDiff
+			}
+			return a.pair_key.localeCompare(b.pair_key)
+		})
+		.map((item, index) => ({
+			...item,
+			pair_rank: index + 1
+		}))
 }
 
 function getRemainingHeartValue(record = {}, fallback = 1) {
@@ -2350,6 +2722,87 @@ module.exports = {
 			id: matchedRecord._id,
 			person_id: matchedRecord.person_id,
 			name: matchedRecord.name
+		}
+	},
+
+	async listIntentPairRankings() {
+		const aggregateResult = await matchVoteCollection
+			.aggregate()
+			.match({
+				is_deleted: dbCmd.nin([true, 1, '1', 'true']),
+				activity_id: dbCmd.exists(true)
+			})
+			.sort({
+				updated_at: -1
+			})
+			.group({
+				_id: {
+					activity_id: '$activity_id',
+					creator_record_id: '$creator_record_id',
+					creator_wx_openid: '$creator_wx_openid',
+					creator_person_id: '$creator_person_id',
+					target_record_id: '$target_record_id',
+					target_wx_openid: '$target_wx_openid',
+					target_person_id: '$target_person_id'
+				},
+				_id_value: dbAggr.first('$_id'),
+				activity_id: dbAggr.first('$activity_id'),
+				creator_record_id: dbAggr.first('$creator_record_id'),
+				creator_person_id: dbAggr.first('$creator_person_id'),
+				creator_user_id: dbAggr.first('$creator_user_id'),
+				creator_wx_openid: dbAggr.first('$creator_wx_openid'),
+				creator_name: dbAggr.first('$creator_name'),
+				creator_nickname: dbAggr.first('$creator_nickname'),
+				target_record_id: dbAggr.first('$target_record_id'),
+				target_person_id: dbAggr.first('$target_person_id'),
+				target_user_id: dbAggr.first('$target_user_id'),
+				target_wx_openid: dbAggr.first('$target_wx_openid'),
+				target_name: dbAggr.first('$target_name'),
+				target_nickname: dbAggr.first('$target_nickname'),
+				target_mbti: dbAggr.first('$target_mbti'),
+				rank: dbAggr.first('$rank'),
+				score: dbAggr.first('$score'),
+				submit_status: dbAggr.first('$submit_status'),
+				submitted_at: dbAggr.first('$submitted_at'),
+				deadline_at: dbAggr.first('$deadline_at'),
+				created_at: dbAggr.first('$created_at'),
+				updated_at: dbAggr.first('$updated_at'),
+				remark: dbAggr.first('$remark')
+			})
+			.end()
+
+		const aggregatedList = (aggregateResult && aggregateResult.data) || []
+		const pairList = buildIntentPairRankingList(
+			aggregatedList.map((item) => ({
+				_id: item && item._id_value,
+				activity_id: item && item.activity_id,
+				creator_record_id: item && item.creator_record_id,
+				creator_person_id: item && item.creator_person_id,
+				creator_user_id: item && item.creator_user_id,
+				creator_wx_openid: item && item.creator_wx_openid,
+				creator_name: item && item.creator_name,
+				creator_nickname: item && item.creator_nickname,
+				target_record_id: item && item.target_record_id,
+				target_person_id: item && item.target_person_id,
+				target_user_id: item && item.target_user_id,
+				target_wx_openid: item && item.target_wx_openid,
+				target_name: item && item.target_name,
+				target_nickname: item && item.target_nickname,
+				target_mbti: item && item.target_mbti,
+				rank: item && item.rank,
+				score: item && item.score,
+				submit_status: item && item.submit_status,
+				submitted_at: item && item.submitted_at,
+				deadline_at: item && item.deadline_at,
+				created_at: item && item.created_at,
+				updated_at: item && item.updated_at,
+				remark: item && item.remark
+			}))
+		)
+
+		return {
+			k_factor: INTENT_MATCH_K_FACTOR,
+			list: pairList
 		}
 	},
 

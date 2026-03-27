@@ -9,26 +9,26 @@
 			<view class="card-head">
 				<text class="card-title">意向记录总览</text>
 				<text class="card-tip">
-					进入页面时会把所有单条意向记录一次性从云端拉回本地，再按活动与提交人分组，后续的分页、互选匹配与合计分计算都在当前设备完成。
+					进入页面时会在云端先聚合最新意向记录，再按双方互选与匹配总分生成排行榜，页面只接收聚合后的配对结果。
 				</text>
 			</view>
 
 			<view class="stats-wrap">
 				<view class="stat-card">
-					<text class="stat-label">提交组数</text>
-					<text class="stat-value">{{ summaryStats.totalRecords }}</text>
+					<text class="stat-label">配对总数</text>
+					<text class="stat-value">{{ summaryStats.totalPairs }}</text>
 				</view>
 				<view class="stat-card">
 					<text class="stat-label">当前展示</text>
-					<text class="stat-value">{{ summaryStats.filteredRecords }}</text>
+					<text class="stat-value">{{ summaryStats.filteredPairs }}</text>
 				</view>
 				<view class="stat-card">
-					<text class="stat-label">意向条目</text>
-					<text class="stat-value">{{ summaryStats.totalPicks }}</text>
+					<text class="stat-label">匹配总分</text>
+					<text class="stat-value">{{ summaryStats.totalMatchScore }}</text>
 				</view>
 				<view class="stat-card">
-					<text class="stat-label">双向命中</text>
-					<text class="stat-value">{{ summaryStats.mutualPicks }}</text>
+					<text class="stat-label">最高匹配分</text>
+					<text class="stat-value">{{ summaryStats.topMatchScore }}</text>
 				</view>
 			</view>
 		</view>
@@ -36,12 +36,12 @@
 		<view v-if="accessChecked" class="panel-card filter-card">
 			<view class="card-head">
 				<text class="card-title">筛选条件</text>
-				<text class="card-tip">支持按活动、编号、姓名、昵称、OpenID、MBTI 与意向对象关键词进行本地筛选。</text>
+				<text class="card-tip">支持按编号、姓名、昵称、OpenID、MBTI 与匹配分关键词进行本地筛选。</text>
 			</view>
 			<input
 				v-model.trim="keyword"
 				class="search-input"
-				placeholder="搜索活动ID / 提交人 / 对象 / OpenID / MBTI"
+				placeholder="搜索编号 / 姓名 / 昵称 / OpenID / MBTI / 分数"
 				confirm-type="search"
 			/>
 			<scroll-view class="status-scroll" scroll-x>
@@ -61,92 +61,124 @@
 
 		<view v-if="accessChecked" class="panel-card">
 			<view class="card-head">
-				<text class="card-title">记录列表</text>
+				<text class="card-title">配对排行榜</text>
 				<text class="card-tip">
-					主表显示按提交人聚合后的结果；明细区域展示拆平后的单条意向，并计算对向分与合计分。
+					主表展示云端聚合后的互选配对，并按匹配总分从高到低排序；展开明细可查看双方给分、状态与时间。
 				</text>
 			</view>
 
-			<scroll-view scroll-x class="table-scroll">
+			<scroll-view
+				scroll-x
+				scroll-y
+				class="table-scroll"
+				:scroll-top="tableScrollTop"
+				:scroll-left="tableScrollLeft"
+				@scroll="handleTableScroll"
+			>
 				<view class="table">
 					<view class="table-row table-header">
-						<text class="col col-activity">活动</text>
-						<text class="col col-person">提交人</text>
-						<text class="col col-openid">提交人 OpenID</text>
+						<text class="col col-rank">排行</text>
+						<text class="col col-score">匹配总分</text>
+						<text class="col col-pair">配对双方</text>
 						<text class="col col-status">状态</text>
-						<text class="col col-count">已选</text>
-						<text class="col col-score">原始总分</text>
-						<text class="col col-score">关系合计</text>
-						<text class="col col-count">互选数</text>
-						<text class="col col-time">截止时间</text>
-						<text class="col col-time">提交时间</text>
-						<text class="col col-time">更新时间</text>
+						<text class="col col-pair-rank">双方志愿</text>
+						<text class="col col-expand">明细</text>
 					</view>
 
 					<view v-if="loading" class="empty-box">
-						<text>正在加载提交记录...</text>
+						<text>正在加载配对排行榜...</text>
 					</view>
 					<view v-else-if="!recordList.length" class="empty-box">
-						<text>当前没有可展示的提交记录</text>
+						<text>当前没有可展示的互选配对</text>
 					</view>
 					<view v-else-if="!filteredRecordList.length" class="empty-box">
 						<text>当前筛选条件下没有匹配结果</text>
 					</view>
 
-					<block v-for="item in pagedRecordList" :key="item.group_key">
-						<view class="table-row body-row">
-							<text class="col col-activity">{{ item.activity_id || '-' }}</text>
-							<view class="col col-person person-cell">
-								<text class="primary-text">#{{ item.creator_person_id || '-' }} · {{ item.creator_name || '-' }}</text>
-								<text class="secondary-text">{{ item.creator_nickname || '未填写昵称' }}</text>
-							</view>
-							<text class="col col-openid openid-text">{{ item.creator_wx_openid || '-' }}</text>
-							<view class="col col-status">
-								<text class="status-pill" :class="statusClass(item.submit_status)">
-									{{ statusText(item.submit_status) }}
-								</text>
-							</view>
-							<text class="col col-count">{{ item.pick_count }}</text>
-							<text class="col col-score">{{ item.total_score }}</text>
-							<text class="col col-score score-strong">{{ item.linked_score_total }}</text>
-							<text class="col col-count">{{ item.mutual_pick_count }}</text>
-							<text class="col col-time">{{ formatDate(item.deadline_at) }}</text>
-							<text class="col col-time">{{ formatDate(item.submitted_at) }}</text>
-							<text class="col col-time">{{ formatDate(item.updated_at) }}</text>
-						</view>
-
-						<view class="detail-panel">
-							<view class="detail-head">
-								<text class="detail-title">意向明细</text>
-								<text class="detail-summary">
-									{{ item.pickViews.length }} 条 · 双向 {{ item.mutual_pick_count }} 条 · 合计 {{ item.linked_score_total }} 分
-								</text>
-							</view>
-							<view v-if="item.pickViews.length" class="pick-list">
-								<view v-for="pick in item.pickViews" :key="pick.key" class="pick-card">
-									<view class="pick-top">
-										<text class="pick-rank">#{{ pick.rank || '-' }}</text>
-										<text class="pick-name">{{ pick.target_name || '-' }}</text>
-										<text class="pick-nickname">{{ pick.target_nickname || '未填写昵称' }}</text>
-										<text class="pick-mbti">{{ pick.target_mbti || 'MBTI 未知' }}</text>
-										<text class="pick-state" :class="pick.is_mutual ? 'pick-state is-mutual' : 'pick-state is-single'">
-											{{ pick.is_mutual ? '已回选' : '单向记录' }}
-										</text>
-									</view>
-									<text class="pick-openid">对象 OpenID：{{ pick.target_wx_openid || '-' }}</text>
-									<view class="pick-score-row">
-										<text class="pick-score">本次分 {{ pick.score }}</text>
-										<text class="pick-score">对向分 {{ pick.reciprocal_score }}</text>
-										<text class="pick-score score-strong">合计分 {{ pick.combined_score }}</text>
-									</view>
-									<text class="pick-meta">
-										对向信息：{{ pick.reciprocal_record_name || '未找到对向记录' }}
-										{{ pick.reciprocal_rank_text }}
-									</text>
+					<block v-for="item in pagedRecordList" :key="item.pair_key">
+						<view
+							class="table-row body-row is-expandable"
+							:class="isPairExpanded(item.pair_key) ? 'is-expanded' : ''"
+							@click="togglePairDetail(item.pair_key)"
+						>
+							<text class="col col-rank rank-text">#{{ item.pair_rank }}</text>
+							<text class="col col-score score-strong">{{ item.match_score_total }}</text>
+							<view class="col col-pair pair-cell">
+								<view class="pair-person">
+									<text class="primary-text">#{{ item.left_person.person_id || '-' }} · {{ item.left_person.name || '-' }}</text>
+									<text class="secondary-text">{{ item.left_person.nickname || '未填写昵称' }} · {{ item.left_person.mbti || 'MBTI 未知' }}</text>
+								</view>
+								<view class="pair-person">
+									<text class="primary-text">#{{ item.right_person.person_id || '-' }} · {{ item.right_person.name || '-' }}</text>
+									<text class="secondary-text">{{ item.right_person.nickname || '未填写昵称' }} · {{ item.right_person.mbti || 'MBTI 未知' }}</text>
 								</view>
 							</view>
-							<view v-else class="detail-empty">
-								<text>该提交人暂无意向条目</text>
+							<view class="col col-status">
+								<text class="status-pill" :class="statusClass(item.pair_status)">
+									{{ statusText(item.pair_status) }}
+								</text>
+							</view>
+							<text class="col col-pair-rank">#{{ item.rank_left_to_right || '-' }} / #{{ item.rank_right_to_left || '-' }}</text>
+							<view class="col col-expand expand-cell">
+								<text class="expand-text">{{ isPairExpanded(item.pair_key) ? '收起 ▲' : '展开 ▼' }}</text>
+							</view>
+						</view>
+
+						<view v-if="isPairExpanded(item.pair_key)" class="detail-panel">
+							<view class="detail-head">
+								<text class="detail-title">配对明细</text>
+								<text class="detail-summary">
+									匹配总分 {{ item.match_score_total }} 分 · 双方志愿 #{{ item.rank_left_to_right || '-' }} / #{{ item.rank_right_to_left || '-' }}
+								</text>
+							</view>
+							<view class="formula-card">
+								<text class="formula-title">得分细节</text>
+								<text class="formula-text">
+									{{ item.left_person.name || 'A' }} → {{ item.right_person.name || 'B' }}：{{ item.score_left_to_right }} 分
+								</text>
+								<text class="formula-text">
+									{{ item.right_person.name || 'B' }} → {{ item.left_person.name || 'A' }}：{{ item.score_right_to_left }} 分
+								</text>
+								<text class="formula-text">
+									互选加成：1.2 × min({{ item.score_left_to_right }}, {{ item.score_right_to_left }}) = {{ item.mutual_bonus_score }}
+								</text>
+								<text class="formula-result">
+									总分 = {{ item.score_left_to_right }} + {{ item.score_right_to_left }} + {{ item.mutual_bonus_score }} = {{ item.match_score_total }}
+								</text>
+							</view>
+							<view class="pick-list">
+								<view class="pick-card">
+									<view class="pick-top">
+										<text class="pick-rank">{{ item.left_person.name || '-' }}</text>
+										<text class="pick-nickname">{{ item.left_person.nickname || '未填写昵称' }}</text>
+										<text class="pick-mbti">{{ item.left_person.mbti || 'MBTI 未知' }}</text>
+										<text class="pick-state" :class="statusClass(item.left_status)">
+											{{ statusText(item.left_status) }}
+										</text>
+									</view>
+									<text class="pick-meta">编号 #{{ item.left_person.person_id || '-' }} · 选择对象 {{ item.right_person.name || '-' }}</text>
+									<view class="pick-score-row">
+										<text class="pick-score">志愿排名 #{{ item.rank_left_to_right || '-' }}</text>
+										<text class="pick-score">给分 {{ item.score_left_to_right }}</text>
+									</view>
+									<text class="pick-meta">提交 {{ formatDate(item.left_submitted_at) }} · 更新 {{ formatDate(item.left_updated_at) }}</text>
+								</view>
+								<view class="pick-card">
+									<view class="pick-top">
+										<text class="pick-rank">{{ item.right_person.name || '-' }}</text>
+										<text class="pick-nickname">{{ item.right_person.nickname || '未填写昵称' }}</text>
+										<text class="pick-mbti">{{ item.right_person.mbti || 'MBTI 未知' }}</text>
+										<text class="pick-state" :class="statusClass(item.right_status)">
+											{{ statusText(item.right_status) }}
+										</text>
+									</view>
+									<text class="pick-meta">编号 #{{ item.right_person.person_id || '-' }} · 选择对象 {{ item.left_person.name || '-' }}</text>
+									<view class="pick-score-row">
+										<text class="pick-score">志愿排名 #{{ item.rank_right_to_left || '-' }}</text>
+										<text class="pick-score">给分 {{ item.score_right_to_left }}</text>
+									</view>
+									<text class="pick-meta">提交 {{ formatDate(item.right_submitted_at) }} · 更新 {{ formatDate(item.right_updated_at) }}</text>
+								</view>
 							</view>
 						</view>
 					</block>
@@ -167,19 +199,22 @@
 </template>
 
 <script>
-var db = null
-if (typeof uniCloud !== 'undefined' && uniCloud.database) {
-	db = uniCloud.database()
-}
-
 const PERSONNEL_PROFILE_STORAGE_KEY = 'mbtiPersonnelProfile'
-const MATCH_VOTE_COLLECTION = 'mbti-match-vote'
 const STATUS_OPTIONS = [
 	{ value: 'all', label: '全部状态' },
 	{ value: 'draft', label: '草稿' },
 	{ value: 'submitted', label: '已提交' },
 	{ value: 'locked', label: '已锁定' }
 ]
+let personnelUser = null
+
+try {
+	personnelUser = uniCloud.importObject('personnel-user', {
+		customUI: true
+	})
+} catch (error) {
+	console.error('import personnel-user failed', error)
+}
 
 function normalizeText(value) {
 	return String(value || '').trim()
@@ -193,9 +228,18 @@ function normalizeOpenid(value) {
 	return normalizeText(value)
 }
 
+function normalizeMbti(value) {
+	return normalizeText(value).toUpperCase()
+}
+
 function toNumber(value) {
 	var num = Number(value)
 	return Number.isFinite(num) ? num : 0
+}
+
+function normalizeRankSortValue(value) {
+	var rank = toNumber(value)
+	return rank > 0 ? rank : 999
 }
 
 function isDeletedRecord(value) {
@@ -263,6 +307,9 @@ export default {
 			loading: false,
 			keyword: '',
 			statusFilter: 'all',
+			expandedPairKey: '',
+			tableScrollTop: 0,
+			tableScrollLeft: 0,
 			statusOptions: STATUS_OPTIONS,
 			recordList: [],
 			pagination: {
@@ -276,7 +323,7 @@ export default {
 			var keyword = normalizeKeyword(this.keyword)
 			var currentStatus = this.statusFilter
 			return this.recordList.filter(function (item) {
-				if (currentStatus !== 'all' && item.submit_status !== currentStatus) {
+				if (currentStatus !== 'all' && item.pair_status !== currentStatus) {
 					return false
 				}
 				if (!keyword) {
@@ -284,25 +331,24 @@ export default {
 				}
 
 				var textPool = [
-					item.activity_id,
-					item.creator_name,
-					item.creator_nickname,
-					String(item.creator_person_id || ''),
-					item.creator_wx_openid,
-					item.submit_status
+					item.pair_status,
+					String(item.pair_rank || ''),
+					String(item.match_score_total || ''),
+					String(item.score_left_to_right || ''),
+					String(item.score_right_to_left || ''),
+					String(item.rank_left_to_right || ''),
+					String(item.rank_right_to_left || ''),
+					item.left_person.name,
+					item.left_person.nickname,
+					String(item.left_person.person_id || ''),
+					item.left_person.wx_openid,
+					item.left_person.mbti,
+					item.right_person.name,
+					item.right_person.nickname,
+					String(item.right_person.person_id || ''),
+					item.right_person.wx_openid,
+					item.right_person.mbti
 				]
-
-				for (var i = 0; i < item.pickViews.length; i += 1) {
-					var pick = item.pickViews[i]
-					textPool.push(
-						pick.target_name,
-						pick.target_nickname,
-						pick.target_mbti,
-						pick.target_wx_openid,
-						String(pick.rank || ''),
-						String(pick.combined_score || '')
-					)
-				}
 
 				return textPool.some(function (text) {
 					return normalizeKeyword(text).indexOf(keyword) !== -1
@@ -316,26 +362,35 @@ export default {
 			return this.filteredRecordList.slice(start, start + pageSize)
 		},
 		summaryStats() {
-			var totalPicks = 0
-			var mutualPicks = 0
+			var totalMatchScore = 0
+			var topMatchScore = 0
 			for (var i = 0; i < this.filteredRecordList.length; i += 1) {
-				totalPicks += Number(this.filteredRecordList[i].pickViews.length) || 0
-				mutualPicks += Number(this.filteredRecordList[i].mutual_pick_count) || 0
+				var currentScore = Number(this.filteredRecordList[i].match_score_total) || 0
+				totalMatchScore += currentScore
+				if (currentScore > topMatchScore) {
+					topMatchScore = currentScore
+				}
 			}
 			return {
-				totalRecords: this.recordList.length,
-				filteredRecords: this.filteredRecordList.length,
-				totalPicks: totalPicks,
-				mutualPicks: mutualPicks
+				totalPairs: this.recordList.length,
+				filteredPairs: this.filteredRecordList.length,
+				totalMatchScore: totalMatchScore,
+				topMatchScore: topMatchScore
 			}
 		}
 	},
 	watch: {
 		keyword() {
 			this.pagination.page = 1
+			this.expandedPairKey = ''
+			this.tableScrollTop = 0
+			this.tableScrollLeft = 0
 		},
 		statusFilter() {
 			this.pagination.page = 1
+			this.expandedPairKey = ''
+			this.tableScrollTop = 0
+			this.tableScrollLeft = 0
 		}
 	},
 	onLoad() {
@@ -380,10 +435,28 @@ export default {
 		},
 		changeStatus(value) {
 			this.statusFilter = value
+			this.expandedPairKey = ''
+			this.tableScrollTop = 0
+			this.tableScrollLeft = 0
 		},
 		handlePageChange(event) {
 			var current = Number(event && event.current)
 			this.pagination.page = current > 0 ? current : 1
+			this.expandedPairKey = ''
+			this.tableScrollTop = 0
+			this.tableScrollLeft = 0
+		},
+		handleTableScroll(event) {
+			var detail = (event && event.detail) || {}
+			this.tableScrollTop = toNumber(detail.scrollTop)
+			this.tableScrollLeft = toNumber(detail.scrollLeft)
+		},
+		isPairExpanded(pairKey) {
+			return normalizeText(pairKey) && this.expandedPairKey === normalizeText(pairKey)
+		},
+		togglePairDetail(pairKey) {
+			var normalizedPairKey = normalizeText(pairKey)
+			this.expandedPairKey = this.expandedPairKey === normalizedPairKey ? '' : normalizedPairKey
 		},
 		buildIdentityKey(recordId, openid, personId) {
 			var normalizedRecordId = normalizeText(recordId)
@@ -397,11 +470,97 @@ export default {
 			var normalizedPersonId = toNumber(personId)
 			return normalizedPersonId ? `person:${normalizedPersonId}` : ''
 		},
-		buildGroupKey(activityId, creatorKey) {
-			return [normalizeText(activityId), normalizeText(creatorKey)].join('::')
-		},
 		buildPairKey(activityId, creatorKey, targetKey) {
 			return [normalizeText(activityId), normalizeText(creatorKey), normalizeText(targetKey)].join('::')
+		},
+		buildCanonicalPairKey(activityId, leftKey, rightKey) {
+			var keyList = [normalizeText(leftKey), normalizeText(rightKey)].sort()
+			return [normalizeText(activityId), keyList[0], keyList[1]].join('::')
+		},
+		mergePersonProfile(profileMap, personKey, payload) {
+			var normalizedPersonKey = normalizeText(personKey)
+			if (!normalizedPersonKey) {
+				return
+			}
+			if (!profileMap[normalizedPersonKey]) {
+				profileMap[normalizedPersonKey] = {
+					person_key: normalizedPersonKey,
+					record_id: '',
+					person_id: 0,
+					user_id: '',
+					wx_openid: '',
+					name: '',
+					nickname: '',
+					mbti: ''
+				}
+			}
+
+			var profile = profileMap[normalizedPersonKey]
+			var recordId = normalizeText(payload && payload.record_id)
+			var personId = toNumber(payload && payload.person_id)
+			var userId = normalizeText(payload && payload.user_id)
+			var wxOpenid = normalizeOpenid(payload && payload.wx_openid)
+			var name = normalizeText(payload && payload.name)
+			var nickname = normalizeText(payload && payload.nickname)
+			var mbti = normalizeMbti(payload && payload.mbti)
+
+			if (!profile.record_id && recordId) {
+				profile.record_id = recordId
+			}
+			if (!profile.person_id && personId) {
+				profile.person_id = personId
+			}
+			if (!profile.user_id && userId) {
+				profile.user_id = userId
+			}
+			if (!profile.wx_openid && wxOpenid) {
+				profile.wx_openid = wxOpenid
+			}
+			if (!profile.name && name) {
+				profile.name = name
+			}
+			if (!profile.nickname && nickname) {
+				profile.nickname = nickname
+			}
+			if (!profile.mbti && mbti) {
+				profile.mbti = mbti
+			}
+		},
+		buildPersonView(profileMap, personKey) {
+			var normalizedPersonKey = normalizeText(personKey)
+			var profile = profileMap[normalizedPersonKey] || {}
+			return {
+				person_key: normalizedPersonKey,
+				record_id: normalizeText(profile.record_id),
+				person_id: toNumber(profile.person_id),
+				user_id: normalizeText(profile.user_id),
+				wx_openid: normalizeOpenid(profile.wx_openid),
+				name: normalizeText(profile.name),
+				nickname: normalizeText(profile.nickname),
+				mbti: normalizeMbti(profile.mbti)
+			}
+		},
+		comparePersonView(leftPerson, rightPerson) {
+			var leftPersonId = toNumber(leftPerson && leftPerson.person_id)
+			var rightPersonId = toNumber(rightPerson && rightPerson.person_id)
+			if (leftPersonId && rightPersonId && leftPersonId !== rightPersonId) {
+				return leftPersonId - rightPersonId
+			}
+			var leftName = normalizeText(leftPerson && leftPerson.name)
+			var rightName = normalizeText(rightPerson && rightPerson.name)
+			if (leftName !== rightName) {
+				return leftName.localeCompare(rightName)
+			}
+			return normalizeText(leftPerson && leftPerson.person_key).localeCompare(
+				normalizeText(rightPerson && rightPerson.person_key)
+			)
+		},
+		resolvePairStatus(leftStatus, rightStatus) {
+			var normalizedLeftStatus = normalizeText(leftStatus) || 'draft'
+			var normalizedRightStatus = normalizeText(rightStatus) || 'draft'
+			return statusOrder(normalizedLeftStatus) <= statusOrder(normalizedRightStatus)
+				? normalizedLeftStatus
+				: normalizedRightStatus
 		},
 		normalizeRow(item) {
 			var creatorKey = this.buildIdentityKey(
@@ -429,7 +588,7 @@ export default {
 				target_wx_openid: normalizeOpenid(item && item.target_wx_openid),
 				target_name: normalizeText(item && item.target_name),
 				target_nickname: normalizeText(item && item.target_nickname),
-				target_mbti: normalizeText(item && item.target_mbti).toUpperCase(),
+				target_mbti: normalizeMbti(item && item.target_mbti),
 				rank: toNumber(item && item.rank),
 				score: toNumber(item && item.score),
 				submit_status: normalizeText(item && item.submit_status) || 'draft',
@@ -456,191 +615,166 @@ export default {
 					return !!(item.activity_id && item.creator_key && item.target_key)
 				})
 
-			var pairMap = {}
-			var groupMap = {}
+			var directionMap = {}
+			var personProfileMap = {}
 
 			rowList.forEach(
 				function (item) {
-					pairMap[this.buildPairKey(item.activity_id, item.creator_key, item.target_key)] = item
-
-					var groupKey = this.buildGroupKey(item.activity_id, item.creator_key)
-					if (!groupMap[groupKey]) {
-						groupMap[groupKey] = {
-							group_key: groupKey,
-							activity_id: item.activity_id,
-							creator_record_id: item.creator_record_id,
-							creator_person_id: item.creator_person_id,
-							creator_user_id: item.creator_user_id,
-							creator_wx_openid: item.creator_wx_openid,
-							creator_name: item.creator_name,
-							creator_nickname: item.creator_nickname,
-							submit_status: item.submit_status,
-							submitted_at: item.submitted_at,
-							deadline_at: item.deadline_at,
-							created_at: item.created_at,
-							updated_at: item.updated_at,
-							rawRows: []
-						}
+					var directionKey = this.buildPairKey(item.activity_id, item.creator_key, item.target_key)
+					var currentDirectionRecord = directionMap[directionKey]
+					if (
+						!currentDirectionRecord ||
+						resolveTimeMs(item.updated_at) > resolveTimeMs(currentDirectionRecord.updated_at)
+					) {
+						directionMap[directionKey] = item
 					}
 
-					var group = groupMap[groupKey]
-					group.rawRows.push(item)
-
-					if (statusOrder(item.submit_status) > statusOrder(group.submit_status)) {
-						group.submit_status = item.submit_status
-					}
-					if (resolveTimeMs(item.submitted_at) > resolveTimeMs(group.submitted_at)) {
-						group.submitted_at = item.submitted_at
-					}
-					if (resolveTimeMs(item.deadline_at) > resolveTimeMs(group.deadline_at)) {
-						group.deadline_at = item.deadline_at
-					}
-					if (resolveTimeMs(item.updated_at) > resolveTimeMs(group.updated_at)) {
-						group.updated_at = item.updated_at
-					}
-					if (resolveTimeMs(item.created_at) < resolveTimeMs(group.created_at) || !group.created_at) {
-						group.created_at = item.created_at
-					}
+					this.mergePersonProfile(personProfileMap, item.creator_key, {
+						record_id: item.creator_record_id,
+						person_id: item.creator_person_id,
+						user_id: item.creator_user_id,
+						wx_openid: item.creator_wx_openid,
+						name: item.creator_name,
+						nickname: item.creator_nickname
+					})
+					this.mergePersonProfile(personProfileMap, item.target_key, {
+						record_id: item.target_record_id,
+						person_id: item.target_person_id,
+						user_id: item.target_user_id,
+						wx_openid: item.target_wx_openid,
+						name: item.target_name,
+						nickname: item.target_nickname,
+						mbti: item.target_mbti
+					})
 				}.bind(this)
 			)
 
-			return Object.keys(groupMap)
+			var pairVisitedMap = {}
+
+			return Object.keys(directionMap)
 				.map(
-					function (groupKey) {
-						var group = groupMap[groupKey]
-						var totalScore = 0
-						var mutualPickCount = 0
-						var linkedScoreTotal = 0
-						var sortedRows = (group.rawRows || []).slice().sort(function (a, b) {
-							if (a.rank && b.rank && a.rank !== b.rank) {
-								return a.rank - b.rank
-							}
-							if (a.rank && !b.rank) {
-								return -1
-							}
-							if (!a.rank && b.rank) {
-								return 1
-							}
-							return resolveTimeMs(b.updated_at) - resolveTimeMs(a.updated_at)
-						})
+					function (directionKey) {
+						var row = directionMap[directionKey]
+						if (!row || row.creator_key === row.target_key) {
+							return null
+						}
 
-						var pickViews = sortedRows.map(
-							function (row, index) {
-								var reciprocalRecord =
-									pairMap[this.buildPairKey(group.activity_id, row.target_key, row.creator_key)] || null
-								var reciprocalScore = reciprocalRecord ? toNumber(reciprocalRecord.score) : 0
-								var combinedScore = toNumber(row.score) + reciprocalScore
-								totalScore += toNumber(row.score)
-								linkedScoreTotal += combinedScore
-								if (reciprocalRecord) {
-									mutualPickCount += 1
-								}
+						var reciprocalKey = this.buildPairKey(row.activity_id, row.target_key, row.creator_key)
+						var reciprocalRow = directionMap[reciprocalKey] || null
+						if (!reciprocalRow) {
+							return null
+						}
 
-								return {
-									key: row._id || `${group.group_key}-${index}`,
-									target_record_id: row.target_record_id,
-									target_person_id: row.target_person_id,
-									target_wx_openid: row.target_wx_openid,
-									target_name: row.target_name,
-									target_nickname: row.target_nickname,
-									target_mbti: row.target_mbti,
-									rank: row.rank,
-									score: row.score,
-									is_mutual: !!reciprocalRecord,
-									reciprocal_score: reciprocalScore,
-									reciprocal_rank: reciprocalRecord ? toNumber(reciprocalRecord.rank) : 0,
-									reciprocal_rank_text:
-										reciprocalRecord && toNumber(reciprocalRecord.rank)
-											? ` · 对向排名 #${toNumber(reciprocalRecord.rank)}`
-											: '',
-									reciprocal_record_name: reciprocalRecord
-										? reciprocalRecord.creator_name || reciprocalRecord.creator_nickname || '已找到对向记录'
-										: '',
-									combined_score: combinedScore
-								}
-							}.bind(this)
+						var canonicalPairKey = this.buildCanonicalPairKey(
+							row.activity_id,
+							row.creator_key,
+							row.target_key
 						)
+						if (pairVisitedMap[canonicalPairKey]) {
+							return null
+						}
+						pairVisitedMap[canonicalPairKey] = true
+
+						var leftRow = row
+						var rightRow = reciprocalRow
+						var leftPerson = this.buildPersonView(personProfileMap, leftRow.creator_key)
+						var rightPerson = this.buildPersonView(personProfileMap, leftRow.target_key)
+
+						if (this.comparePersonView(leftPerson, rightPerson) > 0) {
+							leftRow = reciprocalRow
+							rightRow = row
+							leftPerson = this.buildPersonView(personProfileMap, leftRow.creator_key)
+							rightPerson = this.buildPersonView(personProfileMap, leftRow.target_key)
+						}
+
+						var scoreLeftToRight = toNumber(leftRow.score)
+						var scoreRightToLeft = toNumber(rightRow.score)
+						var mutualBonus = Math.min(scoreLeftToRight, scoreRightToLeft) * 1.2
 
 						return {
-							group_key: group.group_key,
-							activity_id: group.activity_id,
-							creator_record_id: group.creator_record_id,
-							creator_person_id: group.creator_person_id,
-							creator_user_id: group.creator_user_id,
-							creator_wx_openid: group.creator_wx_openid,
-							creator_name: group.creator_name,
-							creator_nickname: group.creator_nickname,
-							submit_status: group.submit_status,
-							submitted_at: group.submitted_at,
-							deadline_at: group.deadline_at,
-							created_at: group.created_at,
-							updated_at: group.updated_at,
-							pick_count: pickViews.length,
-							total_score: totalScore,
-							mutual_pick_count: mutualPickCount,
-							linked_score_total: linkedScoreTotal,
-							pickViews: pickViews
+							pair_key: canonicalPairKey,
+							activity_id: leftRow.activity_id,
+							left_person: leftPerson,
+							right_person: rightPerson,
+							pair_status: this.resolvePairStatus(leftRow.submit_status, rightRow.submit_status),
+							left_status: leftRow.submit_status,
+							right_status: rightRow.submit_status,
+							score_left_to_right: scoreLeftToRight,
+							score_right_to_left: scoreRightToLeft,
+							mutual_bonus_score: Number.isInteger(mutualBonus) ? mutualBonus : Number(mutualBonus.toFixed(1)),
+							match_score_total: scoreLeftToRight + scoreRightToLeft + mutualBonus,
+							best_single_score: Math.max(scoreLeftToRight, scoreRightToLeft),
+							rank_left_to_right: toNumber(leftRow.rank),
+							rank_right_to_left: toNumber(rightRow.rank),
+							left_submitted_at: leftRow.submitted_at,
+							right_submitted_at: rightRow.submitted_at,
+							left_updated_at: leftRow.updated_at,
+							right_updated_at: rightRow.updated_at,
+							submitted_at:
+								resolveTimeMs(leftRow.submitted_at) > resolveTimeMs(rightRow.submitted_at)
+									? leftRow.submitted_at
+									: rightRow.submitted_at,
+							deadline_at:
+								resolveTimeMs(leftRow.deadline_at) > resolveTimeMs(rightRow.deadline_at)
+									? leftRow.deadline_at
+									: rightRow.deadline_at,
+							updated_at:
+								resolveTimeMs(leftRow.updated_at) > resolveTimeMs(rightRow.updated_at)
+									? leftRow.updated_at
+									: rightRow.updated_at
 						}
 					}.bind(this)
 				)
+				.filter(function (item) {
+					return !!item
+				})
 				.sort(function (a, b) {
+					var scoreDiff = toNumber(b.match_score_total) - toNumber(a.match_score_total)
+					if (scoreDiff !== 0) {
+						return scoreDiff
+					}
+					var bestSingleScoreDiff = toNumber(b.best_single_score) - toNumber(a.best_single_score)
+					if (bestSingleScoreDiff !== 0) {
+						return bestSingleScoreDiff
+					}
+					var rankDiff =
+						normalizeRankSortValue(a.rank_left_to_right) +
+						normalizeRankSortValue(a.rank_right_to_left) -
+						normalizeRankSortValue(b.rank_left_to_right) -
+						normalizeRankSortValue(b.rank_right_to_left)
+					if (rankDiff !== 0) {
+						return rankDiff
+					}
 					var timeDiff = resolveTimeMs(b.updated_at) - resolveTimeMs(a.updated_at)
 					if (timeDiff !== 0) {
 						return timeDiff
 					}
-					if (a.activity_id !== b.activity_id) {
-						return a.activity_id.localeCompare(b.activity_id)
-					}
-					return a.creator_person_id - b.creator_person_id
+					return a.pair_key.localeCompare(b.pair_key)
 				})
-		},
-		async fetchAllRecords() {
-			var pageSize = 500
-			var page = 0
-			var allList = []
-
-			while (true) {
-				var res = await db
-					.collection(MATCH_VOTE_COLLECTION)
-					.field(
-						'_id,activity_id,creator_record_id,creator_person_id,creator_user_id,creator_wx_openid,creator_name,creator_nickname,target_record_id,target_person_id,target_user_id,target_wx_openid,target_name,target_nickname,target_mbti,rank,score,submit_status,submitted_at,deadline_at,is_overdue,remark,is_deleted,created_at,updated_at'
-					)
-					.orderBy('updated_at', 'desc')
-					.skip(page * pageSize)
-					.limit(pageSize)
-					.get()
-
-				var currentList = (res.result && res.result.data) || res.data || []
-				if (!currentList.length) {
-					break
-				}
-
-				allList = allList.concat(currentList)
-				if (currentList.length < pageSize) {
-					break
-				}
-
-				page += 1
-			}
-
-			return allList
+				.map(function (item, index) {
+					item.pair_rank = index + 1
+					return item
+				})
 		},
 		async loadRecordList() {
 			if (!this.accessChecked) {
 				return
 			}
-			if (!db) {
+			if (!personnelUser) {
 				uni.showModal({
-					content: '当前环境不支持云数据库查询。',
+					content: '当前环境不支持云对象调用。',
 					showCancel: false
 				})
 				return
 			}
 			this.loading = true
 			try {
-				var list = await this.fetchAllRecords()
-				this.recordList = this.buildRecordViewList(list)
+				var result = await personnelUser.listIntentPairRankings()
+				this.recordList = (result && result.list) || []
 				this.pagination.page = 1
+				this.expandedPairKey = ''
+				this.tableScrollTop = 0
+				this.tableScrollLeft = 0
 			} catch (error) {
 				console.error('loadRecordList failed', error)
 				uni.showToast({
@@ -731,7 +865,6 @@ export default {
 .card-tip,
 .secondary-text,
 .pick-meta,
-.pick-openid,
 .detail-summary {
 	margin-top: 16rpx;
 	font-size: 24rpx;
@@ -750,25 +883,34 @@ export default {
 
 .stats-wrap {
 	justify-content: space-between;
+	flex-wrap: nowrap;
 	margin-top: 24rpx;
 }
 
 .stat-card {
-	width: 48%;
-	margin-bottom: 20rpx;
-	padding: 24rpx;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	width: 23.5%;
+	margin-bottom: 0;
+	padding: 24rpx 16rpx;
+	min-height: 148rpx;
 	box-sizing: border-box;
 }
 
 .stat-label {
+	display: block;
 	font-size: 24rpx;
+	line-height: 1.4;
 	color: #7c6b57;
 }
 
 .stat-value {
+	display: block;
 	margin-top: 12rpx;
-	margin-left: 12rpx;
 	font-size: 40rpx;
+	line-height: 1.1;
 	font-weight: 700;
 	color: #2e241b;
 }
@@ -814,10 +956,18 @@ export default {
 .table-scroll {
 	width: 100%;
 	margin-top: 24rpx;
+	height: 68vh;
+	max-height: 1280rpx;
+	min-height: 720rpx;
+	border: 1rpx solid #eadfce;
+	border-radius: 24rpx;
+	background: #fffaf3;
+	box-sizing: border-box;
 }
 
 .table {
-	min-width: 1980rpx;
+	width: 1180rpx;
+	min-width: 1180rpx;
 }
 
 .table-row {
@@ -844,21 +994,34 @@ export default {
 	white-space: nowrap;
 }
 
-.col-activity { width: 220rpx; }
-.col-person { width: 260rpx; }
-.col-openid {
-	width: 320rpx;
+.col-rank { width: 120rpx; }
+.col-pair {
+	width: 440rpx;
 	white-space: normal;
-	word-break: break-all;
 }
 .col-status { width: 160rpx; }
-.col-count { width: 120rpx; }
 .col-score { width: 140rpx; }
-.col-time { width: 220rpx; }
+.col-pair-rank { width: 180rpx; }
+.col-expand { width: 140rpx; }
 
-.person-cell {
+.is-expandable {
+	transition: background-color 0.2s ease;
+}
+
+.is-expandable.is-expanded {
+	background: rgba(245, 236, 222, 0.9);
+}
+
+.pair-cell,
+.pair-person {
 	display: flex;
 	flex-direction: column;
+}
+
+.pair-person + .pair-person {
+	margin-top: 18rpx;
+	padding-top: 18rpx;
+	border-top: 1rpx dashed #eadfce;
 }
 
 .primary-text {
@@ -867,12 +1030,25 @@ export default {
 	color: #2d241c;
 }
 
-.person-cell .secondary-text {
+.pair-cell .secondary-text {
 	margin-top: 10rpx;
 }
 
-.openid-text {
-	line-height: 1.6;
+.rank-text {
+	font-weight: 700;
+	color: #1f6b52;
+}
+
+.expand-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.expand-text {
+	font-size: 24rpx;
+	font-weight: 700;
+	color: #6d4e2c;
 }
 
 .status-pill,
@@ -929,6 +1105,35 @@ export default {
 	margin-top: 0;
 }
 
+.formula-card {
+	margin-top: 20rpx;
+	padding: 20rpx 24rpx;
+	border-radius: 20rpx;
+	background: #fff3dc;
+	border: 1rpx solid #efd6a8;
+}
+
+.formula-title {
+	font-size: 26rpx;
+	font-weight: 700;
+	color: #7a4a12;
+}
+
+.formula-text,
+.formula-result {
+	display: block;
+	margin-top: 12rpx;
+	font-size: 24rpx;
+	line-height: 1.7;
+	color: #5b4630;
+	word-break: break-word;
+}
+
+.formula-result {
+	font-weight: 700;
+	color: #1f6b52;
+}
+
 .pick-list {
 	display: flex;
 	flex-wrap: wrap;
@@ -975,17 +1180,6 @@ export default {
 	margin-left: auto;
 }
 
-.pick-state.is-mutual {
-	background: #dff4e8;
-	color: #1e6b45;
-}
-
-.pick-state.is-single {
-	background: #efe5d3;
-	color: #6d4e2c;
-}
-
-.pick-openid,
 .pick-meta {
 	display: block;
 	word-break: break-all;
@@ -1001,7 +1195,6 @@ export default {
 	color: #46382b;
 }
 
-.detail-empty,
 .empty-box {
 	padding: 44rpx 24rpx;
 	font-size: 26rpx;
@@ -1036,6 +1229,11 @@ export default {
 }
 
 @media screen and (max-width: 768px) {
+	.table-scroll {
+		height: 60vh;
+		min-height: 880rpx;
+	}
+
 	.pick-card {
 		width: 100%;
 	}
