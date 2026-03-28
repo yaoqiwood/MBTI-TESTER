@@ -24,173 +24,206 @@
 				</view>
 				<view class="stat-card">
 					<text class="stat-label">匹配总分</text>
-					<text class="stat-value">{{ summaryStats.totalMatchScore }}</text>
+					<text class="stat-value">{{ formatScoreValue(summaryStats.totalMatchScore) }}</text>
 				</view>
 				<view class="stat-card">
-					<text class="stat-label">最高匹配分</text>
-					<text class="stat-value">{{ summaryStats.topMatchScore }}</text>
+					<text class="stat-label">{{ isWeightedPanel ? '最低总分' : '最高匹配分' }}</text>
+					<text class="stat-value">{{ formatScoreValue(isWeightedPanel ? summaryStats.lowestMatchScore : summaryStats.topMatchScore) }}</text>
 				</view>
 			</view>
 		</view>
 
-		<view v-if="accessChecked" class="panel-card filter-card">
-			<view class="card-head">
-				<text class="card-title">筛选条件</text>
-				<text class="card-tip">支持按编号、姓名、昵称、OpenID、MBTI 与匹配分关键词进行本地筛选。</text>
-			</view>
-			<input
-				v-model.trim="keyword"
-				class="search-input"
-				placeholder="搜索编号 / 姓名 / 昵称 / OpenID / MBTI / 分数"
-				confirm-type="search"
-			/>
-			<scroll-view class="status-scroll" scroll-x>
-				<view class="status-row">
+		<view v-if="accessChecked" class="panel-card switch-card">
+			<view class="switch-card-head">
+				<view class="card-head">
+					<text class="card-title">榜单切换</text>
+					<text class="card-tip">切换不同计算方式的排行榜，筛选条件已经合并到榜单卡片内。</text>
+				</view>
+				<view class="panel-tabs">
 					<view
-						v-for="item in statusOptions"
+						v-for="item in panelOptions"
 						:key="item.value"
-						class="status-chip"
-						:class="statusFilter === item.value ? 'status-chip active' : 'status-chip'"
-						@click="changeStatus(item.value)"
+						class="panel-tab"
+						:class="activePanel === item.value ? 'panel-tab is-active' : 'panel-tab'"
+						@click="switchPanel(item.value)"
 					>
 						{{ item.label }}
 					</view>
 				</view>
-			</scroll-view>
+			</view>
 		</view>
 
 		<view v-if="accessChecked" class="panel-card">
 			<view class="card-head">
-				<text class="card-title">配对排行榜</text>
-				<text class="card-tip">
-					主表展示云端聚合后的互选配对，并按匹配总分从高到低排序；展开明细可查看双方给分、状态与时间。
-				</text>
+				<text class="card-title">{{ currentPanelMeta.title }}</text>
+				<text class="card-tip">{{ currentPanelMeta.tip }}</text>
 			</view>
 
-			<scroll-view
-				scroll-x
-				scroll-y
-				class="table-scroll"
-				:scroll-top="tableScrollTop"
-				:scroll-left="tableScrollLeft"
-				@scroll="handleTableScroll"
-			>
-				<view class="table">
-					<view class="table-row table-header">
-						<text class="col col-rank">排行</text>
-						<text class="col col-score">匹配总分</text>
-						<text class="col col-pair">配对双方</text>
-						<text class="col col-status">状态</text>
-						<text class="col col-pair-rank">双方志愿</text>
-						<text class="col col-expand">明细</text>
-					</view>
-
-					<view v-if="loading" class="empty-box">
-						<text>正在加载配对排行榜...</text>
-					</view>
-					<view v-else-if="!recordList.length" class="empty-box">
-						<text>当前没有可展示的互选配对</text>
-					</view>
-					<view v-else-if="!filteredRecordList.length" class="empty-box">
-						<text>当前筛选条件下没有匹配结果</text>
-					</view>
-
-					<block v-for="item in pagedRecordList" :key="item.pair_key">
+			<view class="filter-box">
+				<input
+					v-model.trim="keyword"
+					class="search-input filter-search-input"
+					placeholder="搜索编号 / 姓名 / 昵称 / OpenID / MBTI / 分数"
+					confirm-type="search"
+				/>
+				<scroll-view class="status-scroll" scroll-x>
+					<view class="status-row">
 						<view
-							class="table-row body-row is-expandable"
-							:class="isPairExpanded(item.pair_key) ? 'is-expanded' : ''"
-							@click="togglePairDetail(item.pair_key)"
+							v-for="item in statusOptions"
+							:key="item.value"
+							class="status-chip"
+							:class="statusFilter === item.value ? 'status-chip active' : 'status-chip'"
+							@click="changeStatus(item.value)"
 						>
-							<text class="col col-rank rank-text">#{{ item.pair_rank }}</text>
-							<text class="col col-score score-strong">{{ item.match_score_total }}</text>
-							<view class="col col-pair pair-cell">
-								<view class="pair-person">
-									<text class="primary-text">#{{ item.left_person.person_id || '-' }} · {{ item.left_person.name || '-' }}</text>
-									<text class="secondary-text">{{ item.left_person.nickname || '未填写昵称' }} · {{ item.left_person.mbti || 'MBTI 未知' }}</text>
-								</view>
-								<view class="pair-person">
-									<text class="primary-text">#{{ item.right_person.person_id || '-' }} · {{ item.right_person.name || '-' }}</text>
-									<text class="secondary-text">{{ item.right_person.nickname || '未填写昵称' }} · {{ item.right_person.mbti || 'MBTI 未知' }}</text>
-								</view>
-							</view>
-							<view class="col col-status">
-								<text class="status-pill" :class="statusClass(item.pair_status)">
-									{{ statusText(item.pair_status) }}
-								</text>
-							</view>
-							<text class="col col-pair-rank">#{{ item.rank_left_to_right || '-' }} / #{{ item.rank_right_to_left || '-' }}</text>
-							<view class="col col-expand expand-cell">
-								<text class="expand-text">{{ isPairExpanded(item.pair_key) ? '收起 ▲' : '展开 ▼' }}</text>
-							</view>
+							{{ item.label }}
+						</view>
+					</view>
+				</scroll-view>
+			</view>
+
+			<view class="table-shell">
+				<scroll-view
+					scroll-x
+					scroll-y
+					class="table-scroll"
+					:scroll-top="tableScrollTop"
+					:scroll-left="tableScrollLeft"
+					@scroll="handleTableScroll"
+				>
+					<view class="table">
+						<view class="table-row table-header">
+							<text class="col col-rank">排行</text>
+							<text class="col col-score">{{ isWeightedPanel ? '总分' : '匹配总分' }}</text>
+							<text class="col col-pair">配对双方</text>
+							<text class="col col-status">状态</text>
+							<text class="col col-pair-rank">{{ isWeightedPanel ? '双方排名' : '双方志愿' }}</text>
+							<text class="col col-expand">明细</text>
 						</view>
 
-						<view v-if="isPairExpanded(item.pair_key)" class="detail-panel">
-							<view class="detail-head">
-								<text class="detail-title">配对明细</text>
-								<text class="detail-summary">
-									匹配总分 {{ item.match_score_total }} 分 · 双方志愿 #{{ item.rank_left_to_right || '-' }} / #{{ item.rank_right_to_left || '-' }}
-								</text>
-							</view>
-							<view class="formula-card">
-								<text class="formula-title">得分细节</text>
-								<text class="formula-text">
-									{{ item.left_person.name || 'A' }} → {{ item.right_person.name || 'B' }}：{{ item.score_left_to_right }} 分
-								</text>
-								<text class="formula-text">
-									{{ item.right_person.name || 'B' }} → {{ item.left_person.name || 'A' }}：{{ item.score_right_to_left }} 分
-								</text>
-								<text class="formula-text">
-									互选加成：1.2 × min({{ item.score_left_to_right }}, {{ item.score_right_to_left }}) = {{ item.mutual_bonus_score }}
-								</text>
-								<text class="formula-result">
-									总分 = {{ item.score_left_to_right }} + {{ item.score_right_to_left }} + {{ item.mutual_bonus_score }} = {{ item.match_score_total }}
-								</text>
-							</view>
-							<view class="pick-list">
-								<view class="pick-card">
-									<view class="pick-top">
-										<text class="pick-rank">{{ item.left_person.name || '-' }}</text>
-										<text class="pick-nickname">{{ item.left_person.nickname || '未填写昵称' }}</text>
-										<text class="pick-mbti">{{ item.left_person.mbti || 'MBTI 未知' }}</text>
-										<text class="pick-state" :class="statusClass(item.left_status)">
-											{{ statusText(item.left_status) }}
-										</text>
-									</view>
-									<text class="pick-meta">编号 #{{ item.left_person.person_id || '-' }} · 选择对象 {{ item.right_person.name || '-' }}</text>
-									<view class="pick-score-row">
-										<text class="pick-score">志愿排名 #{{ item.rank_left_to_right || '-' }}</text>
-										<text class="pick-score">给分 {{ item.score_left_to_right }}</text>
-									</view>
-									<text class="pick-meta">提交 {{ formatDate(item.left_submitted_at) }} · 更新 {{ formatDate(item.left_updated_at) }}</text>
-								</view>
-								<view class="pick-card">
-									<view class="pick-top">
-										<text class="pick-rank">{{ item.right_person.name || '-' }}</text>
-										<text class="pick-nickname">{{ item.right_person.nickname || '未填写昵称' }}</text>
-										<text class="pick-mbti">{{ item.right_person.mbti || 'MBTI 未知' }}</text>
-										<text class="pick-state" :class="statusClass(item.right_status)">
-											{{ statusText(item.right_status) }}
-										</text>
-									</view>
-									<text class="pick-meta">编号 #{{ item.right_person.person_id || '-' }} · 选择对象 {{ item.left_person.name || '-' }}</text>
-									<view class="pick-score-row">
-										<text class="pick-score">志愿排名 #{{ item.rank_right_to_left || '-' }}</text>
-										<text class="pick-score">给分 {{ item.score_right_to_left }}</text>
-									</view>
-									<text class="pick-meta">提交 {{ formatDate(item.right_submitted_at) }} · 更新 {{ formatDate(item.right_updated_at) }}</text>
-								</view>
-							</view>
+						<view v-if="!loading && !recordList.length" class="empty-box">
+							<text>当前没有可展示的互选配对</text>
 						</view>
-					</block>
+						<view v-else-if="!loading && !filteredRecordList.length" class="empty-box">
+							<text>当前筛选条件下没有匹配结果</text>
+						</view>
+
+						<block v-for="item in pagedRecordList" :key="item.pair_key">
+							<view
+								class="table-row body-row is-expandable"
+								:class="isPairExpanded(item.pair_key) ? 'is-expanded' : ''"
+								@click="togglePairDetail(item.pair_key)"
+							>
+								<text class="col col-rank rank-text">#{{ item.pair_rank }}</text>
+								<text class="col col-score score-strong">{{ formatScoreValue(item.match_score_total) }}</text>
+								<view class="col col-pair pair-cell">
+									<view class="pair-person pair-person-inline">
+										<text class="primary-text">#{{ item.left_person.person_id || '-' }} · {{ item.left_person.name || '-' }}</text>
+										<text class="secondary-text">{{ item.left_person.nickname || '未填写昵称' }} · {{ item.left_person.mbti || 'MBTI 未知' }}</text>
+									</view>
+									<text class="pair-divider">VS</text>
+									<view class="pair-person pair-person-inline">
+										<text class="primary-text">#{{ item.right_person.person_id || '-' }} · {{ item.right_person.name || '-' }}</text>
+										<text class="secondary-text">{{ item.right_person.nickname || '未填写昵称' }} · {{ item.right_person.mbti || 'MBTI 未知' }}</text>
+									</view>
+								</view>
+								<view class="col col-status">
+									<text class="status-pill" :class="statusClass(item.pair_status)">
+										{{ statusText(item.pair_status) }}
+									</text>
+								</view>
+								<text class="col col-pair-rank">{{ formatRankValue(item.rank_left_to_right) }} / {{ formatRankValue(item.rank_right_to_left) }}</text>
+								<view class="col col-expand expand-cell">
+									<text class="expand-text">{{ isPairExpanded(item.pair_key) ? '收起 ▲' : '展开 ▼' }}</text>
+								</view>
+							</view>
+
+							<view v-if="isPairExpanded(item.pair_key)" class="detail-panel">
+								<view class="detail-head">
+									<text class="detail-title">配对明细</text>
+									<text class="detail-summary">
+										总分 {{ formatScoreValue(item.match_score_total) }} 分 · 双方排名 {{ formatRankValue(item.rank_left_to_right) }} / {{ formatRankValue(item.rank_right_to_left) }}
+									</text>
+								</view>
+								<view class="formula-card">
+									<text class="formula-title">得分细节</text>
+									<block v-if="isWeightedPanel">
+										<text class="formula-text">
+											{{ item.left_person.name || 'A' }} → {{ item.right_person.name || 'B' }}：{{ formatWeightedScoreText(item.rank_left_to_right, item.score_left_to_right) }}
+										</text>
+										<text class="formula-text">
+											{{ item.right_person.name || 'B' }} → {{ item.left_person.name || 'A' }}：{{ formatWeightedScoreText(item.rank_right_to_left, item.score_right_to_left) }}
+										</text>
+										<text class="formula-result">
+											总分 = {{ formatScoreValue(item.score_left_to_right) }} + {{ formatScoreValue(item.score_right_to_left) }} = {{ formatScoreValue(item.match_score_total) }}
+										</text>
+									</block>
+									<block v-else>
+										<text class="formula-text">
+											{{ item.left_person.name || 'A' }} → {{ item.right_person.name || 'B' }}：{{ formatScoreValue(item.score_left_to_right) }} 分
+										</text>
+										<text class="formula-text">
+											{{ item.right_person.name || 'B' }} → {{ item.left_person.name || 'A' }}：{{ formatScoreValue(item.score_right_to_left) }} 分
+										</text>
+										<text class="formula-text">
+											互选加成：1.2 × min({{ formatScoreValue(item.score_left_to_right) }}, {{ formatScoreValue(item.score_right_to_left) }}) = {{ formatScoreValue(item.mutual_bonus_score) }}
+										</text>
+										<text class="formula-result">
+											总分 = {{ formatScoreValue(item.score_left_to_right) }} + {{ formatScoreValue(item.score_right_to_left) }} + {{ formatScoreValue(item.mutual_bonus_score) }} = {{ formatScoreValue(item.match_score_total) }}
+										</text>
+									</block>
+								</view>
+								<view class="pick-list">
+									<view class="pick-card">
+										<view class="pick-top">
+											<text class="pick-rank">{{ item.left_person.name || '-' }}</text>
+											<text class="pick-nickname">{{ item.left_person.nickname || '未填写昵称' }}</text>
+											<text class="pick-mbti">{{ item.left_person.mbti || 'MBTI 未知' }}</text>
+											<text class="pick-state" :class="statusClass(item.left_status)">
+												{{ statusText(item.left_status) }}
+											</text>
+										</view>
+										<text class="pick-meta">编号 #{{ item.left_person.person_id || '-' }} · 选择对象 {{ item.right_person.name || '-' }}</text>
+										<view class="pick-score-row">
+											<text class="pick-score">志愿排名 {{ formatRankValue(item.rank_left_to_right) }}</text>
+											<text class="pick-score">给分 {{ formatScoreValue(item.score_left_to_right) }}</text>
+										</view>
+										<text class="pick-meta">提交 {{ formatDate(item.left_submitted_at) }} · 更新 {{ formatDate(item.left_updated_at) }}</text>
+									</view>
+									<view class="pick-card">
+										<view class="pick-top">
+											<text class="pick-rank">{{ item.right_person.name || '-' }}</text>
+											<text class="pick-nickname">{{ item.right_person.nickname || '未填写昵称' }}</text>
+											<text class="pick-mbti">{{ item.right_person.mbti || 'MBTI 未知' }}</text>
+											<text class="pick-state" :class="statusClass(item.right_status)">
+												{{ statusText(item.right_status) }}
+											</text>
+										</view>
+										<text class="pick-meta">编号 #{{ item.right_person.person_id || '-' }} · 选择对象 {{ item.left_person.name || '-' }}</text>
+										<view class="pick-score-row">
+											<text class="pick-score">志愿排名 {{ formatRankValue(item.rank_right_to_left) }}</text>
+											<text class="pick-score">给分 {{ formatScoreValue(item.score_right_to_left) }}</text>
+										</view>
+										<text class="pick-meta">提交 {{ formatDate(item.right_submitted_at) }} · 更新 {{ formatDate(item.right_updated_at) }}</text>
+									</view>
+								</view>
+							</view>
+						</block>
+					</view>
+				</scroll-view>
+
+				<view v-if="loading" class="table-loading-mask">
+					<view class="table-loading-card">
+						<text class="table-loading-text">正在加载{{ currentPanelMeta.title }}...</text>
+					</view>
 				</view>
-			</scroll-view>
+			</view>
 
-			<view v-if="filteredRecordList.length > pagination.pageSize" class="table-pagination">
+			<view v-if="totalCount > pagination.pageSize" class="table-pagination">
 				<uni-pagination
 					show-icon
 					:current="pagination.page"
 					:page-size="pagination.pageSize"
-					:total="filteredRecordList.length"
+					:total="totalCount"
 					@change="handlePageChange"
 				/>
 			</view>
@@ -205,6 +238,20 @@ const STATUS_OPTIONS = [
 	{ value: 'draft', label: '草稿' },
 	{ value: 'submitted', label: '已提交' },
 	{ value: 'locked', label: '已锁定' }
+]
+const PANEL_OPTIONS = [
+	{
+		value: 'ranking',
+		label: '配对排行榜',
+		title: '配对排行榜',
+		tip: '主表展示互选配对结果，按匹配总分从高到低排序。'
+	},
+	{
+		value: 'weighted',
+		label: '正序权重榜',
+		title: '正序权重榜',
+		tip: '双方进入前 10 名按名次正序计分，未进入前 10 名的一侧按 1000 权重计算，总分越低越靠前。'
+	}
 ]
 let personnelUser = null
 
@@ -299,98 +346,112 @@ function statusOrder(status) {
 	return 1
 }
 
+function roundScore(value) {
+	return Math.round(toNumber(value))
+}
+
+function formatCompactChineseNumber(value) {
+	var rounded = roundScore(value)
+	var absValue = Math.abs(rounded)
+	var unitList = [
+		{ value: 1000000000000, label: '万亿' },
+		{ value: 100000000, label: '亿' },
+		{ value: 10000, label: '万' },
+		{ value: 1000, label: '千' }
+	]
+
+	for (var i = 0; i < unitList.length; i += 1) {
+		var currentUnit = unitList[i]
+		if (absValue >= currentUnit.value) {
+			var scaled = rounded / currentUnit.value
+			var precision = absValue >= currentUnit.value * 100 ? 0 : 1
+			return `${scaled.toFixed(precision).replace(/\.0$/, '')}${currentUnit.label}`
+		}
+	}
+
+	return String(rounded)
+}
+
 export default {
 	data() {
 		return {
 			currentUserRole: 0,
 			accessChecked: false,
+			activePanel: 'ranking',
 			loading: false,
 			keyword: '',
+			keywordTimer: null,
+			loadSequence: 0,
 			statusFilter: 'all',
 			expandedPairKey: '',
 			tableScrollTop: 0,
 			tableScrollLeft: 0,
+			panelOptions: PANEL_OPTIONS,
 			statusOptions: STATUS_OPTIONS,
 			recordList: [],
+			totalCount: 0,
+			remoteStats: null,
 			pagination: {
 				page: 1,
-				pageSize: 6
+				pageSize: 5
 			}
 		}
 	},
 	computed: {
+		currentPanelMeta() {
+			var currentPanel = this.panelOptions.find(
+				function (item) {
+					return item.value === this.activePanel
+				}.bind(this)
+			)
+			return currentPanel || PANEL_OPTIONS[0]
+		},
+		isWeightedPanel() {
+			return this.activePanel === 'weighted'
+		},
 		filteredRecordList() {
-			var keyword = normalizeKeyword(this.keyword)
-			var currentStatus = this.statusFilter
-			return this.recordList.filter(function (item) {
-				if (currentStatus !== 'all' && item.pair_status !== currentStatus) {
-					return false
-				}
-				if (!keyword) {
-					return true
-				}
-
-				var textPool = [
-					item.pair_status,
-					String(item.pair_rank || ''),
-					String(item.match_score_total || ''),
-					String(item.score_left_to_right || ''),
-					String(item.score_right_to_left || ''),
-					String(item.rank_left_to_right || ''),
-					String(item.rank_right_to_left || ''),
-					item.left_person.name,
-					item.left_person.nickname,
-					String(item.left_person.person_id || ''),
-					item.left_person.wx_openid,
-					item.left_person.mbti,
-					item.right_person.name,
-					item.right_person.nickname,
-					String(item.right_person.person_id || ''),
-					item.right_person.wx_openid,
-					item.right_person.mbti
-				]
-
-				return textPool.some(function (text) {
-					return normalizeKeyword(text).indexOf(keyword) !== -1
-				})
-			})
+			return this.recordList
 		},
 		pagedRecordList() {
-			var page = Number(this.pagination.page) || 1
-			var pageSize = Number(this.pagination.pageSize) || 6
-			var start = (page - 1) * pageSize
-			return this.filteredRecordList.slice(start, start + pageSize)
+			return this.recordList
 		},
 		summaryStats() {
-			var totalMatchScore = 0
-			var topMatchScore = 0
-			for (var i = 0; i < this.filteredRecordList.length; i += 1) {
-				var currentScore = Number(this.filteredRecordList[i].match_score_total) || 0
-				totalMatchScore += currentScore
-				if (currentScore > topMatchScore) {
-					topMatchScore = currentScore
+			if (this.remoteStats) {
+				return {
+					totalPairs: toNumber(this.remoteStats.totalPairs),
+					filteredPairs: toNumber(this.remoteStats.filteredPairs),
+					totalMatchScore: toNumber(this.remoteStats.totalMatchScore),
+					topMatchScore: toNumber(this.remoteStats.topMatchScore),
+					lowestMatchScore: toNumber(this.remoteStats.lowestMatchScore)
 				}
 			}
 			return {
-				totalPairs: this.recordList.length,
-				filteredPairs: this.filteredRecordList.length,
-				totalMatchScore: totalMatchScore,
-				topMatchScore: topMatchScore
+				totalPairs: this.totalCount,
+				filteredPairs: this.recordList.length,
+				totalMatchScore: 0,
+				topMatchScore: 0,
+				lowestMatchScore: 0
 			}
 		}
 	},
 	watch: {
+		activePanel() {
+			this.resetListPosition(true)
+			this.loadRecordList()
+		},
 		keyword() {
-			this.pagination.page = 1
-			this.expandedPairKey = ''
-			this.tableScrollTop = 0
-			this.tableScrollLeft = 0
+			this.resetListPosition(true)
+			this.scheduleKeywordReload()
 		},
 		statusFilter() {
-			this.pagination.page = 1
-			this.expandedPairKey = ''
-			this.tableScrollTop = 0
-			this.tableScrollLeft = 0
+			this.resetListPosition(true)
+			this.loadRecordList()
+		}
+	},
+	onUnload() {
+		if (this.keywordTimer) {
+			clearTimeout(this.keywordTimer)
+			this.keywordTimer = null
 		}
 	},
 	onLoad() {
@@ -433,18 +494,37 @@ export default {
 			}
 			uni.reLaunch({ url: '/pkg/guide/hub' })
 		},
-		changeStatus(value) {
-			this.statusFilter = value
+		switchPanel(value) {
+			this.activePanel = value === 'weighted' ? 'weighted' : 'ranking'
+		},
+		resetListPosition(resetPage) {
+			if (resetPage) {
+				this.pagination.page = 1
+			}
 			this.expandedPairKey = ''
 			this.tableScrollTop = 0
 			this.tableScrollLeft = 0
 		},
+		scheduleKeywordReload() {
+			if (this.keywordTimer) {
+				clearTimeout(this.keywordTimer)
+			}
+			this.keywordTimer = setTimeout(
+				function () {
+					this.keywordTimer = null
+					this.loadRecordList()
+				}.bind(this),
+				260
+			)
+		},
+		changeStatus(value) {
+			this.statusFilter = value
+		},
 		handlePageChange(event) {
 			var current = Number(event && event.current)
 			this.pagination.page = current > 0 ? current : 1
-			this.expandedPairKey = ''
-			this.tableScrollTop = 0
-			this.tableScrollLeft = 0
+			this.resetListPosition(false)
+			this.loadRecordList()
 		},
 		handleTableScroll(event) {
 			var detail = (event && event.detail) || {}
@@ -768,14 +848,35 @@ export default {
 				return
 			}
 			this.loading = true
+			var currentLoadSequence = this.loadSequence + 1
+			this.loadSequence = currentLoadSequence
 			try {
-				var result = await personnelUser.listIntentPairRankings()
+				var result =
+					this.activePanel === 'weighted'
+						? await personnelUser.listIntentWeightedPairRankings({
+								keyword: this.keyword,
+								status: this.statusFilter,
+								page: this.pagination.page,
+								pageSize: this.pagination.pageSize
+							})
+						: await personnelUser.listIntentPairRankings({
+								keyword: this.keyword,
+								status: this.statusFilter,
+								page: this.pagination.page,
+								pageSize: this.pagination.pageSize
+							})
+				if (currentLoadSequence !== this.loadSequence) {
+					return
+				}
 				this.recordList = (result && result.list) || []
-				this.pagination.page = 1
-				this.expandedPairKey = ''
-				this.tableScrollTop = 0
-				this.tableScrollLeft = 0
+				this.totalCount = toNumber(result && result.total)
+				this.remoteStats = (result && result.stats) || null
+				this.pagination.page = toNumber(result && result.page) || this.pagination.page
+				this.pagination.pageSize = toNumber(result && result.pageSize) || this.pagination.pageSize
 			} catch (error) {
+				if (currentLoadSequence !== this.loadSequence) {
+					return
+				}
 				console.error('loadRecordList failed', error)
 				uni.showToast({
 					title: error.message || '记录加载失败',
@@ -802,6 +903,21 @@ export default {
 				return 'status-locked'
 			}
 			return 'status-draft'
+		},
+		formatRankValue(value) {
+			var rank = toNumber(value)
+			return rank > 0 ? `#${rank}` : '前十外'
+		},
+		formatScoreValue(value) {
+			return formatCompactChineseNumber(value)
+		},
+		formatWeightedScoreText(rank, score) {
+			var normalizedRank = toNumber(rank)
+			var normalizedScore = this.formatScoreValue(score)
+			if (normalizedRank > 0) {
+				return `排名 ${normalizedRank}，计 ${normalizedScore} 分`
+			}
+			return `未进入前 10，按 ${normalizedScore || '1000'} 权重计算`
 		},
 		formatDate(value) {
 			if (!value) {
@@ -856,6 +972,11 @@ export default {
 	flex-direction: column;
 }
 
+.switch-card-head {
+	display: flex;
+	flex-direction: column;
+}
+
 .card-title {
 	font-size: 32rpx;
 	font-weight: 700;
@@ -870,6 +991,40 @@ export default {
 	font-size: 24rpx;
 	line-height: 1.7;
 	color: #716250;
+}
+
+.panel-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	align-self: flex-start;
+	margin-top: 24rpx;
+	padding: 8rpx;
+	border-radius: 999rpx;
+	background: #f4ecde;
+}
+
+.panel-tab {
+	padding: 16rpx 28rpx;
+	border-radius: 999rpx;
+	font-size: 24rpx;
+	line-height: 1;
+	color: #6d4e2c;
+	white-space: nowrap;
+	transition: all 0.2s ease;
+}
+
+.panel-tab.is-active {
+	background: #1f6b52;
+	color: #ffffff;
+	box-shadow: 0 10rpx 24rpx rgba(31, 107, 82, 0.16);
+}
+
+.filter-box {
+	margin-top: 24rpx;
+	padding: 24rpx;
+	border-radius: 24rpx;
+	background: #fbf8f2;
+	border: 1rpx solid #eadfce;
 }
 
 .stats-wrap,
@@ -929,6 +1084,10 @@ export default {
 	font-size: 26rpx;
 }
 
+.filter-search-input {
+	margin-top: 0;
+}
+
 .status-scroll {
 	width: 100%;
 	margin-top: 20rpx;
@@ -965,9 +1124,13 @@ export default {
 	box-sizing: border-box;
 }
 
+.table-shell {
+	position: relative;
+}
+
 .table {
-	width: 1180rpx;
-	min-width: 1180rpx;
+	width: 1320rpx;
+	min-width: 1320rpx;
 }
 
 .table-row {
@@ -996,11 +1159,11 @@ export default {
 
 .col-rank { width: 120rpx; }
 .col-pair {
-	width: 440rpx;
+	width: 580rpx;
 	white-space: normal;
 }
 .col-status { width: 160rpx; }
-.col-score { width: 140rpx; }
+.col-score { width: 160rpx; }
 .col-pair-rank { width: 180rpx; }
 .col-expand { width: 140rpx; }
 
@@ -1018,20 +1181,50 @@ export default {
 	flex-direction: column;
 }
 
-.pair-person + .pair-person {
-	margin-top: 18rpx;
-	padding-top: 18rpx;
-	border-top: 1rpx dashed #eadfce;
+.pair-cell {
+	flex-direction: row;
+	align-items: stretch;
+	gap: 16rpx;
+}
+
+.pair-person {
+	flex: 1;
+	min-width: 0;
+	padding: 18rpx 16rpx;
+	border-radius: 18rpx;
+	background: rgba(244, 236, 222, 0.58);
+}
+
+.pair-person-inline {
+	justify-content: center;
+}
+
+.pair-divider {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	align-self: center;
+	flex: 0 0 56rpx;
+	height: 56rpx;
+	border-radius: 999rpx;
+	background: #efe5d3;
+	color: #6d4e2c;
+	font-size: 22rpx;
+	font-weight: 700;
 }
 
 .primary-text {
 	font-size: 28rpx;
 	font-weight: 700;
 	color: #2d241c;
+	white-space: normal;
+	word-break: break-word;
 }
 
 .pair-cell .secondary-text {
 	margin-top: 10rpx;
+	white-space: normal;
+	word-break: break-word;
 }
 
 .rank-text {
@@ -1202,6 +1395,35 @@ export default {
 	text-align: center;
 }
 
+.table-loading-mask {
+	position: absolute;
+	top: 24rpx;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 24rpx;
+	background: rgba(255, 250, 243, 0.72);
+	backdrop-filter: blur(4px);
+	z-index: 5;
+}
+
+.table-loading-card {
+	padding: 22rpx 30rpx;
+	border-radius: 999rpx;
+	background: rgba(255, 255, 255, 0.96);
+	border: 1rpx solid rgba(234, 223, 206, 0.9);
+	box-shadow: 0 16rpx 32rpx rgba(109, 78, 44, 0.08);
+}
+
+.table-loading-text {
+	font-size: 26rpx;
+	font-weight: 700;
+	color: #6d4e2c;
+}
+
 .table-pagination {
 	padding-top: 24rpx;
 	display: flex;
@@ -1229,9 +1451,30 @@ export default {
 }
 
 @media screen and (max-width: 768px) {
+	.panel-tabs {
+		width: 100%;
+		border-radius: 24rpx;
+	}
+
+	.panel-tab {
+		flex: 1;
+		text-align: center;
+	}
+
 	.table-scroll {
 		height: 60vh;
 		min-height: 880rpx;
+	}
+
+	.pair-cell {
+		gap: 12rpx;
+	}
+
+	.pair-divider {
+		flex-basis: 48rpx;
+		width: 48rpx;
+		height: 48rpx;
+		font-size: 20rpx;
 	}
 
 	.pick-card {

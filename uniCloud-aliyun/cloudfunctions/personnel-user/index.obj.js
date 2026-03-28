@@ -16,6 +16,7 @@ const DEFAULT_PAGE_SIZE = 5
 const MAX_PAGE_SIZE = 50
 const PERSONNEL_CACHE_TTL_MS = 15 * 1000
 const HEART_MESSAGE_CACHE_TTL_MS = 10 * 1000
+const INTENT_RANKING_CACHE_TTL_MS = 10 * 1000
 const PERSONAL_PHOTO_ATTACHMENT_TYPE = 'personal_photo'
 const PUSH_APP_ID = '__UNI__AD079BD'
 const USER_ROLE = {
@@ -27,12 +28,22 @@ const USER_ROLE = {
 const HEART_MESSAGE_STATUS = ['draft', 'queued', 'delivered', 'revoked']
 const HEART_MESSAGE_STATE_DOC_PREFIX = 'personnel'
 const INTENT_MATCH_K_FACTOR = 1.2
+const INTENT_TOP_RANK_LIMIT = 10
+const INTENT_MISSING_RANK_PENALTY = 1000
 const runtimeCache = {
 	personnel: {
 		data: null,
 		expireAt: 0
 	},
 	heartMessages: {
+		data: null,
+		expireAt: 0
+	},
+	intentRankings: {
+		data: null,
+		expireAt: 0
+	},
+	intentWeightedRankings: {
 		data: null,
 		expireAt: 0
 	}
@@ -298,7 +309,8 @@ function mergeIntentPersonProfile(profileMap, personKey, payload) {
 			wx_openid: '',
 			name: '',
 			nickname: '',
-			mbti: ''
+			mbti: '',
+			gender: ''
 		}
 	}
 
@@ -310,6 +322,7 @@ function mergeIntentPersonProfile(profileMap, personKey, payload) {
 	const name = normalizeIntentText(payload && payload.name)
 	const nickname = normalizeIntentText(payload && payload.nickname)
 	const mbti = normalizeIntentMbti(payload && payload.mbti)
+	const gender = normalizeIntentText(payload && payload.gender)
 
 	if (!profile.record_id && recordId) {
 		profile.record_id = recordId
@@ -332,6 +345,9 @@ function mergeIntentPersonProfile(profileMap, personKey, payload) {
 	if (!profile.mbti && mbti) {
 		profile.mbti = mbti
 	}
+	if (!profile.gender && gender) {
+		profile.gender = gender
+	}
 }
 
 function buildIntentPersonView(profileMap, personKey) {
@@ -345,7 +361,8 @@ function buildIntentPersonView(profileMap, personKey) {
 		wx_openid: normalizeIntentOpenid(profile.wx_openid),
 		name: normalizeIntentText(profile.name),
 		nickname: normalizeIntentText(profile.nickname),
-		mbti: normalizeIntentMbti(profile.mbti)
+		mbti: normalizeIntentMbti(profile.mbti),
+		gender: normalizeIntentText(profile.gender)
 	}
 }
 
@@ -539,6 +556,390 @@ function buildIntentPairRankingList(rawList) {
 			...item,
 			pair_rank: index + 1
 		}))
+}
+
+function isIntentRankInTopRange(value) {
+	const rank = normalizeIntentRank(value)
+	return rank >= 1 && rank <= INTENT_TOP_RANK_LIMIT
+}
+
+function buildIntentPersonnelSnapshotMap(personnelList) {
+	const snapshotMap = {}
+	const activeList = Array.isArray(personnelList) ? personnelList : []
+
+	activeList.forEach((item) => {
+		if (!item || isDeletedRecord(item.is_deleted)) {
+			return
+		}
+
+		const profile = {
+			record_id: normalizeIntentText(item._id),
+			person_id: normalizePositiveInt(item.person_id, 0),
+			user_id: normalizeIntentText(item.user_id),
+			wx_openid: normalizeIntentOpenid(item.wx_openid),
+			name: normalizeIntentText(item.name),
+			nickname: normalizeIntentText(item.nickname),
+			mbti: normalizeIntentMbti(item.mbti),
+			gender: normalizeIntentText(item.gender)
+		}
+
+		;[
+			profile.record_id ? `record:${profile.record_id}` : '',
+			profile.wx_openid ? `openid:${profile.wx_openid}` : '',
+			profile.person_id ? `person:${profile.person_id}` : ''
+		]
+			.filter((key) => !!key)
+			.forEach((key) => {
+				snapshotMap[key] = profile
+			})
+	})
+
+	return snapshotMap
+}
+
+function buildIntentWeightedPairRankingList(rawList, personnelList) {
+	const rowList = Array.isArray(rawList)
+		? rawList
+				.map((item) => normalizeIntentVoteRow(item))
+				.filter(
+					(item) =>
+						!!(item.activity_id && item.creator_key && item.target_key) && isIntentRankInTopRange(item.rank)
+				)
+		: []
+
+	const pairMap = {}
+	const personProfileMap = {}
+	const personnelSnapshotMap = buildIntentPersonnelSnapshotMap(personnelList)
+
+	rowList.forEach((item) => {
+		const directionKey = [item.activity_id, item.creator_key, item.target_key].join('::')
+		pairMap[directionKey] = item
+
+		mergeIntentPersonProfile(personProfileMap, item.creator_key, personnelSnapshotMap[item.creator_key] || {})
+		mergeIntentPersonProfile(personProfileMap, item.target_key, personnelSnapshotMap[item.target_key] || {})
+		mergeIntentPersonProfile(personProfileMap, item.creator_key, {
+			record_id: item.creator_record_id,
+			person_id: item.creator_person_id,
+			user_id: item.creator_user_id,
+			wx_openid: item.creator_wx_openid,
+			name: item.creator_name,
+			nickname: item.creator_nickname
+		})
+		mergeIntentPersonProfile(personProfileMap, item.target_key, {
+			record_id: item.target_record_id,
+			person_id: item.target_person_id,
+			user_id: item.target_user_id,
+			wx_openid: item.target_wx_openid,
+			name: item.target_name,
+			nickname: item.target_nickname,
+			mbti: item.target_mbti
+		})
+	})
+
+	const pairVisitedMap = {}
+	const pairList = []
+
+	rowList.forEach((row) => {
+		if (!row) {
+			return
+		}
+
+		const creatorProfile = buildIntentPersonView(personProfileMap, row.creator_key)
+		const targetProfile = buildIntentPersonView(personProfileMap, row.target_key)
+		const creatorGender = normalizeGenderValue(creatorProfile.gender)
+		const targetGender = normalizeGenderValue(targetProfile.gender)
+
+		if (creatorGender && targetGender && creatorGender === targetGender) {
+			return
+		}
+
+		const reciprocalKey = [row.activity_id, row.target_key, row.creator_key].join('::')
+		const reciprocalRow = pairMap[reciprocalKey] || null
+
+		let leftPerson = creatorProfile
+		let rightPerson = targetProfile
+		let leftRow = row
+		let rightRow = reciprocalRow
+
+		if (creatorGender === 'female' && targetGender === 'male') {
+			leftPerson = targetProfile
+			rightPerson = creatorProfile
+			leftRow = reciprocalRow
+			rightRow = row
+		} else if (!(creatorGender === 'male' && targetGender === 'female')) {
+			if (compareIntentPersonView(leftPerson, rightPerson) > 0) {
+				leftPerson = targetProfile
+				rightPerson = creatorProfile
+				leftRow = reciprocalRow
+				rightRow = row
+			}
+		}
+
+		const canonicalPairKey = buildIntentCanonicalPairKey(
+			row.activity_id,
+			leftPerson.person_key,
+			rightPerson.person_key
+		)
+		if (pairVisitedMap[canonicalPairKey]) {
+			return
+		}
+		pairVisitedMap[canonicalPairKey] = true
+
+		const leftRank = isIntentRankInTopRange(leftRow && leftRow.rank) ? normalizeIntentRank(leftRow.rank) : 0
+		const rightRank = isIntentRankInTopRange(rightRow && rightRow.rank) ? normalizeIntentRank(rightRow.rank) : 0
+		const leftScore = leftRank || INTENT_MISSING_RANK_PENALTY
+		const rightScore = rightRank || INTENT_MISSING_RANK_PENALTY
+		const totalScore = leftScore + rightScore
+		const leftStatus = leftRow ? leftRow.submit_status : 'draft'
+		const rightStatus = rightRow ? rightRow.submit_status : 'draft'
+		const updatedAt =
+			resolveIntentTimeMs(leftRow && leftRow.updated_at) > resolveIntentTimeMs(rightRow && rightRow.updated_at)
+				? leftRow && leftRow.updated_at
+				: rightRow && rightRow.updated_at
+		const submittedAt =
+			resolveIntentTimeMs(leftRow && leftRow.submitted_at) > resolveIntentTimeMs(rightRow && rightRow.submitted_at)
+				? leftRow && leftRow.submitted_at
+				: rightRow && rightRow.submitted_at
+		const deadlineAt =
+			resolveIntentTimeMs(leftRow && leftRow.deadline_at) > resolveIntentTimeMs(rightRow && rightRow.deadline_at)
+				? leftRow && leftRow.deadline_at
+				: rightRow && rightRow.deadline_at
+
+		pairList.push({
+			pair_key: canonicalPairKey,
+			activity_id: normalizeIntentText(row.activity_id),
+			left_person: leftPerson,
+			right_person: rightPerson,
+			male_person: creatorGender === 'male' || targetGender === 'male' ? (creatorGender === 'male' ? creatorProfile : targetProfile) : null,
+			female_person: creatorGender === 'female' || targetGender === 'female' ? (creatorGender === 'female' ? creatorProfile : targetProfile) : null,
+			pair_status: resolveIntentPairStatus(leftStatus, rightStatus),
+			left_status: leftStatus,
+			right_status: rightStatus,
+			score_left_to_right: leftScore,
+			score_right_to_left: rightScore,
+			score_male_to_female: creatorGender === 'male' || targetGender === 'male' ? leftScore : 0,
+			score_female_to_male: creatorGender === 'female' || targetGender === 'female' ? rightScore : 0,
+			mutual_bonus_score: 0,
+			match_score_total: totalScore,
+			best_single_score: Math.min(leftScore, rightScore),
+			rank_left_to_right: leftRank,
+			rank_right_to_left: rightRank,
+			left_submitted_at: leftRow ? leftRow.submitted_at : '',
+			right_submitted_at: rightRow ? rightRow.submitted_at : '',
+			left_updated_at: leftRow ? leftRow.updated_at : '',
+			right_updated_at: rightRow ? rightRow.updated_at : '',
+			submitted_at: submittedAt || '',
+			deadline_at: deadlineAt || '',
+			updated_at: updatedAt || '',
+			left_missing_penalty: !leftRank,
+			right_missing_penalty: !rightRank,
+			ranking_mode: 'weighted'
+		})
+	})
+
+	return pairList
+		.sort((a, b) => {
+			const scoreDiff = normalizeIntentScore(a.match_score_total) - normalizeIntentScore(b.match_score_total)
+			if (scoreDiff !== 0) {
+				return scoreDiff
+			}
+			const worstSingleDiff =
+				Math.max(normalizeIntentScore(a.score_left_to_right), normalizeIntentScore(a.score_right_to_left)) -
+				Math.max(normalizeIntentScore(b.score_left_to_right), normalizeIntentScore(b.score_right_to_left))
+			if (worstSingleDiff !== 0) {
+				return worstSingleDiff
+			}
+			const timeDiff = resolveIntentTimeMs(b.updated_at) - resolveIntentTimeMs(a.updated_at)
+			if (timeDiff !== 0) {
+				return timeDiff
+			}
+			return a.pair_key.localeCompare(b.pair_key)
+		})
+		.map((item, index) => ({
+			...item,
+			pair_rank: index + 1
+		}))
+}
+
+function normalizeIntentListStatus(status) {
+	const normalized = normalizeIntentText(status).toLowerCase()
+	if (normalized === 'draft' || normalized === 'submitted' || normalized === 'locked') {
+		return normalized
+	}
+	return 'all'
+}
+
+function matchesIntentPairKeyword(item, normalizedKeyword) {
+	if (!normalizedKeyword) {
+		return true
+	}
+
+	const leftPerson = (item && item.left_person) || {}
+	const rightPerson = (item && item.right_person) || {}
+	const textPool = [
+		item && item.pair_status,
+		String((item && item.pair_rank) || ''),
+		String((item && item.match_score_total) || ''),
+		String((item && item.score_left_to_right) || ''),
+		String((item && item.score_right_to_left) || ''),
+		String((item && item.rank_left_to_right) || ''),
+		String((item && item.rank_right_to_left) || ''),
+		leftPerson.name,
+		leftPerson.nickname,
+		String(leftPerson.person_id || ''),
+		leftPerson.wx_openid,
+		leftPerson.mbti,
+		rightPerson.name,
+		rightPerson.nickname,
+		String(rightPerson.person_id || ''),
+		rightPerson.wx_openid,
+		rightPerson.mbti
+	]
+
+	return textPool.some((text) => normalizeIntentText(text).toLowerCase().includes(normalizedKeyword))
+}
+
+function filterIntentPairRankingList(list, { keyword = '', status = 'all' } = {}) {
+	const normalizedKeyword = normalizeIntentText(keyword).toLowerCase()
+	const normalizedStatus = normalizeIntentListStatus(status)
+
+	return (Array.isArray(list) ? list : []).filter((item) => {
+		if (normalizedStatus !== 'all' && normalizeIntentStatus(item && item.pair_status) !== normalizedStatus) {
+			return false
+		}
+		return matchesIntentPairKeyword(item, normalizedKeyword)
+	})
+}
+
+function buildIntentPairRankingStats(list, totalPairs) {
+	let totalMatchScore = 0
+	let topMatchScore = 0
+	let lowestMatchScore = 0
+
+	;(Array.isArray(list) ? list : []).forEach((item) => {
+		const currentScore = normalizeIntentScore(item && item.match_score_total)
+		totalMatchScore += currentScore
+		if (currentScore > topMatchScore) {
+			topMatchScore = currentScore
+		}
+		if (!lowestMatchScore || currentScore < lowestMatchScore) {
+			lowestMatchScore = currentScore
+		}
+	})
+
+	return {
+		totalPairs: normalizePositiveInt(totalPairs, 0),
+		filteredPairs: Array.isArray(list) ? list.length : 0,
+		totalMatchScore,
+		topMatchScore,
+		lowestMatchScore
+	}
+}
+
+function paginateIntentPairRankingList(list, { page = 1, pageSize = DEFAULT_PAGE_SIZE } = {}) {
+	const currentPage = normalizePositiveInt(page, 1)
+	const currentPageSize = Math.min(normalizePositiveInt(pageSize, DEFAULT_PAGE_SIZE), 100)
+	const safeList = Array.isArray(list) ? list : []
+	const total = safeList.length
+	const start = (currentPage - 1) * currentPageSize
+
+	return {
+		list: safeList.slice(start, start + currentPageSize),
+		total,
+		page: currentPage,
+		pageSize: currentPageSize
+	}
+}
+
+async function fetchAggregatedIntentVoteList() {
+	const aggregateResult = await matchVoteCollection
+		.aggregate()
+		.match({
+			is_deleted: dbCmd.nin([true, 1, '1', 'true']),
+			activity_id: dbCmd.exists(true)
+		})
+		.sort({
+			updated_at: -1
+		})
+		.group({
+			_id: {
+				activity_id: '$activity_id',
+				creator_record_id: '$creator_record_id',
+				creator_wx_openid: '$creator_wx_openid',
+				creator_person_id: '$creator_person_id',
+				target_record_id: '$target_record_id',
+				target_wx_openid: '$target_wx_openid',
+				target_person_id: '$target_person_id'
+			},
+			_id_value: dbAggr.first('$_id'),
+			activity_id: dbAggr.first('$activity_id'),
+			creator_record_id: dbAggr.first('$creator_record_id'),
+			creator_person_id: dbAggr.first('$creator_person_id'),
+			creator_user_id: dbAggr.first('$creator_user_id'),
+			creator_wx_openid: dbAggr.first('$creator_wx_openid'),
+			creator_name: dbAggr.first('$creator_name'),
+			creator_nickname: dbAggr.first('$creator_nickname'),
+			target_record_id: dbAggr.first('$target_record_id'),
+			target_person_id: dbAggr.first('$target_person_id'),
+			target_user_id: dbAggr.first('$target_user_id'),
+			target_wx_openid: dbAggr.first('$target_wx_openid'),
+			target_name: dbAggr.first('$target_name'),
+			target_nickname: dbAggr.first('$target_nickname'),
+			target_mbti: dbAggr.first('$target_mbti'),
+			rank: dbAggr.first('$rank'),
+			score: dbAggr.first('$score'),
+			submit_status: dbAggr.first('$submit_status'),
+			submitted_at: dbAggr.first('$submitted_at'),
+			deadline_at: dbAggr.first('$deadline_at'),
+			created_at: dbAggr.first('$created_at'),
+			updated_at: dbAggr.first('$updated_at'),
+			remark: dbAggr.first('$remark')
+		})
+		.end()
+
+	return ((aggregateResult && aggregateResult.data) || []).map((item) => ({
+		_id: item && item._id_value,
+		activity_id: item && item.activity_id,
+		creator_record_id: item && item.creator_record_id,
+		creator_person_id: item && item.creator_person_id,
+		creator_user_id: item && item.creator_user_id,
+		creator_wx_openid: item && item.creator_wx_openid,
+		creator_name: item && item.creator_name,
+		creator_nickname: item && item.creator_nickname,
+		target_record_id: item && item.target_record_id,
+		target_person_id: item && item.target_person_id,
+		target_user_id: item && item.target_user_id,
+		target_wx_openid: item && item.target_wx_openid,
+		target_name: item && item.target_name,
+		target_nickname: item && item.target_nickname,
+		target_mbti: item && item.target_mbti,
+		rank: item && item.rank,
+		score: item && item.score,
+		submit_status: item && item.submit_status,
+		submitted_at: item && item.submitted_at,
+		deadline_at: item && item.deadline_at,
+		created_at: item && item.created_at,
+		updated_at: item && item.updated_at,
+		remark: item && item.remark
+	}))
+}
+
+async function getCachedIntentPairRankingList({ weighted = false, forceRefresh = false } = {}) {
+	const cacheKey = weighted ? 'intentWeightedRankings' : 'intentRankings'
+	const now = Date.now()
+	const cacheEntry = runtimeCache[cacheKey]
+	if (!forceRefresh && cacheEntry && Array.isArray(cacheEntry.data) && now < cacheEntry.expireAt) {
+		return cacheEntry.data
+	}
+
+	const aggregatedList = await fetchAggregatedIntentVoteList()
+	const fullList = weighted
+		? buildIntentWeightedPairRankingList(aggregatedList, await getCachedPersonnelRecords())
+		: buildIntentPairRankingList(aggregatedList)
+
+	runtimeCache[cacheKey].data = fullList
+	runtimeCache[cacheKey].expireAt = now + INTENT_RANKING_CACHE_TTL_MS
+	return fullList
 }
 
 function getRemainingHeartValue(record = {}, fallback = 1) {
@@ -923,6 +1324,10 @@ function invalidateRuntimeCache({ personnel = false, heartMessages = false } = {
 	if (personnel) {
 		runtimeCache.personnel.data = null
 		runtimeCache.personnel.expireAt = 0
+		runtimeCache.intentRankings.data = null
+		runtimeCache.intentRankings.expireAt = 0
+		runtimeCache.intentWeightedRankings.data = null
+		runtimeCache.intentWeightedRankings.expireAt = 0
 	}
 	if (heartMessages) {
 		runtimeCache.heartMessages.data = null
@@ -2725,84 +3130,58 @@ module.exports = {
 		}
 	},
 
-	async listIntentPairRankings() {
-		const aggregateResult = await matchVoteCollection
-			.aggregate()
-			.match({
-				is_deleted: dbCmd.nin([true, 1, '1', 'true']),
-				activity_id: dbCmd.exists(true)
-			})
-			.sort({
-				updated_at: -1
-			})
-			.group({
-				_id: {
-					activity_id: '$activity_id',
-					creator_record_id: '$creator_record_id',
-					creator_wx_openid: '$creator_wx_openid',
-					creator_person_id: '$creator_person_id',
-					target_record_id: '$target_record_id',
-					target_wx_openid: '$target_wx_openid',
-					target_person_id: '$target_person_id'
-				},
-				_id_value: dbAggr.first('$_id'),
-				activity_id: dbAggr.first('$activity_id'),
-				creator_record_id: dbAggr.first('$creator_record_id'),
-				creator_person_id: dbAggr.first('$creator_person_id'),
-				creator_user_id: dbAggr.first('$creator_user_id'),
-				creator_wx_openid: dbAggr.first('$creator_wx_openid'),
-				creator_name: dbAggr.first('$creator_name'),
-				creator_nickname: dbAggr.first('$creator_nickname'),
-				target_record_id: dbAggr.first('$target_record_id'),
-				target_person_id: dbAggr.first('$target_person_id'),
-				target_user_id: dbAggr.first('$target_user_id'),
-				target_wx_openid: dbAggr.first('$target_wx_openid'),
-				target_name: dbAggr.first('$target_name'),
-				target_nickname: dbAggr.first('$target_nickname'),
-				target_mbti: dbAggr.first('$target_mbti'),
-				rank: dbAggr.first('$rank'),
-				score: dbAggr.first('$score'),
-				submit_status: dbAggr.first('$submit_status'),
-				submitted_at: dbAggr.first('$submitted_at'),
-				deadline_at: dbAggr.first('$deadline_at'),
-				created_at: dbAggr.first('$created_at'),
-				updated_at: dbAggr.first('$updated_at'),
-				remark: dbAggr.first('$remark')
-			})
-			.end()
-
-		const aggregatedList = (aggregateResult && aggregateResult.data) || []
-		const pairList = buildIntentPairRankingList(
-			aggregatedList.map((item) => ({
-				_id: item && item._id_value,
-				activity_id: item && item.activity_id,
-				creator_record_id: item && item.creator_record_id,
-				creator_person_id: item && item.creator_person_id,
-				creator_user_id: item && item.creator_user_id,
-				creator_wx_openid: item && item.creator_wx_openid,
-				creator_name: item && item.creator_name,
-				creator_nickname: item && item.creator_nickname,
-				target_record_id: item && item.target_record_id,
-				target_person_id: item && item.target_person_id,
-				target_user_id: item && item.target_user_id,
-				target_wx_openid: item && item.target_wx_openid,
-				target_name: item && item.target_name,
-				target_nickname: item && item.target_nickname,
-				target_mbti: item && item.target_mbti,
-				rank: item && item.rank,
-				score: item && item.score,
-				submit_status: item && item.submit_status,
-				submitted_at: item && item.submitted_at,
-				deadline_at: item && item.deadline_at,
-				created_at: item && item.created_at,
-				updated_at: item && item.updated_at,
-				remark: item && item.remark
-			}))
-		)
+	async listIntentPairRankings({
+		keyword = '',
+		status = 'all',
+		page = 1,
+		pageSize = DEFAULT_PAGE_SIZE
+	} = {}) {
+		const pairList = await getCachedIntentPairRankingList()
+		const filteredList = filterIntentPairRankingList(pairList, {
+			keyword,
+			status
+		})
+		const pagedResult = paginateIntentPairRankingList(filteredList, {
+			page,
+			pageSize
+		})
 
 		return {
 			k_factor: INTENT_MATCH_K_FACTOR,
-			list: pairList
+			list: pagedResult.list,
+			total: pagedResult.total,
+			page: pagedResult.page,
+			pageSize: pagedResult.pageSize,
+			stats: buildIntentPairRankingStats(filteredList, pairList.length)
+		}
+	},
+
+	async listIntentWeightedPairRankings({
+		keyword = '',
+		status = 'all',
+		page = 1,
+		pageSize = DEFAULT_PAGE_SIZE
+	} = {}) {
+		const pairList = await getCachedIntentPairRankingList({
+			weighted: true
+		})
+		const filteredList = filterIntentPairRankingList(pairList, {
+			keyword,
+			status
+		})
+		const pagedResult = paginateIntentPairRankingList(filteredList, {
+			page,
+			pageSize
+		})
+
+		return {
+			penalty_score: INTENT_MISSING_RANK_PENALTY,
+			top_rank_limit: INTENT_TOP_RANK_LIMIT,
+			list: pagedResult.list,
+			total: pagedResult.total,
+			page: pagedResult.page,
+			pageSize: pagedResult.pageSize,
+			stats: buildIntentPairRankingStats(filteredList, pairList.length)
 		}
 	},
 
